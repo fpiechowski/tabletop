@@ -1,0 +1,41 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+box Client
+participant UserInterface
+participant ClientEntity
+participant ClientCommand
+participant ClientWebsocket
+end box
+
+UserInterface -> ClientCommand: input event
+ClientCommand -> ClientWebsocket: execute
+ClientWebsocket -> ServerWebsocket: send
+
+
+ServerWebsocket -> ServerCommand: incoming
+ServerCommand -> ServerEntity: execute
+ServerEntity -> ServerEntity: <<entity updates>>
+ServerEntity -> Persistence: store
+
+Persistence --> ServerEntity
+ServerEntity --> ServerCommand
+loop for each client
+    ServerCommand -> ServerWebsocket: execute
+    ServerWebsocket -> ClientWebsocket: send
+
+    ClientWebsocket -> ClientCommand: incoming
+    ClientCommand -> ClientEntity: execute
+    ClientEntity -> UserInterface: update
+end
+
+box Server
+participant ServerWebsocket
+participant ServerCommand
+participant ServerEntity
+participant Persistence
+end box
+
+@enduml

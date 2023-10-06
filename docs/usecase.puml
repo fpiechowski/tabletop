@@ -1,0 +1,21 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+:Admin:
+:GameMaster: as "Game Master"
+:Player:
+
+(SessionMatching) as "Session Matching"
+(Worldbuilding) as "World Building"
+(Gameplay)
+(Management)
+
+GameMaster --> (SessionMatching)
+GameMaster --> (WorldBuilding)
+GameMaster --> (Gameplay)
+
+Player -> (SessionMatching)
+Player  -> (Gameplay)
+
+
+@enduml

@@ -9,6 +9,7 @@ build/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.idea/artifacts/
 *.iws
 *.iml
 *.ipr
@@ -40,4 +41,4 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-/src/commonMain/kotlin/tabletop/dnd5e/Race.kt
+/common/src/main/kotlin/tabletop/dnd5e/Race.kt

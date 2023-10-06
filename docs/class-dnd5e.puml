@@ -1,0 +1,30 @@
+@startuml
+!include class-common.puml
+'https://plantuml.com/interface-diagram
+
+object DND5E
+
+DND5E --|> System
+
+class GameMaster
+GamMaster --|> User
+Game *-- GameMaster
+
+class Player
+Player --|> User
+Game o-- Player
+
+class Character
+Character --|> Actor
+
+interface Useable
+interface Reacting
+
+class Item
+Item --|> Useable
+class Feature
+Feature --|> Useable
+Feature --|> Reacting
+
+
+@enduml

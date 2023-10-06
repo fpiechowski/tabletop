@@ -1,0 +1,30 @@
+@startuml
+'https://plantuml.com/interface-diagram
+
+interface Game
+interface User
+interface System
+
+Game *-- System
+Game *-- User
+Game o-- Scene
+Game o-- Actor
+Game o-- Item
+
+interface Scene
+interface Token
+
+Scene o-- Token
+
+interface Actor
+Token *-- Actor
+Actor o-- Token
+
+interface Item
+Actor o-- Item
+
+interface Effect
+Actor "0..* effects" o-- Effect
+Item o-- Effect
+
+@enduml
