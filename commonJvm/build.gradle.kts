@@ -53,6 +53,7 @@ dependencies {
     api("one.microstream:microstream-storage-embedded-configuration:08.01.01-MS-GA")
 
     testApi("io.kotest:kotest-assertions-core:5.7.2")
+    testApi("io.kotest:kotest-assertions-json:5.7.2")
     testApi("io.kotest:kotest-runner-junit5:5.7.2")
 
     testApi("io.kotest.extensions:kotest-assertions-arrow:1.4.0")

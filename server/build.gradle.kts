@@ -50,6 +50,12 @@ dependencies {
     implementation("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")
     implementation("one.microstream:microstream-storage-embedded-configuration:08.01.01-MS-GA")
 
+    testImplementation("io.ktor:ktor-client-core:2.3.4")
+    testImplementation("io.ktor:ktor-client-cio:2.3.4")
+    testImplementation("io.ktor:ktor-client-resources:2.3.4")
+
+    testImplementation("io.ktor:ktor-server-test-host:2.3.4")
+
     testImplementation("io.kotest:kotest-assertions-core:5.7.2")
     testImplementation("io.kotest:kotest-runner-junit5:5.7.2")
 

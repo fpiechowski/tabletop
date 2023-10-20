@@ -2,6 +2,7 @@ package tabletop.server
 
 import arrow.core.raise.Raise
 import arrow.core.raise.recover
+import arrow.fx.stm.TVar
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -36,7 +37,7 @@ class ServerAdapter : Server() {
     companion object
 }
 
-context (Raise<Server.Error>, Persistence, Serialization, Authentication)
+context (Persistence, Serialization, Authentication)
 fun ServerAdapter.start() {
     embeddedServer(Netty, port = 8080, host = "127.0.0.1") {
         module().also {
@@ -45,8 +46,8 @@ fun ServerAdapter.start() {
     }.start(wait = true)
 }
 
-context (Raise<Server.Error>, Persistence, ServerAdapter, Serialization, Authentication)
-private fun Application.module() = apply {
+context (Persistence, ServerAdapter, Serialization, Authentication)
+fun Application.module() = apply {
     launch {
         install(WebSockets)
         serve()
@@ -59,7 +60,7 @@ private suspend fun ServerAdapter.serve() {
     application.await().routing {
 
         webSocket {
-            val connection = Connection(this)
+            val connection = Connection(this, TVar.new(false))
             connections += connection
 
             with(connection) {
@@ -94,9 +95,11 @@ private fun launchCommandResultProcessing(
 ) {
     launch {
         startProcessing<Command.Result<*, *>> { result ->
+
             recover({
-                if (result.shared) connections.forEach { with(it) { result.send() } }
-                else with(connection) { result.send() }
+                val commandResult = (result as Command.Result<Command, Command.Result.Data>)
+                if (result.shared) connections.forEach { with(it) { commandResult.send() } }
+                else with(connection) { commandResult.send() }
             }) {
                 it.handleTerminal(Command.Result.Processor)
             }

@@ -1,6 +1,7 @@
 package tabletop.common.connection
 
 import arrow.core.raise.*
+import arrow.fx.stm.TVar
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,8 +17,13 @@ import tabletop.common.serialization.Serialization
 import tabletop.common.serialization.deserialize
 import tabletop.common.serialization.serialize
 import tabletop.common.transformFold
+import kotlin.time.Duration
 
-class Connection(val session: WebSocketSession, override val id: UUID = UUID.generateUUID()) : Identifiable<UUID> {
+class Connection(
+    val session: WebSocketSession,
+    val authenticated: TVar<Boolean>,
+    override val id: UUID = UUID.generateUUID()
+) : Identifiable<UUID> {
 
     companion object
 
@@ -40,7 +46,7 @@ suspend inline fun <reified T : Any> T.send(
 )
 
 context (Raise<Connection.Error>, Connection, Serialization)
-suspend inline fun <reified T : Any> receive(): T {
+suspend inline fun <reified T : Any> receive(timeout: Duration): T {
     val frameText = catch({ (session.incoming.receive() as Frame.Text).readText() }) {
         raise(Connection.Error("Can't receive incoming frame", CommonError.ThrowableError(it)))
     }.also { Connection.logger.debug { "Incoming payload: $it" } }
@@ -72,6 +78,7 @@ context (Connection, Serialization)
 inline fun <reified T : Any> receiveFlow(
 ): Flow<T> =
     session.incoming.receiveAsFlow()
+        .also { Connection.logger.debug { "Started receiving ${T::class}" } }
         .map { frame ->
             either {
                 fold<CommonError, T, T>(

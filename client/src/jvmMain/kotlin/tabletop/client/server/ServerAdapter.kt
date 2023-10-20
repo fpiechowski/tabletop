@@ -45,7 +45,7 @@ suspend fun ServerAdapter.connect(
     catch({
         httpClient
             .webSocket(host = host, port = port) {
-                with(Connection(this)) {
+                with(Connection(this, null)) {
                     with(Command.Processor()) {
                         with(Command.Result.Processor()) {
                             recover({
