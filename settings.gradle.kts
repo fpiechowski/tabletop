@@ -11,4 +11,4 @@ plugins {
 
 rootProject.name = "tabletop"
 
-//include("common", "server", "client")
+include("commonJvm", "client", "server")

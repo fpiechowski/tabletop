@@ -1,0 +1,41 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+box Client
+participant InputAdapter
+participant EventProcessor
+participant ClientCommandProcessor
+participant ClientCommandResultProcessor
+participant State
+participant ClientServerAdapter
+end box
+
+box Server
+participant ServerAdapter
+participant ServerCommandProcessor
+participant Persistence
+participant ServerCommandResultProcessor
+end box
+
+InputAdapter -> EventProcessor: publish event
+EventProcessor -> ClientCommandProcessor: publish command
+loop for each command
+    ClientServerAdapter -> ClientCommandProcessor: receive command
+    ClientServerAdapter <-> ServerAdapter: send/receive
+
+    ServerAdapter -> ServerCommandProcessor: publish
+    ServerCommandProcessor -> Persistence: store
+    Persistence --> ServerCommandProcessor
+    ServerCommandProcessor -> ServerCommandResultProcessor: publish
+    loop for each command result
+        ServerAdapter -> ServerCommandResultProcessor: receive
+        ServerAdapter <-> ClientServerAdapter: send/receive
+        ClientServerAdapter -> ClientCommandResultProcessor: send
+        ClientCommandResultProcessor -> State: update
+    end
+end
+
+
+@enduml
