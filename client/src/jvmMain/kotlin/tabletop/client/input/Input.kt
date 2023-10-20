@@ -9,7 +9,7 @@ import tabletop.client.error.handleUI
 import tabletop.client.event.EscapeKeyDown
 import tabletop.client.event.Event
 import tabletop.client.ui.UserInterface
-import tabletop.common.publish
+import tabletop.common.process.publish
 
 
 object Input

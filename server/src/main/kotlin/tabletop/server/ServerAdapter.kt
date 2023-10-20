@@ -21,10 +21,10 @@ import tabletop.common.connection.send
 import tabletop.common.error.CommonError
 import tabletop.common.error.handleConnection
 import tabletop.common.error.handleTerminal
-import tabletop.common.publish
+import tabletop.common.process.publish
+import tabletop.common.process.startProcessing
 import tabletop.common.serialization.Serialization
 import tabletop.common.server.Server
-import tabletop.common.startProcessing
 import tabletop.server.command.process
 import tabletop.server.persistence.Persistence
 import java.util.*

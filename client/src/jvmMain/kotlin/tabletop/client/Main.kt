@@ -29,8 +29,8 @@ import tabletop.client.ui.UserInterface
 import tabletop.common.command.Command
 import tabletop.common.error.CommonError
 import tabletop.common.error.handleTerminal
+import tabletop.common.process.startProcessing
 import tabletop.common.serialization.Serialization
-import tabletop.common.startProcessing
 
 fun main() {
     with(runBlocking { State(TMVar.empty(), TMVar.empty(), TMVar.empty()) }) {

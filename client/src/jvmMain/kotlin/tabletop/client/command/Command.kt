@@ -11,7 +11,7 @@ import tabletop.common.command.Command
 import tabletop.common.command.GetGameCommandResult
 import tabletop.common.command.GetGamesCommandResult
 import tabletop.common.command.SignInCommandResult
-import tabletop.common.publish
+import tabletop.common.process.publish
 
 context (Raise<Command.Result.Error>, UserInterface, State, Event.Processor)
 @Suppress("UNCHECKED_CAST")

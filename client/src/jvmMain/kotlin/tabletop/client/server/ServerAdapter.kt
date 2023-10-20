@@ -24,10 +24,10 @@ import tabletop.common.connection.receiveFlow
 import tabletop.common.connection.send
 import tabletop.common.error.CommonError
 import tabletop.common.error.handleConnection
-import tabletop.common.publish
+import tabletop.common.process.publish
+import tabletop.common.process.startProcessing
 import tabletop.common.serialization.Serialization
 import tabletop.common.server.Server
-import tabletop.common.startProcessing
 
 class ServerAdapter(val host: String, val port: Int) : Server() {
     companion object {

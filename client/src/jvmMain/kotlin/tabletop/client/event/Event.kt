@@ -13,10 +13,10 @@ import tabletop.client.server.ServerAdapter
 import tabletop.client.server.connect
 import tabletop.client.state.State
 import tabletop.client.ui.UserInterface
-import tabletop.common.ChannelProcessor
 import tabletop.common.command.Command
 import tabletop.common.error.CommonError
-import tabletop.common.publish
+import tabletop.common.process.ChannelProcessor
+import tabletop.common.process.publish
 import tabletop.common.serialization.Serialization
 
 abstract class Event {

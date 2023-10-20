@@ -1,4 +1,4 @@
-package tabletop.common
+package tabletop.common.process
 
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
@@ -7,8 +7,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import tabletop.common.error.CommonError
 import tabletop.common.logging.logger
 
-abstract class ChannelProcessor<T> {
-    val channel: Channel<T> = Channel()
+abstract class ChannelProcessor<T>(val channel: Channel<T> = Channel()) {
 
     companion object
 
@@ -21,7 +20,7 @@ suspend inline fun <reified T> T.publish() = catch({
     channel.send(this)
     ChannelProcessor.logger.debug { "Published $this" }
 }) {
-    raise(ChannelProcessor.Error("Error when publishing $this"))
+    raise(ChannelProcessor.Error("Error when publishing $this", CommonError.ThrowableError(it)))
 }
 
 context (ChannelProcessor<T>)

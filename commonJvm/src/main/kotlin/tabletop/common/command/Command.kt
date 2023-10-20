@@ -2,8 +2,8 @@ package tabletop.common.command
 
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
-import tabletop.common.ChannelProcessor
 import tabletop.common.error.CommonError
+import tabletop.common.process.ChannelProcessor
 
 @Serializable
 sealed class Command {

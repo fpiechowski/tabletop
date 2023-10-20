@@ -14,7 +14,7 @@ import tabletop.client.state.State
 import tabletop.client.ui.UserInterface
 import tabletop.common.auth.Credentials
 import tabletop.common.connection.Connection
-import tabletop.common.publish
+import tabletop.common.process.publish
 import tabletop.common.serialization.Serialization
 
 
