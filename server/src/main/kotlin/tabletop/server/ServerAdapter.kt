@@ -26,6 +26,7 @@ import tabletop.common.process.publish
 import tabletop.common.process.startProcessing
 import tabletop.common.serialization.Serialization
 import tabletop.common.server.Server
+import tabletop.common.transformFold
 import tabletop.server.command.process
 import tabletop.server.persistence.Persistence
 import java.util.*
@@ -95,7 +96,6 @@ private fun launchCommandResultProcessing(
 ) {
     launch {
         startProcessing<Command.Result<*, *>> { result ->
-
             recover({
                 val commandResult = (result as Command.Result<Command, Command.Result.Data>)
                 if (result.shared) connections.forEach { with(it) { commandResult.send() } }
@@ -123,6 +123,7 @@ private fun launchCommandProcessing() {
 context (Serialization, Connection, ServerAdapter)
 private suspend fun receiveIncomingCommands(onEach: suspend Raise<CommonError>.(Command) -> Unit) =
     receiveFlow<Command>()
+        .transformFold { it.handleConnection(ServerAdapter) }
         .transform {
             recover({ onEach(it) }) {
                 it.handleConnection(ServerAdapter)

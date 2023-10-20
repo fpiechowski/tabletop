@@ -9,7 +9,7 @@ import tabletop.common.process.ChannelProcessor
 sealed class Command {
 
     @Serializable
-    class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+    data class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
 
     companion object
 

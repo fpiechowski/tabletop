@@ -10,7 +10,6 @@ import tabletop.common.command.Command
 import tabletop.common.command.GetGamesCommandResult
 import tabletop.common.serialization.Serialization
 import tabletop.common.serialization.serialize
-import tabletop.server.serialization.buildSerializersModule
 
 class SerializationSandbox : FreeSpec({
     "serialization" {
@@ -19,7 +18,7 @@ class SerializationSandbox : FreeSpec({
             Game.Listing(listOf(Game.Listing.Item(UUID.generateUUID(), "game", "system")))
         )
 
-        with(Serialization { buildSerializersModule() }) {
+        with(Serialization { }) {
             recover({
                 val serialized = (commandResult as Command.Result<Command, Command.Result.Data>).serialize()
                 println(serialized)

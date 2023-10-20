@@ -29,6 +29,7 @@ import tabletop.common.process.publish
 import tabletop.common.process.startProcessing
 import tabletop.common.serialization.Serialization
 import tabletop.common.server.Server
+import tabletop.common.transformFold
 
 class ServerAdapter(val host: String, val port: Int) : Server() {
     companion object {
@@ -84,6 +85,7 @@ private suspend fun receiveIncomingCommandResults(
     onEach: suspend Raise<CommonError>.(Command.Result<Command, Command.Result.Data>) -> Unit
 ) =
     receiveFlow<Command.Result<Command, Command.Result.Data>>()
+        .transformFold { it.handleUI(ServerAdapter) }
         .transform {
             recover({ onEach(it) }) {
                 it.handleUI(ServerAdapter)

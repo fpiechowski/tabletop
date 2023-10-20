@@ -22,7 +22,6 @@ import tabletop.client.game.GameScreen
 import tabletop.client.input.Input
 import tabletop.client.input.InputAdapter
 import tabletop.client.lwjgl3.lwjgl3Application
-import tabletop.client.serialization.buildSerializersModule
 import tabletop.client.state.State
 import tabletop.client.ui.StageScreen
 import tabletop.client.ui.UserInterface
@@ -34,7 +33,7 @@ import tabletop.common.serialization.Serialization
 
 fun main() {
     with(runBlocking { State(TMVar.empty(), TMVar.empty(), TMVar.empty()) }) {
-        with(Serialization { buildSerializersModule() }) {
+        with(Serialization {}) {
             with(Input) {
                 with(Command.Processor()) {
                     with(Command.Result.Processor()) {

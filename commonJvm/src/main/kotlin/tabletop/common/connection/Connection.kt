@@ -1,5 +1,6 @@
 package tabletop.common.connection
 
+import arrow.core.Either
 import arrow.core.raise.*
 import arrow.fx.stm.TMVar
 import io.ktor.websocket.*
@@ -16,7 +17,6 @@ import tabletop.common.logging.logger
 import tabletop.common.serialization.Serialization
 import tabletop.common.serialization.deserialize
 import tabletop.common.serialization.serialize
-import tabletop.common.transformFold
 import tabletop.common.user.User
 import kotlin.time.Duration
 
@@ -77,21 +77,28 @@ suspend inline fun <reified T : Any> receive(timeout: Duration): T {
 
 context (Connection, Serialization)
 inline fun <reified T : Any> receiveFlow(
-): Flow<T> =
+): Flow<Either<CommonError, T>> =
     session.incoming.receiveAsFlow()
         .also { Connection.logger.debug { "Started receiving ${T::class}" } }
         .map { frame ->
             either {
-                fold<CommonError, T, T>(
+                val frameText = (frame as Frame.Text).readText()
+                    .also { Connection.logger.debug { "Incoming payload: $it" } }
+                recover<CommonError, T>(
                     block = {
-                        deserialize((frame as Frame.Text).readText()
-                            .also { Connection.logger.debug { "Incoming payload: $it" } })
+                        deserialize(frameText)
                     },
-                    catch = { raise(Connection.Error("Error on receive", CommonError.ThrowableError(it))) },
-                    recover = { raise(Connection.Error("Error on receive", it)) },
-                    transform = { it.also { Connection.logger.debug { "Received $it" } } }
-                )
+                    recover = {
+                        if (it is Serialization.Error) {
+                            val incomingError = recover({ deserialize<CommonError>(frameText) }) {
+                                raise(Connection.Error("Unhandled incoming message", it))
+                            }
+
+                            raise(incomingError)
+                        } else raise(Connection.Error("Error on receive", it))
+                    }
+                ).also { Connection.logger.debug { "Received $it" } }
             }.onLeft {
                 it.handleTerminal(Connection)
             }
-        }.transformFold { Connection.logger.debug { "Skippable frame received for ${T::class.qualifiedName} flow" } }
+        }

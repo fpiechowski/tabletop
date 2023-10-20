@@ -10,7 +10,7 @@ import tabletop.common.serialization.Serialization
 context (Connection, Serialization)
 suspend inline fun <reified T : CommonError> T.handleConnection(source: Any) = fold(block = {
     handleTerminal(source)
-    this@handleConnection.send<CommonError>()
+    (this@handleConnection as CommonError).send<CommonError>()
 }, recover = {
     it.handleTerminal(source)
 }, catch = {
