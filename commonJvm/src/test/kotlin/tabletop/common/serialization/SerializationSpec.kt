@@ -9,6 +9,7 @@ import tabletop.common.command.SignInCommandResult
 import tabletop.common.error.CommonError
 import tabletop.common.user.User
 
+@Suppress("UNCHECKED_CAST")
 class SerializationSpec : FreeSpec({
     with(Serialization { }) {
         val signIn = Command.SignIn("principal", "secret")

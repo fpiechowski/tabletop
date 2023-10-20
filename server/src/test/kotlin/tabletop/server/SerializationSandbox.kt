@@ -20,7 +20,8 @@ class SerializationSandbox : FreeSpec({
 
         with(Serialization { }) {
             recover({
-                val serialized = (commandResult as Command.Result<Command, Command.Result.Data>).serialize()
+                @Suppress("UNCHECKED_CAST") val serialized =
+                    (commandResult as Command.Result<Command, Command.Result.Data>).serialize()
                 println(serialized)
             }) {
                 fail(it.toString())

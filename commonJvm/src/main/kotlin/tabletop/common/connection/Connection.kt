@@ -1,7 +1,10 @@
 package tabletop.common.connection
 
 import arrow.core.Either
-import arrow.core.raise.*
+import arrow.core.raise.Raise
+import arrow.core.raise.either
+import arrow.core.raise.fold
+import arrow.core.raise.recover
 import arrow.fx.stm.TMVar
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +21,6 @@ import tabletop.common.serialization.Serialization
 import tabletop.common.serialization.deserialize
 import tabletop.common.serialization.serialize
 import tabletop.common.user.User
-import kotlin.time.Duration
 
 class Connection(
     val session: WebSocketSession,
@@ -45,35 +47,6 @@ suspend inline fun <reified T : Any> T.send(
     recover = { raise(Connection.Error("Error on sending ${this@send}", it)) },
     transform = { it.also { Connection.logger.debug { "Sent ${this@send}" } } }
 )
-
-context (Raise<Connection.Error>, Connection, Serialization)
-suspend inline fun <reified T : Any> receive(timeout: Duration): T {
-    val frameText = catch({ (session.incoming.receive() as Frame.Text).readText() }) {
-        raise(Connection.Error("Can't receive incoming frame", CommonError.ThrowableError(it)))
-    }.also { Connection.logger.debug { "Incoming payload: $it" } }
-
-    return fold<CommonError, T, T>(
-        block = { deserialize<T>(frameText) },
-        catch = { raise(Connection.Error("Error on receive", CommonError.ThrowableError(it))) },
-        recover = {
-            raise(
-                recover({
-                    Connection.Error(
-                        "Received error response",
-                        deserialize<CommonError>(frameText)
-                    )
-                }) {
-                    raise(
-                        Connection.Error(
-                            "Received content is not ${T::class.simpleName} nor ${CommonError::class.simpleName}",
-                            it
-                        )
-                    )
-                })
-        },
-        transform = { it.also { Connection.logger.debug { "Received $it" } } }
-    )
-}
 
 context (Connection, Serialization)
 inline fun <reified T : Any> receiveFlow(

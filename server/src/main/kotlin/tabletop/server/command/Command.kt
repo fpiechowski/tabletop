@@ -17,7 +17,7 @@ import tabletop.server.persistence.Persistence
 import tabletop.server.persistence.retrieve
 
 context (Raise<Command.Error>, ServerAdapter, Persistence, Authentication, Connection)
-@Suppress("UNCHECKED_CAST", "IMPLICIT_CAST_TO_ANY")
+@Suppress("UNCHECKED_CAST")
 suspend fun <C : Command> C.process(): Command.Result<C, *> =
     recover({
         when (this@process) {

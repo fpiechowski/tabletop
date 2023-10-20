@@ -91,6 +91,7 @@ private suspend fun ServerAdapter.serve() {
 }
 
 context (CoroutineScope, Command.Result.Processor, ServerAdapter, Connection, Serialization)
+@Suppress("UNCHECKED_CAST")
 private fun launchCommandResultProcessing(
     connection: Connection
 ) {
