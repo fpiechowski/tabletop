@@ -2,7 +2,7 @@ package tabletop.server
 
 import arrow.core.raise.Raise
 import arrow.core.raise.recover
-import arrow.fx.stm.TVar
+import arrow.fx.stm.TMVar
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -60,7 +60,7 @@ private suspend fun ServerAdapter.serve() {
     application.await().routing {
 
         webSocket {
-            val connection = Connection(this, TVar.new(false))
+            val connection = Connection(this, TMVar.empty())
             connections += connection
 
             with(connection) {

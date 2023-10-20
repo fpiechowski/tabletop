@@ -1,7 +1,7 @@
 package tabletop.common.connection
 
 import arrow.core.raise.*
-import arrow.fx.stm.TVar
+import arrow.fx.stm.TMVar
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,11 +17,12 @@ import tabletop.common.serialization.Serialization
 import tabletop.common.serialization.deserialize
 import tabletop.common.serialization.serialize
 import tabletop.common.transformFold
+import tabletop.common.user.User
 import kotlin.time.Duration
 
 class Connection(
     val session: WebSocketSession,
-    val authenticated: TVar<Boolean>,
+    val authenticatedUser: TMVar<User>,
     override val id: UUID = UUID.generateUUID()
 ) : Identifiable<UUID> {
 

@@ -3,6 +3,7 @@ package tabletop.client.server
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.recover
+import arrow.fx.stm.TMVar
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
@@ -45,7 +46,7 @@ suspend fun ServerAdapter.connect(
     catch({
         httpClient
             .webSocket(host = host, port = port) {
-                with(Connection(this, null)) {
+                with(Connection(this, TMVar.empty())) {
                     with(Command.Processor()) {
                         with(Command.Result.Processor()) {
                             recover({

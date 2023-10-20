@@ -9,15 +9,16 @@ import tabletop.common.command.Command
 import tabletop.common.command.GetGameCommandResult
 import tabletop.common.command.GetGamesCommandResult
 import tabletop.common.command.SignInCommandResult
+import tabletop.common.connection.Connection
 import tabletop.common.error.CommonError
 import tabletop.server.ServerAdapter
 import tabletop.server.auth.authenticate
 import tabletop.server.persistence.Persistence
 import tabletop.server.persistence.retrieve
 
-context (Raise<Command.Error>, ServerAdapter, Persistence, Authentication)
+context (Raise<Command.Error>, ServerAdapter, Persistence, Authentication, Connection)
 @Suppress("UNCHECKED_CAST", "IMPLICIT_CAST_TO_ANY")
-fun <C : Command> C.process(): Command.Result<C, *> =
+suspend fun <C : Command> C.process(): Command.Result<C, *> =
     recover({
         when (this@process) {
             is Command.GetGames -> execute()
@@ -44,8 +45,8 @@ private fun Command.GetGame.execute(): GetGameCommandResult {
     return GetGameCommandResult(this, game)
 }
 
-context (Raise<CommonError>, ServerAdapter, Command, Persistence, Authentication)
-private fun Command.SignIn.execute(): SignInCommandResult {
+context (Raise<CommonError>, ServerAdapter, Command, Persistence, Authentication, Connection)
+private suspend fun Command.SignIn.execute(): SignInCommandResult {
     val user = authenticate(principal, secret)
     return SignInCommandResult(this, user)
 }
