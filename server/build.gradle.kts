@@ -1,4 +1,10 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val ktorVersion: String by project
+val kotlinVersion: String by project
+val logbackVersion: String by project
+val kotlinxSerialization: String by project
+val kotlinxDateTime: String by project
+
+val mainClass = "tabletop.server.MainKt"
 
 plugins {
     kotlin("jvm")
@@ -6,15 +12,11 @@ plugins {
     application
 }
 
+project.setProperty("mainClassName", mainClass)
+
 group = "com.github.mesayah"
 version = "1.0-SNAPSHOT"
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xcontext-receivers"
-}
-kotlin {
-    jvmToolchain(11)
-}
 application {
     mainClass.set("tabletop.server.MainKt")
 }
@@ -61,6 +63,7 @@ dependencies {
 
     testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
     testImplementation("io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
+    testImplementation("io.kotest.extensions:kotest-extensions-koin:1.3.0")
 
     testImplementation("io.mockk:mockk:1.13.8")
 }

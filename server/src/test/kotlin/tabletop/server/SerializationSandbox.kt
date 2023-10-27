@@ -7,9 +7,9 @@ import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
 import tabletop.common.Game
 import tabletop.common.command.Command
+import tabletop.common.command.CommandResult
 import tabletop.common.command.GetGamesCommandResult
 import tabletop.common.serialization.Serialization
-import tabletop.common.serialization.serialize
 
 class SerializationSandbox : FreeSpec({
     "serialization" {
@@ -18,10 +18,10 @@ class SerializationSandbox : FreeSpec({
             Game.Listing(listOf(Game.Listing.Item(UUID.generateUUID(), "game", "system")))
         )
 
-        with(Serialization { }) {
+        with(Serialization()) {
             recover({
                 @Suppress("UNCHECKED_CAST") val serialized =
-                    (commandResult as Command.Result<Command, Command.Result.Data>).serialize()
+                    (commandResult as CommandResult).serialize().bind()
                 println(serialized)
             }) {
                 fail(it.toString())

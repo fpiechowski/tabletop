@@ -1,6 +1,8 @@
 package tabletop.server
 
 import arrow.core.raise.Raise
+import arrow.core.raise.catch
+import arrow.core.raise.either
 import arrow.core.raise.recover
 import arrow.fx.stm.TMVar
 import io.ktor.server.application.*
@@ -14,123 +16,118 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
-import tabletop.common.auth.Authentication
 import tabletop.common.command.Command
+import tabletop.common.command.CommandResult
 import tabletop.common.connection.Connection
-import tabletop.common.connection.receiveFlow
-import tabletop.common.connection.send
 import tabletop.common.error.CommonError
-import tabletop.common.error.handleConnection
-import tabletop.common.error.handleTerminal
-import tabletop.common.process.publish
-import tabletop.common.process.startProcessing
-import tabletop.common.serialization.Serialization
+import tabletop.common.handleErrors
 import tabletop.common.server.Server
-import tabletop.common.transformFold
-import tabletop.server.command.process
-import tabletop.server.persistence.Persistence
+import tabletop.server.di.DependenciesAdapter
 import java.util.*
 
-class ServerAdapter : Server() {
+class ServerAdapter(
+    private val dependencies: DependenciesAdapter
+) : Server() {
     val application: CompletableDeferred<Application> = CompletableDeferred()
-    val connections: MutableSet<Connection> = Collections.synchronizedSet(LinkedHashSet())
+    val connections: MutableSet<Connection> = Collections.synchronizedSet(mutableSetOf())
 
-    companion object
-}
+    val commandChannel by lazy { dependencies.commandChannel }
 
-context (Persistence, Serialization, Authentication)
-fun ServerAdapter.start() {
-    embeddedServer(Netty, port = 8080, host = "127.0.0.1") {
-        module().also {
-            application.complete(this)
+    fun launch() = either {
+        catch({
+            embeddedServer(Netty, port = 8080, host = "127.0.0.1") {
+                module().also {
+                    application.complete(this)
+                }
+            }.start(wait = true)
+        }) {
+            raise(Error("Error on starting server", CommonError.ThrowableError(it)))
         }
-    }.start(wait = true)
-}
-
-context (Persistence, ServerAdapter, Serialization, Authentication)
-fun Application.module() = apply {
-    launch {
-        install(WebSockets)
-        serve()
     }
-}
 
+    fun Application.module() = apply {
+        launch {
+            install(WebSockets)
+            serve()
+        }
+    }
 
-context (Persistence, ServerAdapter, Serialization, Authentication)
-private suspend fun ServerAdapter.serve() {
-    application.await().routing {
+    private suspend fun serve() {
+        application.await().routing {
+            webSocket {
+                val connection = Connection(this, TMVar.empty())
+                val connectionScopeDependencies = dependencies.ConnectionScope(connection)
+                connections += connection
 
-        webSocket {
-            val connection = Connection(this, TMVar.empty())
-            connections += connection
-
-            with(connection) {
-                with(Command.Processor()) {
-                    with(Command.Result.Processor()) {
-                        recover<CommonError, Unit>(
-                            block = {
-                                launchCommandProcessing()
-
-                                launchCommandResultProcessing(connection)
-
-                                receiveIncomingCommands { it.publish() }
-                            },
-                            catch = {
-                                CommonError.ThrowableError(it).handleConnection(ServerAdapter)
-                            },
-                            recover = {
-                                it.handleConnection(ServerAdapter)
-                                session.close(CloseReason(CloseReason.Codes.NORMAL, "Closing due to error $it"))
-                            }
-                        )
-                    }
+                with(connectionScopeDependencies) {
+                    recover<CommonError, Unit>(
+                        block = {
+                            launchCommandProcessing(connectionScopeDependencies)
+                            launchCommandResultProcessing(connectionScopeDependencies)
+                            receiveIncomingCommands(connectionScopeDependencies) { with(commandChannel) { it.publish() } }
+                        },
+                        catch = {
+                            with(connectionErrorHandler) { CommonError.ThrowableError(it).handle() }
+                        },
+                        recover = {
+                            with(connectionErrorHandler) { it.handle() }
+                            connection.session.close(CloseReason(CloseReason.Codes.NORMAL, "Closing due to error $it"))
+                        }
+                    )
                 }
             }
         }
     }
-}
 
-context (CoroutineScope, Command.Result.Processor, ServerAdapter, Connection, Serialization)
-@Suppress("UNCHECKED_CAST")
-private fun launchCommandResultProcessing(
-    connection: Connection
-) {
-    launch {
-        startProcessing<Command.Result<*, *>> { result ->
-            recover({
-                val commandResult = (result as Command.Result<Command, Command.Result.Data>)
-                if (result.shared) connections.forEach { with(it) { commandResult.send() } }
-                else with(connection) { commandResult.send() }
-            }) {
-                it.handleTerminal(Command.Result.Processor)
+    private fun CoroutineScope.launchCommandResultProcessing(connectionScopeDependencies: DependenciesAdapter.ConnectionScope) =
+        launch {
+            with(connectionScopeDependencies) {
+                commandResultChannel.receiveAsFlow { result ->
+                    recover<CommonError, Unit>({
+                        with(connectionCommunicator) { (result as CommandResult).send().bind() }
+                    }) {
+                        with(terminalErrorHandler) { it.handle() }
+                    }
+                }
             }
         }
+
+
+    private fun CoroutineScope.launchCommandProcessing(connectionScopeDependencies: DependenciesAdapter.ConnectionScope) =
+        launch {
+            with(connectionScopeDependencies) {
+                with(commandChannel) {
+                    receiveAsFlow {
+                        recover({
+                            with(commandResultChannel) {
+                                with(commandExecutor) {
+                                    it.execute().bind().publish()
+                                }
+                            }
+                        }) {
+                            with(connectionErrorHandler) { it.handle() }
+                        }
+                    }
+                }
+            }
+        }
+
+
+    private suspend fun receiveIncomingCommands(
+        connectionScopeDependencies: DependenciesAdapter.ConnectionScope,
+        onEach: suspend Raise<CommonError>.(Command) -> Unit
+    ) = with(connectionScopeDependencies) {
+        connectionCommunicator.receiveIncomingAsEithersFlow<Command>()
+            .handleErrors(connectionErrorHandler)
+            .transform {
+                recover({ onEach(it) }) {
+                    with(connectionErrorHandler) { it.handle() }
+                }
+                emit(it)
+            }
+            .collect()
     }
+
+    companion object;
+
 }
-
-context (CoroutineScope, Command.Processor, Command.Result.Processor, ServerAdapter, Connection, Serialization, Persistence, Authentication)
-private fun launchCommandProcessing() {
-    launch {
-        startProcessing<Command> {
-            recover({
-                it.process().publish()
-            }) {
-                it.handleConnection(Command.Processor)
-            }
-        }
-    }
-}
-
-context (Serialization, Connection, ServerAdapter)
-private suspend fun receiveIncomingCommands(onEach: suspend Raise<CommonError>.(Command) -> Unit) =
-    receiveFlow<Command>()
-        .transformFold { it.handleConnection(ServerAdapter) }
-        .transform {
-            recover({ onEach(it) }) {
-                it.handleConnection(ServerAdapter)
-            }
-            emit(it)
-        }
-        .collect()
-
-

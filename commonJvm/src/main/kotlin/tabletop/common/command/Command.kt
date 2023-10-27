@@ -1,9 +1,13 @@
 package tabletop.common.command
 
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import tabletop.common.error.CommonError
-import tabletop.common.process.ChannelProcessor
+import tabletop.common.process.CommonChannel
+
+typealias CommandResult = Command.Result<Command, Command.Result.Data>
 
 @Serializable
 sealed class Command {
@@ -13,8 +17,12 @@ sealed class Command {
 
     companion object
 
-    class Processor : ChannelProcessor<Command>() {
+    class Channel : CommonChannel<Command>() {
         companion object
+
+        override
+
+        override val logger: KLogger = KotlinLogging.logger {}
     }
 
     @Serializable
@@ -47,7 +55,9 @@ sealed class Command {
 
         interface Data
 
-        class Processor : ChannelProcessor<Result<*, *>>() {
+        class Channel : CommonChannel<Result<*, *>>() {
+            override val logger: KLogger = KotlinLogging.logger {}
+
             companion object
         }
     }

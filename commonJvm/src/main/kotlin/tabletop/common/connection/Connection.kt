@@ -1,11 +1,11 @@
 package tabletop.common.connection
 
 import arrow.core.Either
-import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.fold
 import arrow.core.raise.recover
 import arrow.fx.stm.TMVar
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -14,12 +14,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
 import tabletop.common.Identifiable
+import tabletop.common.di.CommonDependencies
 import tabletop.common.error.CommonError
-import tabletop.common.error.handleTerminal
-import tabletop.common.logging.logger
 import tabletop.common.serialization.Serialization
-import tabletop.common.serialization.deserialize
-import tabletop.common.serialization.serialize
 import tabletop.common.user.User
 
 class Connection(
@@ -27,51 +24,61 @@ class Connection(
     val authenticatedUser: TMVar<User>,
     override val id: UUID = UUID.generateUUID()
 ) : Identifiable<UUID> {
-
     companion object
 
     @Serializable
     class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
 }
 
-context (Raise<Connection.Error>, Connection, Serialization)
-suspend inline fun <reified T : Any> T.send(
-): Unit = fold(
-    block = {
-        session.send(
-            Frame.Text(
-                this@send.serialize().also { Connection.logger.debug { "Outgoing payload: $it" } })
-        )
-    },
-    catch = { raise(Connection.Error("Error on sending ${this@send}", CommonError.ThrowableError(it))) },
-    recover = { raise(Connection.Error("Error on sending ${this@send}", it)) },
-    transform = { it.also { Connection.logger.debug { "Sent ${this@send}" } } }
-)
+class ConnectionCommunicator(val dependencies: CommonDependencies.ConnectionScope) {
+    val logger = KotlinLogging.logger { }
 
-context (Connection, Serialization)
-inline fun <reified T : Any> receiveFlow(
-): Flow<Either<CommonError, T>> =
-    session.incoming.receiveAsFlow()
-        .also { Connection.logger.debug { "Started receiving ${T::class}" } }
-        .map { frame ->
-            either {
-                val frameText = (frame as Frame.Text).readText()
-                    .also { Connection.logger.debug { "Incoming payload: $it" } }
-                recover<CommonError, T>(
-                    block = {
-                        deserialize(frameText)
-                    },
-                    recover = {
-                        if (it is Serialization.Error) {
-                            val incomingError = recover({ deserialize<CommonError>(frameText) }) {
-                                raise(Connection.Error("Unhandled incoming message", it))
-                            }
-
-                            raise(incomingError)
-                        } else raise(Connection.Error("Error on receive", it))
-                    }
-                ).also { Connection.logger.debug { "Received $it" } }
-            }.onLeft {
-                it.handleTerminal(Connection)
-            }
+    suspend inline fun <reified T : Any> T.send() = with(dependencies) {
+        either {
+            fold<CommonError, Unit, Unit>(
+                block = {
+                    connection.session.send(
+                        Frame.Text(
+                            with(serialization) { this@send.serialize().bind() }
+                                .also { logger.debug { "Outgoing payload: $it" } })
+                    )
+                },
+                catch = { raise(Connection.Error("Error on sending ${this@send}", CommonError.ThrowableError(it))) },
+                recover = { raise(Connection.Error("Error on sending ${this@send}", it)) },
+                transform = { it.also { logger.debug { "Sent ${this@send}" } } }
+            )
         }
+    }
+
+    inline fun <reified T : Any> receiveIncomingAsEithersFlow(): Flow<Either<CommonError, T>> =
+        with(dependencies) {
+            connection.session.incoming.receiveAsFlow()
+                .also { logger.debug { "Started receiving ${T::class}" } }
+                .map { frame ->
+                    either {
+                        val frameText = (frame as Frame.Text).readText()
+                            .also { logger.debug { "Incoming payload: $it" } }
+
+                        recover<CommonError, T>(
+                            block = {
+                                with(serialization) { frameText.deserialize<T>().bind() }
+                            },
+                            recover = {
+                                if (it is Serialization.Error) {
+                                    val incomingError = recover({
+                                        with(serialization) { frameText.deserialize<CommonError>().bind() }
+                                    }) {
+                                        raise(Connection.Error("Unhandled incoming message", it))
+                                    }
+
+                                    raise(incomingError)
+                                } else raise(Connection.Error("Error on receive", it))
+                            }
+                        ).also { logger.debug { "Received $it" } }
+                    }.onLeft {
+                        with(terminalErrorHandler) { it.handle() }
+                    }
+                }
+        }
+
+}

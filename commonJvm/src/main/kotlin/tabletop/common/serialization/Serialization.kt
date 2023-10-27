@@ -1,8 +1,9 @@
 package tabletop.common.serialization
 
-import arrow.core.raise.Raise
+import arrow.core.Either
 import arrow.core.raise.catch
-import kotlinx.serialization.KSerializer
+import arrow.core.raise.either
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -21,13 +22,28 @@ import tabletop.common.server.Server
 import tabletop.common.user.User
 
 
-class Serialization(serializersModuleBuilder: SerializersModuleBuilder.() -> Unit) {
+class Serialization {
     val json: Json = Json {
         ignoreUnknownKeys = true
 
         this.serializersModule = SerializersModule {
             buildCommonSerializersModule()
-            serializersModuleBuilder()
+        }
+    }
+
+    inline fun <reified T> T.serialize(): Either<Error, String> = either {
+        catch({
+            json.encodeToString<T>(this@serialize)
+        }) {
+            raise(Error("Can't encode to string", CommonError.ThrowableError(it)))
+        }
+    }
+
+    inline fun <reified T> String.deserialize(): Either<Error, T> = either {
+        catch({
+            json.decodeFromString<T>(this@deserialize)
+        }) {
+            raise(Error("Can't decode from string ${this@deserialize}", CommonError.ThrowableError(it)))
         }
     }
 
@@ -56,34 +72,6 @@ class Serialization(serializersModuleBuilder: SerializersModuleBuilder.() -> Uni
         }
     }
 
-    @kotlinx.serialization.Serializable
+    @Serializable
     class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
-}
-
-context (Raise<Serialization.Error>, Serialization)
-inline fun <reified T : Any> T.serialize(): String = catch({
-    json.encodeToString<T>(this)
-}) {
-    raise(Serialization.Error("Can't encode to string", CommonError.ThrowableError(it)))
-}
-
-context (Raise<Serialization.Error>, Serialization)
-fun <T : Any> Serializable<T>.serialize(): String = catch({
-    json.encodeToString(serializer, this.value)
-}) {
-    raise(Serialization.Error("Can't encode to string", CommonError.ThrowableError(it)))
-}
-
-context (Raise<Serialization.Error>, Serialization)
-inline fun <reified T : Any> deserialize(string: String): T = catch({
-    json.decodeFromString(string)
-}) {
-    raise(Serialization.Error("Can't decode from string $string", CommonError.ThrowableError(it)))
-}
-
-context (Raise<Serialization.Error>, Serialization)
-fun <T : Any> deserialize(serializer: KSerializer<T>, string: String): T = catch({
-    json.decodeFromString(serializer, string)
-}) {
-    raise(Serialization.Error("Can't decode from string $string", CommonError.ThrowableError(it)))
 }

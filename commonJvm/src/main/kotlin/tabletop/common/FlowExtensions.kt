@@ -1,21 +1,16 @@
 package tabletop.common
 
 import arrow.core.Either
-import arrow.core.Option
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.transform
 import tabletop.common.error.CommonError
+import tabletop.common.error.ErrorHandler
 
-fun <T, E : CommonError> Flow<Either<E, T>>.transformFold(
-    ifLeft: suspend (CommonError) -> Unit
+fun <T, E : CommonError> Flow<Either<E, T>>.handleErrors(
+    errorHandler: ErrorHandler<CommonError>
 ): Flow<T> =
     transform { either ->
-        either.fold({ ifLeft(it) }) {
+        either.fold({ with(errorHandler) { it.handle() } }) {
             emit(it)
         }
-    }
-
-fun <T> Flow<Option<T>>.transformFold(ifNone: suspend () -> Unit): Flow<T> =
-    transform { option ->
-        option.fold({ ifNone() }) { emit(it) }
     }
