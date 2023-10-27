@@ -22,9 +22,9 @@ abstract class CommonChannel<T>(
 
     suspend inline fun receiveAsFlow(crossinline onCollected: suspend (T) -> Unit) {
         channel.receiveAsFlow()
-            .collect { command ->
-                logger.debug { "Collected $command" }
-                onCollected(command)
+            .collect {
+                logger.debug { "Collected $it`" }
+                onCollected(it)
             }
     }
 

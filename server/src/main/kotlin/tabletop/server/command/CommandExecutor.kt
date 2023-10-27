@@ -26,7 +26,7 @@ class CommandExecutor(
                     is Command.GetGame -> execute().bind()
                     is Command.SignIn -> execute().bind()
                     else -> raise(Command.Error("Unhandled Command type ${this::class.simpleName}"))
-                } as Command.Result<Command, *>
+                }
             }) {
                 raise(Command.Error("Error on executing ${this@execute}", it))
             }

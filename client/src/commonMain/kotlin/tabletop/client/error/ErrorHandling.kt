@@ -1,7 +1,6 @@
 package tabletop.client.error
 
 import tabletop.client.di.DependenciesAdapter
-import tabletop.client.ui.UserInterface
 import tabletop.common.error.CommonError
 import tabletop.common.error.ErrorHandler
 
@@ -19,13 +18,4 @@ class UIErrorHandler(
             )
         }
     }
-}
-
-
-suspend fun <T : CommonError> T.uiErrorHandler(
-    source: Any,
-    terminalErrorHandler: ErrorHandler<T>,
-    userInterface: UserInterface
-) = ErrorHandler<T> {
-
 }

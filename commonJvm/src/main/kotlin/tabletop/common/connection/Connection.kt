@@ -63,8 +63,8 @@ class ConnectionCommunicator(val dependencies: CommonDependencies.ConnectionScop
                             block = {
                                 with(serialization) { frameText.deserialize<T>().bind() }
                             },
-                            recover = {
-                                if (it is Serialization.Error) {
+                            recover = { error ->
+                                if (error is Serialization.Error) {
                                     val incomingError = recover({
                                         with(serialization) { frameText.deserialize<CommonError>().bind() }
                                     }) {
@@ -72,7 +72,7 @@ class ConnectionCommunicator(val dependencies: CommonDependencies.ConnectionScop
                                     }
 
                                     raise(incomingError)
-                                } else raise(Connection.Error("Error on receive", it))
+                                } else raise(Connection.Error("Error on receive", error))
                             }
                         ).also { logger.debug { "Received $it" } }
                     }.onLeft {

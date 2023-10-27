@@ -4,7 +4,6 @@ import tabletop.common.Game
 import tabletop.common.auth.Credentials
 import tabletop.common.user.User
 
-object EscapeKeyDown : Event()
 class LoadingGameAttempted(val gameListingItem: Game.Listing.Item) : Event()
 
 class UserAuthenticated(val user: User) : Event()

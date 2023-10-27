@@ -79,6 +79,7 @@ class ServerAdapter(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun CoroutineScope.launchCommandResultProcessing(connectionScopeDependencies: DependenciesAdapter.ConnectionScope) =
         launch {
             with(connectionScopeDependencies) {

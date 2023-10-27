@@ -20,9 +20,9 @@ class Persistence(private val storageManager: EmbeddedStorageManager = EmbeddedS
     fun <T> T.persist(): Either<Error, Unit> =
         either {
             catch({
-                storageManager.store(this)
+                storageManager.store(this@persist)
             }) {
-                raise(Error("Can't store entity $this", CommonError.ThrowableError(it)))
+                raise(Error("Can't store entity ${this@persist}", CommonError.ThrowableError(it)))
             }
         }
 
