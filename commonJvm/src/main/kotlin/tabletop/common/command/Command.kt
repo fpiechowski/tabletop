@@ -1,11 +1,8 @@
 package tabletop.common.command
 
-import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import tabletop.common.error.CommonError
-import tabletop.common.process.CommonChannel
 
 typealias CommandResult = Command.Result<Command, Command.Result.Data>
 
@@ -13,17 +10,9 @@ typealias CommandResult = Command.Result<Command, Command.Result.Data>
 sealed class Command {
 
     @Serializable
-    data class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+    data class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
     companion object
-
-    class Channel : CommonChannel<Command>() {
-        companion object
-
-        override
-
-        override val logger: KLogger = KotlinLogging.logger {}
-    }
 
     @Serializable
     data class SignIn(
@@ -47,18 +36,11 @@ sealed class Command {
         abstract val data: T
         abstract val shared: Boolean
 
-
         @Serializable
-        class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+        class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
         companion object
 
         interface Data
-
-        class Channel : CommonChannel<Result<*, *>>() {
-            override val logger: KLogger = KotlinLogging.logger {}
-
-            companion object
-        }
     }
 }

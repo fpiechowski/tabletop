@@ -1,26 +1,34 @@
 package tabletop.client
 
-import arrow.continuations.SuspendApp
-import arrow.core.raise.either
+import korlibs.image.color.Colors
 import korlibs.korge.Korge
 import korlibs.korge.scene.sceneContainer
+import korlibs.math.geom.Size
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import tabletop.client.connection.ConnectionScene
 import tabletop.client.di.DependenciesAdapter
-import tabletop.client.ui.UserInterface
 
-fun main() = SuspendApp {
-    val dependencies = DependenciesAdapter(this)
+fun main() = runBlocking {
+    val dependencies = DependenciesAdapter()
+    runKorge(dependencies)
+}
 
+private suspend fun runKorge(dependencies: DependenciesAdapter) =
     with(dependencies) {
-        eventChannel.receiveAsFlow {
-            with(eventHandler) { either { it.handle().bind() } }
+        Korge(
+            virtualSize = Size(1280, 720),
+            windowSize = Size(1280, 720),
+            backgroundColor = Colors["#2b2b2b"]
+        ) {
+            val sceneContainer = sceneContainer()
+
+            dependencies.userInterface.stage.complete(this)
+
+            injector.mapInstance(dependencies)
+
+            launch {
+                sceneContainer.changeTo { ConnectionScene() }
+            }
         }
-
-        userInterface.runKorge()
     }
-}
-
-private suspend fun UserInterface.runKorge() = Korge {
-    val sceneContainer = sceneContainer()
-
-    // TODO sceneContainer.changeTo { MyScene() }
-}

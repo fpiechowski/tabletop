@@ -8,9 +8,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import tabletop.common.error.CommonError
 
 abstract class CommonChannel<T>(
-    val channel: Channel<T> = Channel()
+    val channel: Channel<T> = Channel(10)
 ) {
     abstract val logger: KLogger
+
     suspend inline fun T.publish() = either {
         catch({
             channel.send(this@publish)
@@ -21,6 +22,7 @@ abstract class CommonChannel<T>(
     }
 
     suspend inline fun receiveAsFlow(crossinline onCollected: suspend (T) -> Unit) {
+        logger.info { "Started receiving" }
         channel.receiveAsFlow()
             .collect {
                 logger.debug { "Collected $it`" }
@@ -30,5 +32,5 @@ abstract class CommonChannel<T>(
 
     companion object
 
-    class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 }

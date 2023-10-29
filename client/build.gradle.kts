@@ -16,12 +16,16 @@ repositories {
     maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
+
+
 korge {
     id = "com.github.mesayah"
 
     targetJvm()
 
     serializationJson()
+
+    jvmMainClassName = "tabletop.client.MainKt"
 }
 
 dependencies {
@@ -60,3 +64,6 @@ dependencies {
 
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}

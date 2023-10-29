@@ -1,7 +1,6 @@
 package tabletop.server.di
 
 import tabletop.common.auth.Authentication
-import tabletop.common.command.Command
 import tabletop.common.connection.Connection
 import tabletop.common.connection.ConnectionCommunicator
 import tabletop.common.di.CommonDependencies
@@ -19,25 +18,25 @@ class DependenciesAdapter(
 ) : CommonDependencies() {
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
-    override val commandChannel: Command.Channel by lazy { Command.Channel() }
-    override val commandResultChannel: Command.Result.Channel by lazy { Command.Result.Channel() }
     val persistence: Persistence by lazyPersistence
     val serverAdapter: ServerAdapter by lazy { ServerAdapter(this) }
-    val demo: Demo by lazy { Demo(persistence) }
+    val demo: Demo = Demo(persistence)
 
-    inner class ConnectionScope(override val connection: Connection) : CommonDependencies.ConnectionScope() {
+    inner class ConnectionScope(
+        override val connection: Connection,
+    ) : CommonDependencies.ConnectionScope() {
+
         val persistence: Persistence = this@DependenciesAdapter.persistence
-        val authentication: Authentication by lazy {
-            AuthenticationAdapter(this)
-        }
+
+        val authentication: Authentication by lazy { AuthenticationAdapter(this) }
+        val commandExecutor: CommandExecutor by lazy { CommandExecutor(this) }
+
         override val connectionCommunicator: ConnectionCommunicator by lazy {
             ConnectionCommunicator(this)
         }
-        val commandResultChannel: Command.Result.Channel by lazy { Command.Result.Channel() }
         override val connectionErrorHandler: ConnectionErrorHandler by lazy {
             ConnectionErrorHandler(this)
         }
-        val commandExecutor: CommandExecutor by lazy { CommandExecutor(authentication, persistence) }
     }
 }
 

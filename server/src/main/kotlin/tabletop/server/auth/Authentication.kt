@@ -20,7 +20,7 @@ class AuthenticationAdapter(
                     .keys
                     .firstOrNull()
                     ?.also { atomically { connection.authenticatedUser.put(it) } }
-                    .let { ensureNotNull(it) { Error("Invalid credentials") } }
+                    .let { ensureNotNull(it) { Error("Invalid credentials", null) } }
             }
         }
 }

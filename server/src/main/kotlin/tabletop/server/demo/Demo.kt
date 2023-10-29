@@ -6,7 +6,12 @@ import tabletop.common.demo.*
 import tabletop.server.persistence.Persistence
 
 class Demo(private val persistence: Persistence) {
-    fun storeEntities(): Either<Persistence.Error, Unit> = either {
+
+    init {
+        storeEntities()
+    }
+
+    private fun storeEntities(): Either<Persistence.Error, Unit> = either {
         with(persistence) {
             val users = listOf(demoGmUser, demoPlayerUser)
                 .onEach { user ->

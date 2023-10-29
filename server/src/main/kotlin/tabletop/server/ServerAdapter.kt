@@ -10,9 +10,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import io.ktor.websocket.*
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
@@ -30,8 +28,6 @@ class ServerAdapter(
 ) : Server() {
     val application: CompletableDeferred<Application> = CompletableDeferred()
     val connections: MutableSet<Connection> = Collections.synchronizedSet(mutableSetOf())
-
-    val commandChannel by lazy { dependencies.commandChannel }
 
     fun launch() = either {
         catch({
@@ -52,6 +48,7 @@ class ServerAdapter(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private suspend fun serve() {
         application.await().routing {
             webSocket {
@@ -62,57 +59,26 @@ class ServerAdapter(
                 with(connectionScopeDependencies) {
                     recover<CommonError, Unit>(
                         block = {
-                            launchCommandProcessing(connectionScopeDependencies)
-                            launchCommandResultProcessing(connectionScopeDependencies)
-                            receiveIncomingCommands(connectionScopeDependencies) { with(commandChannel) { it.publish() } }
+                            receiveIncomingCommands(connectionScopeDependencies) {
+                                with(commandExecutor) {
+                                    with(connectionCommunicator) {
+                                        (it.execute().bind() as CommandResult).send().bind()
+                                    }
+                                }
+                            }
                         },
                         catch = {
                             with(connectionErrorHandler) { CommonError.ThrowableError(it).handle() }
                         },
                         recover = {
                             with(connectionErrorHandler) { it.handle() }
-                            connection.session.close(CloseReason(CloseReason.Codes.NORMAL, "Closing due to error $it"))
+                            //connection.session.close(CloseReason(CloseReason.Codes.NORMAL, "Closing due to error $it"))
                         }
                     )
                 }
             }
         }
     }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun CoroutineScope.launchCommandResultProcessing(connectionScopeDependencies: DependenciesAdapter.ConnectionScope) =
-        launch {
-            with(connectionScopeDependencies) {
-                commandResultChannel.receiveAsFlow { result ->
-                    recover<CommonError, Unit>({
-                        with(connectionCommunicator) { (result as CommandResult).send().bind() }
-                    }) {
-                        with(terminalErrorHandler) { it.handle() }
-                    }
-                }
-            }
-        }
-
-
-    private fun CoroutineScope.launchCommandProcessing(connectionScopeDependencies: DependenciesAdapter.ConnectionScope) =
-        launch {
-            with(connectionScopeDependencies) {
-                with(commandChannel) {
-                    receiveAsFlow {
-                        recover({
-                            with(commandResultChannel) {
-                                with(commandExecutor) {
-                                    it.execute().bind().publish()
-                                }
-                            }
-                        }) {
-                            with(connectionErrorHandler) { it.handle() }
-                        }
-                    }
-                }
-            }
-        }
-
 
     private suspend fun receiveIncomingCommands(
         connectionScopeDependencies: DependenciesAdapter.ConnectionScope,

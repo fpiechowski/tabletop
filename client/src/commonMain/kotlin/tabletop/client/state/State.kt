@@ -13,6 +13,6 @@ class State(
 
 
     companion object {
-        class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+        class Error(override val message: String?, override val cause: CommonError?) : CommonError()
     }
 }

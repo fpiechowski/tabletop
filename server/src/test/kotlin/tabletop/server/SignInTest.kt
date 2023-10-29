@@ -30,7 +30,6 @@ class SignInTest : StringSpec() {
     private val embeddedStorageManager = EmbeddedStorage.start(Persistence.Root)
 
     init {
-
         "signIn" {
             val dependenciesAdapter = DependenciesAdapter(lazy { Persistence(embeddedStorageManager) })
 
@@ -109,7 +108,7 @@ class SignInTest : StringSpec() {
                                 ).shouldBeEqualToComparingFields(
                                     Command.Error(
                                         "Error on executing $signIn",
-                                        Authentication.Error("Invalid credentials")
+                                        Authentication.Error("Invalid credentials", null)
                                     )
                                 )
                             }

@@ -27,7 +27,7 @@ class Connection(
     companion object
 
     @Serializable
-    class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 }
 
 class ConnectionCommunicator(val dependencies: CommonDependencies.ConnectionScope) {
@@ -39,7 +39,7 @@ class ConnectionCommunicator(val dependencies: CommonDependencies.ConnectionScop
                 block = {
                     connection.session.send(
                         Frame.Text(
-                            with(serialization) { this@send.serialize().bind() }
+                            with(serialization) { this@send.serialize<T>().bind() }
                                 .also { logger.debug { "Outgoing payload: $it" } })
                     )
                 },
@@ -53,7 +53,7 @@ class ConnectionCommunicator(val dependencies: CommonDependencies.ConnectionScop
     inline fun <reified T : Any> receiveIncomingAsEithersFlow(): Flow<Either<CommonError, T>> =
         with(dependencies) {
             connection.session.incoming.receiveAsFlow()
-                .also { logger.debug { "Started receiving ${T::class}" } }
+                .also { logger.debug { "Started receiving through WebSocket ${T::class}" } }
                 .map { frame ->
                     either {
                         val frameText = (frame as Frame.Text).readText()
@@ -75,10 +75,9 @@ class ConnectionCommunicator(val dependencies: CommonDependencies.ConnectionScop
                                 } else raise(Connection.Error("Error on receive", error))
                             }
                         ).also { logger.debug { "Received $it" } }
-                    }.onLeft {
-                        with(terminalErrorHandler) { it.handle() }
                     }
                 }
+
         }
 
 }

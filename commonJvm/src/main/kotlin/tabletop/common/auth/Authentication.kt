@@ -10,6 +10,6 @@ abstract class Authentication {
     abstract suspend fun authenticate(principal: String, secret: String): Either<Error, User>
 
     @Serializable
-    class Error(override val message: String?, override val cause: CommonError? = null) :
+    class Error(override val message: String?, override val cause: CommonError?) :
         CommonError()
 }

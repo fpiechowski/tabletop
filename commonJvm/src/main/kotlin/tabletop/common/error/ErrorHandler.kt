@@ -27,12 +27,10 @@ class TerminalErrorHandler : ErrorHandler<CommonError> {
 
     override suspend fun CommonError.handle() {
         logger.error {
-            """$this${findThrowable()?.stackTrace?.let { "\n$it" } ?: ""}""".trimMargin()
+            """$this
+                |${this.findThrowable()?.stackTrace ?: ""}
+            """.trimMargin()
         }
     }
 }
 
-private fun CommonError.findThrowable(): CommonError.ThrowableError? = when {
-    this is CommonError.ThrowableError -> this
-    else -> cause?.findThrowable()
-}

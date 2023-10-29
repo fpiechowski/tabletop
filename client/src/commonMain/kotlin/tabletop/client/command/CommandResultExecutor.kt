@@ -16,7 +16,10 @@ class CommandResultExecutor(
     private val dependencies: DependenciesAdapter
 ) {
     private val state by lazy { dependencies.state }
-    private val eventChannel by lazy { dependencies.eventChannel }
+    private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
+    private val eventHandler by lazy { dependencies.eventHandler }
+
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
     suspend fun Command.Result<*, *>.execute() = either {
         recover<CommonError, Unit>({
@@ -25,7 +28,7 @@ class CommandResultExecutor(
                 is GetGamesCommandResult -> atomically { state.gameListing.put(this@execute.data) }
                 is SignInCommandResult -> {
                     atomically { state.user.put(data) }
-                    with(eventChannel) { UserAuthenticated(data).publish() }
+                    with(eventHandler) { UserAuthenticated(data).handle().bind() }
                 }
 
                 else -> {}
