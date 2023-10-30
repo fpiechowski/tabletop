@@ -36,7 +36,11 @@ class CommandExecutor(
 
     private fun Command.GetGames.execute(): Either<CommonError, GetGamesCommandResult> =
         either {
-            val games = persistence.retrieve { games.values.filter { it.players.any { it.user.id == userId } } }.bind()
+            val games = persistence.retrieve {
+                games.values.filter { it.gameMaster.user.id == userId } +
+                        games.values.filter { it.players.any { it.user.id == userId } }
+                            .toSet()
+            }.bind()
             val listing = Game.Listing(games.map { Game.Listing.Item(it) })
             GetGamesCommandResult(this@execute, listing)
         }

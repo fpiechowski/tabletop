@@ -3,6 +3,7 @@ package tabletop.client.command
 import arrow.core.raise.either
 import arrow.core.raise.recover
 import arrow.fx.stm.atomically
+import tabletop.client.connection.ConnectionScene
 import tabletop.client.di.DependenciesAdapter
 import tabletop.client.event.UserAuthenticated
 import tabletop.common.command.Command
@@ -13,7 +14,7 @@ import tabletop.common.error.CommonError
 
 
 class CommandResultExecutor(
-    private val dependencies: DependenciesAdapter
+    private val dependencies: DependenciesAdapter.ConnectionScope
 ) {
     private val state by lazy { dependencies.state }
     private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
@@ -25,10 +26,20 @@ class CommandResultExecutor(
         recover<CommonError, Unit>({
             when (this@execute) {
                 is GetGameCommandResult -> atomically { state.game.put(this@execute.data) }
-                is GetGamesCommandResult -> atomically { state.gameListing.put(this@execute.data) }
+                is GetGamesCommandResult -> {
+                    atomically {
+                        state.gameListing.put(this@execute.data)
+                    }
+                    dependencies.userInterface.connectionScene.sceneView.dispatch(
+                        ConnectionScene.GameListingUpdated(
+                            data
+                        )
+                    )
+                }
+
                 is SignInCommandResult -> {
                     atomically { state.user.put(data) }
-                    with(eventHandler) { UserAuthenticated(data).handle().bind() }
+                    with(eventHandler) { UserAuthenticated(data).handle(dependencies).bind() }
                 }
 
                 else -> {}

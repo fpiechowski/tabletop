@@ -19,7 +19,6 @@ import tabletop.common.serialization.Serialization
 class DependenciesAdapter : CommonDependencies() {
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
-    val commandResultExecutor: CommandResultExecutor by lazy { CommandResultExecutor(this) }
     val uiErrorHandler: UIErrorHandler by lazy { UIErrorHandler(this) }
     val userInterface: UserInterface by lazy { UserInterface() }
     val eventHandler: EventHandler by lazy { EventHandler(this) }
@@ -29,6 +28,13 @@ class DependenciesAdapter : CommonDependencies() {
         CoroutineScope by CoroutineScope(Dispatchers.Default) {
         override val connectionCommunicator: ConnectionCommunicator by lazy { ConnectionCommunicator(this) }
         override val connectionErrorHandler: ConnectionErrorHandler by lazy { ConnectionErrorHandler(this) }
+        val commandResultExecutor: CommandResultExecutor by lazy { CommandResultExecutor(this) }
+        val eventHandler: EventHandler by lazy { this@DependenciesAdapter.eventHandler }
+        val uiErrorHandler: UIErrorHandler by lazy { this@DependenciesAdapter.uiErrorHandler }
+        val state: State by lazy { this@DependenciesAdapter.state }
+        val userInterface: UserInterface by lazy { this@DependenciesAdapter.userInterface }
+
+
     }
 }
 

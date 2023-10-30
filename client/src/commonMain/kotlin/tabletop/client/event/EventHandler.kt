@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.recover
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.future.await
 import tabletop.client.di.DependenciesAdapter
 import tabletop.client.server.ServerAdapter
 import tabletop.common.command.Command
@@ -14,6 +15,7 @@ class EventHandler(
 ) {
     private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
     private val eventHandler by lazy { dependencies.eventHandler }
+    private val userInterface by lazy { dependencies.userInterface }
 
     private val logger = KotlinLogging.logger {}
 
@@ -26,11 +28,7 @@ class EventHandler(
             recover<CommonError, Unit>({
                 when (this@handle) {
                     is ConnectionAttempted ->
-                        recover({
-                            ServerAdapter(dependencies).connect(host, port, credentialsData).bind()
-                        }) {
-                            with(uiErrorHandler) { it.handle() }
-                        }
+                        ServerAdapter(dependencies).connect(host, port, credentialsData).bind()
 
                     else -> {}
                 }
@@ -46,12 +44,15 @@ class EventHandler(
 
                 recover<CommonError, Unit>({
                     when (this@handle) {
-                        is UserAuthenticated ->
+                        is UserAuthenticated -> {
+                            userInterface.connectionScene.connectionWindow.await().closeAnimated()
+
                             with(connectionCommunicator) {
                                 (Command.GetGames(user.id) as Command)
                                     .send()
                                     .bind()
                             }
+                        }
 
                         is LoadingGameAttempted ->
                             with(connectionCommunicator) {

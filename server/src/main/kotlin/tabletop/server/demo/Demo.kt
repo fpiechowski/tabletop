@@ -23,7 +23,7 @@ class Demo(private val persistence: Persistence) {
                     persistenceRoot.credentials[credentialsUserPair.second] = credentialsUserPair.first
                 }.map { it.first }
 
-            val games = listOf(demoGame)
+            val games = listOf(demoGame, demoGame2)
                 .onEach { game ->
                     persistenceRoot.games[game.id] = game
                 }

@@ -6,7 +6,6 @@ import korlibs.korge.scene.sceneContainer
 import korlibs.math.geom.Size
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import tabletop.client.connection.ConnectionScene
 import tabletop.client.di.DependenciesAdapter
 
 fun main() = runBlocking {
@@ -28,7 +27,7 @@ private suspend fun runKorge(dependencies: DependenciesAdapter) =
             injector.mapInstance(dependencies)
 
             launch {
-                sceneContainer.changeTo { ConnectionScene() }
+                sceneContainer.changeTo { userInterface.connectionScene }
             }
         }
     }

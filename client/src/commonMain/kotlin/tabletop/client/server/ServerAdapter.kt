@@ -25,7 +25,6 @@ class ServerAdapter(
     private val dependencies: DependenciesAdapter
 ) : Server() {
     private val logger = KotlinLogging.logger { }
-    private val commandResultExecutor by lazy { dependencies.commandResultExecutor }
     private val eventHandler by lazy { dependencies.eventHandler }
     private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
 
@@ -47,7 +46,7 @@ class ServerAdapter(
                         }
 
                         receiveIncomingCommandResults(connectionScopeDependencies) {
-                            with(commandResultExecutor) {
+                            with(connectionScopeDependencies.commandResultExecutor) {
                                 it.execute().bind()
                             }
                         }
