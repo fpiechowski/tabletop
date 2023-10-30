@@ -1,12 +1,13 @@
-package tabletop.common.server
+package tabletop.client.event
 
-import kotlinx.serialization.Serializable
 import tabletop.common.error.CommonError
 
-abstract class Server {
-    companion object
+abstract class Event {
 
-    @Serializable
+
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
+    companion object
 }
+
+abstract class ConnectionEvent : Event()

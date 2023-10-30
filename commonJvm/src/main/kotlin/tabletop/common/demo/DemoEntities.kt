@@ -30,3 +30,11 @@ val demoGame = Game(
     setOf(Player("player", demoPlayerUser)),
     id = UUID("543efd85-98c2-482d-a292-6c9b2c188b7a")
 )
+
+val demoGame2 = Game(
+    "demo2",
+    DnD5e,
+    GameMaster("gm", demoGmUser),
+    setOf(Player("player", demoPlayerUser)),
+    id = UUID("8b6c9a25-066d-4233-8f26-0cb4c141b7af")
+)

@@ -3,19 +3,16 @@ package tabletop.common.command
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import tabletop.common.error.CommonError
-import tabletop.common.process.ChannelProcessor
+
+typealias CommandResult = Command.Result<Command, Command.Result.Data>
 
 @Serializable
 sealed class Command {
 
     @Serializable
-    data class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+    data class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
     companion object
-
-    class Processor : ChannelProcessor<Command>() {
-        companion object
-    }
 
     @Serializable
     data class SignIn(
@@ -39,16 +36,11 @@ sealed class Command {
         abstract val data: T
         abstract val shared: Boolean
 
-
         @Serializable
-        class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+        class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
         companion object
 
         interface Data
-
-        class Processor : ChannelProcessor<Result<*, *>>() {
-            companion object
-        }
     }
 }

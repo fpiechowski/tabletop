@@ -1,7 +1,8 @@
 package tabletop.server.persistence
 
-import arrow.core.raise.Raise
+import arrow.core.Either
 import arrow.core.raise.catch
+import arrow.core.raise.either
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import one.microstream.storage.embedded.types.EmbeddedStorage
@@ -12,9 +13,29 @@ import tabletop.common.error.CommonError
 import tabletop.common.user.User
 
 
-object Persistence {
-    val storageManager: EmbeddedStorageManager = EmbeddedStorage.start(Root)
+class Persistence(private val storageManager: EmbeddedStorageManager = EmbeddedStorage.start(Root)) {
     val persistenceRoot = Root
+
+
+    fun <T> T.persist(): Either<Error, Unit> =
+        either {
+            catch({
+                storageManager.store(this@persist)
+            }) {
+                raise(Error("Can't store entity ${this@persist}", CommonError.ThrowableError(it)))
+            }
+        }
+
+
+    fun <T> retrieve(get: Root.() -> T): Either<Error, T> =
+        either {
+            catch({
+                persistenceRoot.let(get)
+            }) {
+                raise(Error("Can't retrieve entity", CommonError.ThrowableError(it)))
+            }
+        }
+
 
     init {
         storageManager.storeRoot()
@@ -27,20 +48,6 @@ object Persistence {
     }
 
     @Serializable
-    class Error(override val message: String?, override val cause: CommonError? = null) : CommonError()
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 }
 
-
-context (Raise<Persistence.Error>, Persistence)
-fun <T> T.persist() = catch({
-    storageManager.store(this)
-}) {
-    raise(Persistence.Error("Can't store entity $this", CommonError.ThrowableError(it)))
-}
-
-context (Raise<Persistence.Error>, Persistence)
-fun <T> retrieve(get: Persistence.Root.() -> T): T = catch({
-    persistenceRoot.let(get)
-}) {
-    raise(Persistence.Error("Can't retrieve entity", CommonError.ThrowableError(it)))
-}

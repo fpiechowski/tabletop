@@ -1,30 +1,36 @@
 package tabletop.common.error
 
-import arrow.core.raise.fold
-import tabletop.common.connection.Connection
-import tabletop.common.connection.send
-import tabletop.common.logging.logger
-import tabletop.common.serialization.Serialization
+import arrow.core.raise.recover
+import io.github.oshai.kotlinlogging.KotlinLogging
+import tabletop.common.di.CommonDependencies
 
+fun interface ErrorHandler<T : CommonError> {
+    suspend fun T.handle()
+}
 
-context (Connection, Serialization)
-suspend inline fun <reified T : CommonError> T.handleConnection(source: Any) = fold(block = {
-    handleTerminal(source)
-    (this@handleConnection as CommonError).send<CommonError>()
-}, recover = {
-    it.handleTerminal(source)
-}, catch = {
-    CommonError.ThrowableError(it).handleTerminal(source)
-}, transform = { })
+class ConnectionErrorHandler(private val dependencies: CommonDependencies.ConnectionScope) : ErrorHandler<CommonError> {
+    override suspend fun CommonError.handle() = with(dependencies) {
+        recover<CommonError, Unit>(block = {
+            with(terminalErrorHandler) { this@handle.handle() }
+            with(connectionCommunicator) { this@handle.send<CommonError>() }
+        }, recover = {
+            with(terminalErrorHandler) { this@handle.handle() }
+        }, catch = {
+            with(terminalErrorHandler) { CommonError.ThrowableError(it).handle() }
+        })
+    }
 
-fun CommonError.handleTerminal(source: Any) {
-    source.logger.error {
-        """$this${findThrowable()?.stackTrace?.let { "\n$it" } ?: ""}
-    """.trimMargin()
+}
+
+class TerminalErrorHandler : ErrorHandler<CommonError> {
+    private val logger = KotlinLogging.logger { }
+
+    override suspend fun CommonError.handle() {
+        logger.error {
+            """$this
+                |${this.findThrowable()?.stackTrace ?: ""}
+            """.trimMargin()
+        }
     }
 }
 
-private fun CommonError.findThrowable(): CommonError.ThrowableError? = when {
-    this is CommonError.ThrowableError -> this
-    else -> cause?.findThrowable()
-}

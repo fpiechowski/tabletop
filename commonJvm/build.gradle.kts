@@ -1,6 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val kotlinxSerialization: String by project
+val kotlinVersion: String by project
+
 plugins {
+    application
     kotlin("jvm")
     kotlin("plugin.serialization")
 }
@@ -9,11 +13,18 @@ group = "com.github.mesayah"
 version = "1.0-SNAPSHOT"
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xcontext-receivers"
+    kotlinOptions {
+        jvmTarget = "1.8"
+        kotlinOptions.freeCompilerArgs += listOf("-Xskip-prerelease-check", "-Xcontext-receivers")
+    }
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(8)
 }
 
 repositories {
@@ -28,6 +39,8 @@ repositories {
 
 dependencies {
     api("app.softwork:kotlinx-uuid-core:0.0.21")
+
+    api("io.insert-koin:koin-core:3.5.0")
 
     api("io.github.oshai:kotlin-logging-jvm:5.1.0")
 
@@ -52,11 +65,16 @@ dependencies {
     api("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")
     api("one.microstream:microstream-storage-embedded-configuration:08.01.01-MS-GA")
 
+    testApi("io.insert-koin:koin-test:3.5.0")
+    testApi("io.insert-koin:koin-test-junit4:3.5.0")
+    testApi("io.insert-koin:koin-test-junit5:3.5.0")
+
     testApi("io.kotest:kotest-assertions-core:5.7.2")
     testApi("io.kotest:kotest-assertions-json:5.7.2")
     testApi("io.kotest:kotest-runner-junit5:5.7.2")
 
     testApi("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
+    testApi("io.kotest.extensions:kotest-extensions-koin:1.3.0")
     testApi("io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
 
     testApi("io.mockk:mockk:1.13.8")

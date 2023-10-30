@@ -2,34 +2,25 @@ package tabletop.server
 
 import arrow.continuations.SuspendApp
 import arrow.core.raise.fold
-import tabletop.common.auth.Authentication
+import io.github.oshai.kotlinlogging.KotlinLogging
 import tabletop.common.error.CommonError
-import tabletop.common.error.handleTerminal
-import tabletop.common.logging.logger
-import tabletop.common.serialization.Serialization
-import tabletop.server.demo.storeDemoEntities
-import tabletop.server.persistence.Persistence
+import tabletop.server.di.DependenciesAdapter
 
-object Main
+
+private val logger = KotlinLogging.logger { }
 
 fun main() = SuspendApp {
-    fold(
-        block = {
-            with(Persistence) {
-                storeDemoEntities()
+    val dependenciesAdapter = DependenciesAdapter()
 
-                with(Authentication) {
-                    with(Serialization {}) {
-                        with(ServerAdapter()) {
-                            start()
-                        }
-                    }
-                }
-            }
-        },
-        recover = { it.handleTerminal(Main) },
-        catch = { CommonError.ThrowableError(it).handleTerminal(Main) },
-        transform = { logger.info { "Exiting..." } }
-    )
+    with(dependenciesAdapter.terminalErrorHandler) {
+        fold<CommonError, Unit, Unit>(
+            block = {
+                dependenciesAdapter.serverAdapter.launch()
+            },
+            recover = { it.handle() },
+            catch = { CommonError.ThrowableError(it).handle() },
+            transform = { logger.info { "Exiting..." } }
+        )
+    }
 }
 

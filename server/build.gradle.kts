@@ -1,4 +1,10 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+val ktorVersion: String by project
+val kotlinVersion: String by project
+val logbackVersion: String by project
+val kotlinxSerialization: String by project
+val kotlinxDateTime: String by project
+
+val mainClass = "tabletop.server.MainKt"
 
 plugins {
     kotlin("jvm")
@@ -6,15 +12,11 @@ plugins {
     application
 }
 
+project.setProperty("mainClassName", mainClass)
+
 group = "com.github.mesayah"
 version = "1.0-SNAPSHOT"
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xcontext-receivers"
-}
-kotlin {
-    jvmToolchain(11)
-}
 application {
     mainClass.set("tabletop.server.MainKt")
 }
@@ -44,23 +46,24 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.4.11")
 
-    implementation("io.ktor:ktor-server-netty:2.3.4")
-    implementation("io.ktor:ktor-server-websockets:2.3.4")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets:$ktorVersion")
 
     implementation("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")
     implementation("one.microstream:microstream-storage-embedded-configuration:08.01.01-MS-GA")
 
-    testImplementation("io.ktor:ktor-client-core:2.3.4")
-    testImplementation("io.ktor:ktor-client-cio:2.3.4")
-    testImplementation("io.ktor:ktor-client-resources:2.3.4")
+    testImplementation("io.ktor:ktor-client-core:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-resources:$ktorVersion")
 
-    testImplementation("io.ktor:ktor-server-test-host:2.3.4")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
 
     testImplementation("io.kotest:kotest-assertions-core:5.7.2")
     testImplementation("io.kotest:kotest-runner-junit5:5.7.2")
 
     testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
     testImplementation("io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
+    testImplementation("io.kotest.extensions:kotest-extensions-koin:1.3.0")
 
     testImplementation("io.mockk:mockk:1.13.8")
 }

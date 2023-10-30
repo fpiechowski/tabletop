@@ -9,8 +9,12 @@ abstract class CommonError {
 
 
     override fun toString(): String =
-        "${this::class.qualifiedName}${message?.let { ": $it" }}${cause?.let { ", cause: $it" } ?: ""}"
+        """${this::class.qualifiedName}${message?.let { ": $it" }}${cause?.let { ", cause: $it" } ?: ""}""".trimMargin()
 
+    fun CommonError.findThrowable(): ThrowableError? = when {
+        this is ThrowableError -> this
+        else -> cause?.findThrowable()
+    }
 
     @Serializable
     class ThrowableError(
