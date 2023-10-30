@@ -1,6 +1,9 @@
 package tabletop.client.event
 
+import korlibs.event.EventType
 import tabletop.common.error.CommonError
+import korlibs.event.BEvent as KorgeEvent
+import korlibs.event.TEvent as KorgeTypedEvent
 
 abstract class Event {
 
@@ -11,3 +14,7 @@ abstract class Event {
 }
 
 abstract class ConnectionEvent : Event()
+
+abstract class UIEvent<T : KorgeEvent>(override val type: EventType<T>) : Event(), KorgeTypedEvent<T> {
+    override var target: Any? = null
+}

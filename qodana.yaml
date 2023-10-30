@@ -26,3 +26,5 @@ exclude:
   - name: All
     paths:
       - client/src/jvmMain/resources/ui/uiskin.json
+include:
+  - name: UnusedSymbol

@@ -6,14 +6,14 @@ import korlibs.korge.scene.sceneContainer
 import korlibs.math.geom.Size
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import tabletop.client.di.DependenciesAdapter
+import tabletop.client.di.Dependencies
 
 fun main() = runBlocking {
-    val dependencies = DependenciesAdapter()
+    val dependencies = Dependencies()
     runKorge(dependencies)
 }
 
-private suspend fun runKorge(dependencies: DependenciesAdapter) =
+private suspend fun runKorge(dependencies: Dependencies) =
     with(dependencies) {
         Korge(
             virtualSize = Size(1280, 720),
