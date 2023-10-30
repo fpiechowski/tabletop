@@ -3,9 +3,9 @@ package tabletop.client.event
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.recover
+import arrow.fx.stm.atomically
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tabletop.client.di.Dependencies
-import tabletop.client.game.GameScene
 import tabletop.client.server.ServerAdapter
 import tabletop.common.command.Command
 import tabletop.common.error.CommonError
@@ -17,6 +17,7 @@ class EventHandler(
     private val logger = KotlinLogging.logger {}
 
     private val userInterface by lazy { dependencies.userInterface }
+    private val state by lazy { dependencies.state }
 
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
@@ -52,7 +53,12 @@ class EventHandler(
                     }
 
                     is GameLoaded -> {
-                        userInterface.sceneContainer.await().changeTo { GameScene(game) }
+                        with(userInterface) { sceneContainer.await().changeTo { gameScene } }
+                    }
+
+                    is SceneOpened -> {
+                        atomically { if (!state.currentScene.tryPut(scene)) state.currentScene.swap(scene) }
+                        handle(userInterface.gameScene)
                     }
 
                     else -> {}

@@ -4,9 +4,11 @@ import tabletop.common.connection.Connection
 import tabletop.common.connection.ConnectionCommunicator
 import tabletop.common.error.ConnectionErrorHandler
 import tabletop.common.error.TerminalErrorHandler
+import tabletop.common.persistence.Persistence
 import tabletop.common.serialization.Serialization
 
 abstract class CommonDependencies {
+    abstract val persistence: Persistence<*>
     abstract val serialization: Serialization
     abstract val terminalErrorHandler: TerminalErrorHandler
 

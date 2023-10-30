@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import tabletop.client.command.CommandResultExecutor
 import tabletop.client.error.UIErrorHandler
 import tabletop.client.event.EventHandler
+import tabletop.client.persistence.Persistence
 import tabletop.client.state.State
 import tabletop.client.ui.UserInterface
 import tabletop.common.connection.Connection
@@ -18,12 +19,13 @@ import tabletop.common.error.TerminalErrorHandler
 import tabletop.common.serialization.Serialization
 
 class Dependencies : CommonDependencies() {
+    override val persistence: Persistence by lazy { Persistence() }
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
     val uiErrorHandler: UIErrorHandler by lazy { UIErrorHandler(this) }
     val userInterface: UserInterface by lazy { UserInterface() }
     val eventHandler: EventHandler by lazy { EventHandler(this) }
-    val state: State by lazy { runBlocking { State(TMVar.empty(), TMVar.empty(), TMVar.empty()) } }
+    val state: State by lazy { runBlocking { State.empty() } }
     private val connectionScope: TMVar<ConnectionScope> = runBlocking { TMVar.empty() }
     suspend fun connectionScope() = atomically { connectionScope.tryRead() }
 

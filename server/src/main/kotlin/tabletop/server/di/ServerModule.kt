@@ -18,7 +18,7 @@ class DependenciesAdapter(
 ) : CommonDependencies() {
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
-    val persistence: Persistence by lazyPersistence
+    override val persistence: Persistence by lazyPersistence
     val serverAdapter: ServerAdapter by lazy { ServerAdapter(this) }
     val demo: Demo = Demo(persistence)
 

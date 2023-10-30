@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import tabletop.common.demo.*
 import tabletop.server.persistence.Persistence
+import tabletop.common.persistence.Persistence as CommonPersistence
 
 class Demo(private val persistence: Persistence) {
 
@@ -11,7 +12,7 @@ class Demo(private val persistence: Persistence) {
         storeEntities()
     }
 
-    private fun storeEntities(): Either<Persistence.Error, Unit> = either {
+    private fun storeEntities(): Either<CommonPersistence.Error, Unit> = either {
         with(persistence) {
             val users = listOf(demoGmUser, demoPlayerUser)
                 .onEach { user ->
