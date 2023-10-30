@@ -12,7 +12,7 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
-import tabletop.client.di.DependenciesAdapter
+import tabletop.client.di.Dependencies
 import tabletop.common.auth.Credentials
 import tabletop.common.command.Command
 import tabletop.common.command.CommandResult
@@ -22,7 +22,7 @@ import tabletop.common.handleErrors
 import tabletop.common.server.Server
 
 class ServerAdapter(
-    private val dependencies: DependenciesAdapter
+    private val dependencies: Dependencies
 ) : Server() {
     private val logger = KotlinLogging.logger { }
     private val eventHandler by lazy { dependencies.eventHandler }
@@ -59,7 +59,7 @@ class ServerAdapter(
     }
 
     private suspend fun receiveIncomingCommandResults(
-        connectionScopeDependencies: DependenciesAdapter.ConnectionScope,
+        connectionScopeDependencies: Dependencies.ConnectionScope,
         onEach: suspend Raise<CommonError>.(Command.Result<Command, Command.Result.Data>) -> Unit
     ) = with(uiErrorHandler) {
         connectionScopeDependencies.connectionCommunicator.receiveIncomingAsEithersFlow<CommandResult>()

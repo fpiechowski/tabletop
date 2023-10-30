@@ -5,13 +5,14 @@ import arrow.core.raise.either
 import arrow.core.raise.recover
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.future.await
-import tabletop.client.di.DependenciesAdapter
+import tabletop.client.di.Dependencies
 import tabletop.client.server.ServerAdapter
 import tabletop.common.command.Command
 import tabletop.common.error.CommonError
+import korlibs.korge.scene.Scene as UIScene
 
 class EventHandler(
-    private val dependencies: DependenciesAdapter
+    private val dependencies: Dependencies
 ) {
     private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
     private val eventHandler by lazy { dependencies.eventHandler }
@@ -37,7 +38,18 @@ class EventHandler(
             }
         }
 
-    suspend fun <T : ConnectionEvent> T.handle(connectionScope: DependenciesAdapter.ConnectionScope): Either<Event.Error, Unit> =
+    suspend fun <T : UIEvent<*>> T.handle(uiScene: UIScene): Either<Event.Error, Unit> =
+        either {
+            logger.debug { "Handling ${this@handle}" }
+
+            recover<CommonError, Unit>({
+                uiScene.sceneView.dispatch(this@handle)
+            }) {
+                raise(Event.Error("Error when handling $this", it))
+            }
+        }
+
+    suspend fun <T : ConnectionEvent> T.handle(connectionScope: Dependencies.ConnectionScope): Either<Event.Error, Unit> =
         with(connectionScope) {
             either {
                 logger.debug { "Handling ${this@handle}" }

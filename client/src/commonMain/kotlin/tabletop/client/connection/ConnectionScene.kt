@@ -5,7 +5,6 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import io.github.oshai.kotlinlogging.KotlinLogging
 import korlibs.event.EventType
-import korlibs.event.TypedEvent
 import korlibs.korge.input.onClick
 import korlibs.korge.scene.Scene
 import korlibs.korge.ui.*
@@ -16,9 +15,10 @@ import korlibs.korge.view.container
 import korlibs.korge.view.xy
 import korlibs.math.geom.Size
 import kotlinx.coroutines.launch
-import tabletop.client.di.DependenciesAdapter
+import tabletop.client.di.Dependencies
 import tabletop.client.event.ConnectionAttempted
 import tabletop.client.event.EventHandler
+import tabletop.client.event.UIEvent
 import tabletop.common.Game
 import tabletop.common.auth.Credentials
 import tabletop.common.connection.Connection
@@ -31,9 +31,9 @@ class ConnectionScene : Scene() {
     val connectionWindow = CompletableFuture<UIWindow>()
 
     override suspend fun SContainer.sceneMain() {
-        val eventHandler = injector.get<DependenciesAdapter>().eventHandler
-        val uiErrorHandler = injector.get<DependenciesAdapter>().uiErrorHandler
-        val state = injector.get<DependenciesAdapter>().state
+        val eventHandler = injector.get<Dependencies>().eventHandler
+        val uiErrorHandler = injector.get<Dependencies>().uiErrorHandler
+        val state = injector.get<Dependencies>().state
 
         gameListingView()
 
@@ -43,7 +43,7 @@ class ConnectionScene : Scene() {
     class GameListingUpdated(
         val gameListing: Game.Listing
     ) :
-        TypedEvent<GameListingUpdated>(GameListingUpdated) {
+        UIEvent<GameListingUpdated>(GameListingUpdated) {
         companion object : EventType<GameListingUpdated>
     }
 
