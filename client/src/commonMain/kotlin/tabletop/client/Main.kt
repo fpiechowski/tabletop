@@ -23,6 +23,7 @@ private suspend fun runKorge(dependencies: Dependencies) =
             val sceneContainer = sceneContainer()
 
             dependencies.userInterface.stage.complete(this)
+            dependencies.userInterface.sceneContainer.complete(sceneContainer)
 
             injector.mapInstance(dependencies)
 

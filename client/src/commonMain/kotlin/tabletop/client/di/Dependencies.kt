@@ -1,6 +1,7 @@
 package tabletop.client.di
 
 import arrow.fx.stm.TMVar
+import arrow.fx.stm.atomically
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -23,9 +24,21 @@ class Dependencies : CommonDependencies() {
     val userInterface: UserInterface by lazy { UserInterface() }
     val eventHandler: EventHandler by lazy { EventHandler(this) }
     val state: State by lazy { runBlocking { State(TMVar.empty(), TMVar.empty(), TMVar.empty()) } }
+    private val connectionScope: TMVar<ConnectionScope> = runBlocking { TMVar.empty() }
+    suspend fun connectionScope() = atomically { connectionScope.tryRead() }
 
     inner class ConnectionScope(override val connection: Connection) : CommonDependencies.ConnectionScope(),
         CoroutineScope by CoroutineScope(Dispatchers.Default) {
+
+        init {
+            runBlocking {
+                atomically {
+                    if (!connectionScope.tryPut(this@ConnectionScope))
+                        connectionScope.swap(this@ConnectionScope)
+                }
+            }
+        }
+
         override val connectionCommunicator: ConnectionCommunicator by lazy { ConnectionCommunicator(this) }
         override val connectionErrorHandler: ConnectionErrorHandler by lazy { ConnectionErrorHandler(this) }
         val commandResultExecutor: CommandResultExecutor by lazy { CommandResultExecutor(this) }
@@ -33,8 +46,6 @@ class Dependencies : CommonDependencies() {
         val uiErrorHandler: UIErrorHandler by lazy { this@Dependencies.uiErrorHandler }
         val state: State by lazy { this@Dependencies.state }
         val userInterface: UserInterface by lazy { this@Dependencies.userInterface }
-
-
     }
 }
 
