@@ -25,7 +25,8 @@ val demoPlayerUser = User(
 val demoPlayerUserCredentials = Credentials.UsernamePassword("player", "player")
 
 val demoScene = Scene(
-    "Demo Scene"
+    "Demo Scene",
+    "assets/demo/sceneImage.png",
 )
 
 val demoGame = Game(

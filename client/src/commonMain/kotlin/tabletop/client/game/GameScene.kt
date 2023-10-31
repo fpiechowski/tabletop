@@ -1,13 +1,16 @@
 package tabletop.client.game
 
 import arrow.fx.stm.atomically
+import io.github.oshai.kotlinlogging.KotlinLogging
 import korlibs.image.format.readBitmap
-import korlibs.io.file.std.resourcesVfs
+import korlibs.io.file.std.applicationVfs
 import korlibs.korge.input.onClick
+import korlibs.korge.input.onScroll
 import korlibs.korge.ui.*
 import korlibs.korge.view.*
 import korlibs.korge.view.align.alignTopToBottomOf
 import korlibs.korge.view.align.centerOnStage
+import korlibs.memory.clamp
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import tabletop.client.di.Dependencies
@@ -18,7 +21,7 @@ import java.util.concurrent.CompletableFuture
 import korlibs.korge.scene.Scene as UIScene
 
 class GameScene : UIScene() {
-
+    private val logger = KotlinLogging.logger { }
     private val dependencies = CompletableFuture<Dependencies>()
     private val eventHandler = CompletableFuture<EventHandler>()
     private val settings = CompletableFuture<Settings>()
@@ -47,8 +50,19 @@ class GameScene : UIScene() {
                 launch {
                     clipContainer(settings.await().virtualSize) {
                         camera {
-                            image(resourcesVfs["demo/sceneImage.png"].readBitmap())
+                            val foregroundImage = it.scene.foregroundImagePath?.let {
+                                image(applicationVfs[it].readBitmap())
+                            }
+
+                            var zoom = 1f
+
+                            onScroll {
+                                zoom += it.scrollDeltaYPixels * 0.01f
+                                zoom = zoom.clamp(0.1f, 5f)
+                                foregroundImage?.scale(zoom, zoom)
+                            }
                         }
+
                     }
                 }
             }
@@ -77,7 +91,7 @@ class GameScene : UIScene() {
                         }
                     }
                 }.fold(listOf<UIButton>()) { prevList, next ->
-                    next.alignTopToBottomOf(prevList.last(), 10)
+                    prevList.lastOrNull()?.let { next.alignTopToBottomOf(it, 10) }
                     prevList + next
                 }
             }
