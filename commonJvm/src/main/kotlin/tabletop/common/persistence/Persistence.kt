@@ -7,10 +7,9 @@ import kotlinx.serialization.Serializable
 import one.microstream.storage.embedded.types.EmbeddedStorageManager
 import tabletop.common.error.CommonError
 
-abstract class Persistence<R>(
-    private val storageManager: EmbeddedStorageManager
-) {
-    val persistenceRoot get() = storageManager.root() as R
+abstract class Persistence<R> {
+    abstract val storageManager: EmbeddedStorageManager
+    abstract val persistenceRoot: R
 
     fun <T> T.persist(): Either<Error, Unit> =
         either {
@@ -30,10 +29,6 @@ abstract class Persistence<R>(
                 raise(Error("Can't retrieve entity", CommonError.ThrowableError(it)))
             }
         }
-
-    init {
-        storageManager.storeRoot()
-    }
 
     @Serializable
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()

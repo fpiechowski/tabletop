@@ -24,8 +24,6 @@ private suspend fun runKorge(dependencies: Dependencies) =
             dependencies.userInterface.stage.complete(this)
             dependencies.userInterface.sceneContainer.complete(sceneContainer)
 
-            injector.mapInstance(dependencies)
-
             launch {
                 sceneContainer.changeTo { userInterface.connectionScene }
             }

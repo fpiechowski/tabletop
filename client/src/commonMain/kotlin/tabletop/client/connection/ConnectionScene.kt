@@ -17,28 +17,22 @@ import korlibs.korge.view.align.*
 import korlibs.korge.view.container
 import korlibs.korge.view.xy
 import korlibs.math.geom.Size
-import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import tabletop.client.di.Dependencies
-import tabletop.client.event.*
+import tabletop.client.event.ConnectionAttempted
+import tabletop.client.event.LoadingGameAttempted
+import tabletop.client.event.UIEvent
+import tabletop.client.event.UserAuthenticated
 import tabletop.common.Game
 import tabletop.common.auth.Credentials
 import tabletop.common.connection.Connection
 import tabletop.common.error.CommonError
-import java.util.concurrent.CompletableFuture
 
 class ConnectionScene : Scene() {
     private val logger = KotlinLogging.logger { }
 
-    private val dependencies = CompletableFuture<Dependencies>()
-    private val eventHandler = CompletableFuture<EventHandler>()
 
     override suspend fun SContainer.sceneMain() {
-        injector.get<Dependencies>().also { dependencies.complete(it) }
-            .also {
-                eventHandler.complete(it.eventHandler)
-            }
-
         gameListing()
         connectionWindow()
     }
@@ -58,7 +52,7 @@ class ConnectionScene : Scene() {
                 event.gameListing.games.map { gameListingItem ->
                     uiButton(gameListingItem.name) {
                         onClick {
-                            with(eventHandler.await()) {
+                            with(Dependencies.await().eventHandler) {
                                 LoadingGameAttempted(gameListingItem).handle()
                             }
                         }
@@ -101,7 +95,7 @@ class ConnectionScene : Scene() {
                 .alignTopToTopOf(serverUrlInput)
                 .centerYOn(usernameInput)
                 .onClick {
-                    with(eventHandler.await()) {
+                    with(Dependencies.await().eventHandler) {
                         either {
                             val (host, port) = parseServerUrl(serverUrlInput.text)
 

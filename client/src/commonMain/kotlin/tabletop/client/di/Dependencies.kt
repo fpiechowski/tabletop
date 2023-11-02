@@ -2,6 +2,7 @@ package tabletop.client.di
 
 import arrow.fx.stm.TMVar
 import arrow.fx.stm.atomically
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -18,14 +19,20 @@ import tabletop.common.error.ConnectionErrorHandler
 import tabletop.common.error.TerminalErrorHandler
 import tabletop.common.serialization.Serialization
 
-class Dependencies : CommonDependencies() {
-    override val persistence: Persistence by lazy { Persistence() }
+open class Dependencies(
+    persistence: Lazy<Persistence> = lazy { Persistence() },
+) : CommonDependencies() {
+
+    companion object : CompletableDeferred<Dependencies> by CompletableDeferred();
+
+    override val persistence: Persistence by persistence
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
     val uiErrorHandler: UIErrorHandler by lazy { UIErrorHandler(this) }
     val userInterface: UserInterface by lazy { UserInterface() }
     val eventHandler: EventHandler by lazy { EventHandler(this) }
-    val state: State by lazy { runBlocking { State.empty() } }
+    val state: State by lazy { State.empty() }
+
     private val connectionScope: TMVar<ConnectionScope> = runBlocking { TMVar.empty() }
     suspend fun connectionScope() = atomically { connectionScope.tryRead() }
 

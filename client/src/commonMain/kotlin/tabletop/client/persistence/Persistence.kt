@@ -6,9 +6,17 @@ import tabletop.client.settings.Settings
 import tabletop.common.persistence.Persistence as CommonPersistence
 
 class Persistence(
-    storageManager: EmbeddedStorageManager = EmbeddedStorage.start(Root())
-) : CommonPersistence<Persistence.Root>(storageManager) {
+    override val persistenceRoot: Root = Root(),
+    override val storageManager: EmbeddedStorageManager = EmbeddedStorage.start(persistenceRoot)
+) : CommonPersistence<Persistence.Root>() {
+
+
+    init {
+        storageManager.storeRoot()
+    }
+
     class Root(
         val settings: Settings = Settings()
     )
 }
+
