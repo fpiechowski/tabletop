@@ -27,7 +27,7 @@ class SignInTest : StringSpec() {
 
     private val testUserCredentials = Credentials.UsernamePassword("username", "password")
 
-    private val embeddedStorageManager = EmbeddedStorage.start(Persistence.Root)
+    private val embeddedStorageManager = EmbeddedStorage.start(Persistence.Root())
 
     init {
         "signIn" {

@@ -1,5 +1,6 @@
 package tabletop.server.di
 
+import one.microstream.storage.embedded.types.EmbeddedStorage
 import tabletop.common.auth.Authentication
 import tabletop.common.connection.Connection
 import tabletop.common.connection.ConnectionCommunicator
@@ -14,11 +15,13 @@ import tabletop.server.demo.Demo
 import tabletop.server.persistence.Persistence
 
 class DependenciesAdapter(
-    lazyPersistence: Lazy<Persistence> = lazy { Persistence() }
+    lazyPersistence: Lazy<Persistence> = lazy {
+        Persistence(EmbeddedStorage.start(Persistence.Root()))
+    }
 ) : CommonDependencies() {
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
-    val persistence: Persistence by lazyPersistence
+    override val persistence: Persistence by lazyPersistence
     val serverAdapter: ServerAdapter by lazy { ServerAdapter(this) }
     val demo: Demo = Demo(persistence)
 

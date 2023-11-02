@@ -13,7 +13,7 @@ class UIErrorHandler(
         with(terminalErrorHandler) { handle() }
 
         with(userInterface) {
-            stage.await().gameWindow.alert(this@handle.toString())
+            stage.await().gameWindow.alert(this@handle.message ?: "${this@handle::class.qualifiedName}")
         }
     }
 }

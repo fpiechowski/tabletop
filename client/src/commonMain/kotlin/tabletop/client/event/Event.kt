@@ -13,8 +13,6 @@ abstract class Event {
     companion object
 }
 
-abstract class ConnectionEvent : Event()
-
 abstract class UIEvent<T : KorgeEvent>(override val type: EventType<T>) : Event(), KorgeTypedEvent<T> {
     override var target: Any? = null
 }

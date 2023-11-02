@@ -4,6 +4,7 @@ import kotlinx.uuid.UUID
 import tabletop.common.Game
 import tabletop.common.auth.Credentials
 import tabletop.common.dnd5e.DnD5e
+import tabletop.common.scene.Scene
 import tabletop.common.user.GameMaster
 import tabletop.common.user.Player
 import tabletop.common.user.User
@@ -23,11 +24,17 @@ val demoPlayerUser = User(
 
 val demoPlayerUserCredentials = Credentials.UsernamePassword("player", "player")
 
+val demoScene = Scene(
+    "Demo Scene",
+    "assets/demo/sceneImage.png",
+)
+
 val demoGame = Game(
     "demo",
     DnD5e,
     GameMaster("gm", demoGmUser),
     setOf(Player("player", demoPlayerUser)),
+    scenes = mutableMapOf(UUID("3254f12c-aead-4e7f-a19c-06752d437fa7") to demoScene),
     id = UUID("543efd85-98c2-482d-a292-6c9b2c188b7a")
 )
 
@@ -38,3 +45,4 @@ val demoGame2 = Game(
     setOf(Player("player", demoPlayerUser)),
     id = UUID("8b6c9a25-066d-4233-8f26-0cb4c141b7af")
 )
+

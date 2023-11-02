@@ -5,6 +5,7 @@ import arrow.core.raise.recover
 import arrow.fx.stm.atomically
 import tabletop.client.connection.ConnectionScene
 import tabletop.client.di.Dependencies
+import tabletop.client.event.GameLoaded
 import tabletop.client.event.UserAuthenticated
 import tabletop.common.command.Command
 import tabletop.common.command.GetGameCommandResult
@@ -14,10 +15,10 @@ import tabletop.common.error.CommonError
 
 
 class CommandResultExecutor(
-    private val dependencies: Dependencies.ConnectionScope
+    val dependencies: Dependencies.ConnectionScope
 ) {
     private val state by lazy { dependencies.state }
-    private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
+    private val userInterface by lazy { dependencies.userInterface }
     private val eventHandler by lazy { dependencies.eventHandler }
 
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
@@ -25,27 +26,31 @@ class CommandResultExecutor(
     suspend fun Command.Result<*, *>.execute() = either {
         recover<CommonError, Unit>({
             when (this@execute) {
-                is GetGameCommandResult -> atomically { state.game.put(this@execute.data) }
+                is GetGameCommandResult -> {
+                    atomically { state.game.put(this@execute.data) }
+                    with(eventHandler) {
+                        GameLoaded(data).handle()
+                    }
+                }
+
                 is GetGamesCommandResult -> {
                     atomically {
                         state.gameListing.put(this@execute.data)
                     }
-                    with(dependencies.eventHandler) {
-                        ConnectionScene.GameListingUpdated(
-                            data
-                        ).handle()
+                    with(eventHandler) {
+                        ConnectionScene.GameListingUpdated(data).handle(userInterface.connectionScene)
                     }
                 }
 
                 is SignInCommandResult -> {
                     atomically { state.user.put(data) }
-                    with(eventHandler) { UserAuthenticated(data).handle(dependencies).bind() }
+                    with(eventHandler) { UserAuthenticated(data).handle().bind() }
                 }
 
                 else -> {}
             }
         }) {
-            raise(Command.Result.Error("Error when executing $this", it))
+            raise(Error("Error when executing $this", it))
         }
     }
 }

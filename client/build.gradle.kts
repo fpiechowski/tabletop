@@ -16,8 +16,6 @@ repositories {
     maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
-
-
 korge {
     id = "com.github.mesayah"
 
@@ -25,7 +23,10 @@ korge {
 
     serializationJson()
 
-    jvmMainClassName = "tabletop.client.MainKt"
+    entrypoint("main", "tabletop.client.MainKt")
+    entrypoint("offline", "tabletop.client.OfflineMainKt")
+
+    jvmMainClassName = "tabletop.client.OfflineMainKt"
 }
 
 dependencies {
@@ -60,7 +61,8 @@ dependencies {
     add("commonTestApi", "io.kotest.extensions:kotest-assertions-arrow:1.4.0")
     add("commonTestApi", "io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
 
-    add("commonTestApi", "io.mockk:mockk:1.13.8")
+    add("commonTestApi", "io.mockk:mockk:1.13.7")
+    add("commonMainApi", "io.mockk:mockk:1.13.7")
 
 }
 
