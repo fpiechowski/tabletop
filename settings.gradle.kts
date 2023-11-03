@@ -9,21 +9,18 @@ pluginManagement {
     }
 
     val kotlinVersion: String by settings
-    val kotlinxBenchmark: String by settings
 
     plugins {
-        kotlin("multiplatform") version kotlinVersion // TODO maybe delete
+        kotlin("multiplatform") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
-        id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
     }
 }
 
-/*
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
+    id("com.soywiz.kproject.settings") version "0.3.1" // Substitute by the latest version
 }
-*/
-
 
 include("commonJvm", "server")
 include("client")
+
+kproject("./deps")

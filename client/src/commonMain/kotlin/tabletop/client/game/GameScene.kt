@@ -19,6 +19,7 @@ import korlibs.math.geom.Vector2
 import kotlinx.coroutines.launch
 import tabletop.client.di.Dependencies
 import tabletop.client.event.SceneOpened
+import tabletop.client.ui.uiScaling
 import korlibs.korge.scene.Scene as UIScene
 
 
@@ -29,8 +30,9 @@ class GameScene : UIScene() {
 
     override suspend fun SContainer.sceneMain() {
         scene()
-
-        libraryButton()
+        container {
+            libraryButton()
+        }
     }
 
     private fun SContainer.scene() {
@@ -95,6 +97,11 @@ class GameScene : UIScene() {
             onClick {
                 libraryWindow()
             }
+
+            width = 100f
+            height = 30f
+
+            uiScaling()
         }.xy(20, 20)
     }
 

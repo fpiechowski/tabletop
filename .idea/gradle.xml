@@ -12,6 +12,8 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/client" />
             <option value="$PROJECT_DIR$/commonJvm" />
+            <option value="$PROJECT_DIR$/deps" />
+            <option value="$PROJECT_DIR$/modules/korge-docking" />
             <option value="$PROJECT_DIR$/server" />
           </set>
         </option>
