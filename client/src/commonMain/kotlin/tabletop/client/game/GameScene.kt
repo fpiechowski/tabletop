@@ -19,6 +19,7 @@ import korlibs.math.geom.Vector2
 import kotlinx.coroutines.launch
 import tabletop.client.di.Dependencies
 import tabletop.client.event.SceneOpened
+import tabletop.client.ui.uiScaling
 import korlibs.korge.scene.Scene as UIScene
 
 
@@ -100,7 +101,7 @@ class GameScene : UIScene() {
             width = 100f
             height = 30f
 
-            // dockedTo(Anchor.TOP_LEFT)
+            uiScaling()
         }.xy(20, 20)
     }
 

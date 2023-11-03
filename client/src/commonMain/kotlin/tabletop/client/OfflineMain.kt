@@ -1,10 +1,8 @@
 package tabletop.client
 
 import arrow.fx.stm.atomically
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.mockk.every
 import io.mockk.mockk
-import korlibs.event.ReshapeEvent
 import korlibs.image.color.Colors
 import korlibs.korge.Korge
 import korlibs.korge.annotations.KorgeExperimental
@@ -14,15 +12,12 @@ import korlibs.korge.scene.sceneContainer
 import korlibs.korge.view.SContainer
 import korlibs.math.geom.Anchor
 import korlibs.math.geom.ScaleMode
-import korlibs.math.geom.Size
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import tabletop.client.di.Dependencies
 import tabletop.client.persistence.Persistence
 import tabletop.client.settings.Settings
 import tabletop.common.demo.demoGame
-
-private val logger = KotlinLogging.logger { }
 
 @KorgeInternal
 @KorgeExperimental
@@ -43,11 +38,6 @@ private suspend fun runKorge() =
             clipBorders = false,
         ) {
             val sceneContainer = sceneContainer()
-
-            onEvent(ReshapeEvent) {
-                logger.debug { "in onReshapeEvent $it" }
-                this.size = Size(it.width, it.height)
-            }
 
             launch {
                 sceneContainer.changeTo { OfflineDependenciesScene }
