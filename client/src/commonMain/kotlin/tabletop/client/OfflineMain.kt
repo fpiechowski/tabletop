@@ -24,6 +24,8 @@ import tabletop.common.demo.demoGame
 
 private val logger = KotlinLogging.logger { }
 
+@KorgeInternal
+@KorgeExperimental
 fun main() = runBlocking {
     runKorge()
 }
