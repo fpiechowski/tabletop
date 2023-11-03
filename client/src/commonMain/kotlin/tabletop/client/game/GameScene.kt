@@ -29,8 +29,9 @@ class GameScene : UIScene() {
 
     override suspend fun SContainer.sceneMain() {
         scene()
-
-        libraryButton()
+        container {
+            libraryButton()
+        }
     }
 
     private fun SContainer.scene() {
@@ -95,6 +96,11 @@ class GameScene : UIScene() {
             onClick {
                 libraryWindow()
             }
+
+            width = 100f
+            height = 30f
+
+            // dockedTo(Anchor.TOP_LEFT)
         }.xy(20, 20)
     }
 

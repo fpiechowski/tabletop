@@ -4,7 +4,6 @@ buildscript {
     val korgePluginVersion: String by project
 
     repositories {
-        println("Setting up buildscript>repositories>build.gradle.kts")
         mavenLocal()
         mavenCentral()
         google()
@@ -23,6 +22,7 @@ tasks.withType<KotlinCompile> {
 
 repositories {
     mavenCentral()
+    google()
 }
 
 subprojects {

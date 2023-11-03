@@ -1,7 +1,8 @@
-import korlibs.korge.gradle.KorgeGradlePlugin
 import korlibs.korge.gradle.korge
 
-apply<KorgeGradlePlugin>()
+plugins {
+    id("com.soywiz.korge")
+}
 
 group = "com.github.mesayah"
 version = "1.0-SNAPSHOT"
@@ -30,8 +31,7 @@ korge {
 }
 
 dependencies {
-    //add("commonMainApi", project(":korge-dragonbones"))
-
+    add("commonMainApi", project(":deps"))
     add("commonMainApi", project(":commonJvm"))
 
     add("commonMainApi", "app.softwork:kotlinx-uuid-core:0.0.21")
