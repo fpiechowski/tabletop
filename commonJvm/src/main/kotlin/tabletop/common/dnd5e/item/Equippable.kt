@@ -1,6 +1,6 @@
-package tabletop.common.dnd5e.item.inventory
+package tabletop.common.dnd5e.item
 
-import tabletop.common.dnd5e.DnD5eCharacter
+import tabletop.common.dnd5e.character.DnD5eCharacter
 
 interface Equippable {
     fun DnD5eCharacter.equip(): DnD5eCharacter = copy(equipped = equipped + this@Equippable)

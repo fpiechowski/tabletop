@@ -13,5 +13,6 @@ class Token<T : Tokenizable>(
     override var position: Point,
     val scene: Scene,
     val tokenizable: T,
+    val imageFilePath: String,
     override val id: UUID = UUID.generateUUID()
 ) : NamedEntity(), Usable.User, Usable.Targetable, Moveable

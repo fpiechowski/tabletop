@@ -1,28 +1,25 @@
-package tabletop.common
+package tabletop.common.game
 
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
+import tabletop.common.NamedEntity
 import tabletop.common.command.Command
-import tabletop.common.rpg.character.Character
-import tabletop.common.rpg.item.Item
 import tabletop.common.scene.Scene
+import tabletop.common.system.System
 import tabletop.common.user.GameMaster
 import tabletop.common.user.Player
 
 
 @Serializable
-class Game(
-    override val name: String,
-    val system: System,
-    val gameMaster: GameMaster,
-    val players: Set<Player> = setOf(),
-    val scenes: MutableMap<UUID, Scene> = mutableMapOf(),
-    val characters: MutableSet<Character> = mutableSetOf(),
-    val items: Set<Item<*, *>> = setOf(),
-    val chat: Chat = Chat(),
+abstract class Game<T : System> : NamedEntity(), Command.Result.Data {
+
     override val id: UUID = UUID.generateUUID()
-) : NamedEntity(), Command.Result.Data {
+    abstract val system: T
+    abstract val gameMaster: GameMaster
+    open val players: Set<Player> = setOf()
+    open val scenes: MutableMap<UUID, Scene> = mutableMapOf()
+    open val chat: Chat = Chat()
 
     companion object
 
@@ -36,7 +33,7 @@ class Game(
             val name: String,
             val systemName: String
         ) {
-            constructor(game: Game) : this(game.id, game.name, game.system.name)
+            constructor(game: Game<*>) : this(game.id, game.name, game.system.name)
         }
 
     }

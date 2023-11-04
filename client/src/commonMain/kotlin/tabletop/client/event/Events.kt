@@ -1,8 +1,8 @@
 package tabletop.client.event
 
 import korlibs.event.EventType
-import tabletop.common.Game
 import tabletop.common.auth.Credentials
+import tabletop.common.game.Game
 import tabletop.common.scene.Scene
 import tabletop.common.user.User
 
@@ -15,7 +15,7 @@ class UserAuthenticated(val user: User) : UIEvent<UserAuthenticated>(UserAuthent
 class ConnectionAttempted(val host: String, val port: Int, val credentialsData: Credentials.UsernamePassword.Data) :
     Event()
 
-class GameLoaded(val game: Game) : UIEvent<GameLoaded>(GameLoaded) {
+class GameLoaded(val game: Game<*>) : UIEvent<GameLoaded>(GameLoaded) {
     companion object : EventType<GameLoaded>
 }
 

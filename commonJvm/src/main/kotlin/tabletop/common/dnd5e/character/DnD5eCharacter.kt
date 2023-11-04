@@ -1,26 +1,25 @@
-package tabletop.common.dnd5e
+package tabletop.common.dnd5e.character
 
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
 import tabletop.common.Usable
-import tabletop.common.dnd5e.item.CharacterClass
-import tabletop.common.dnd5e.item.Proficiency
-import tabletop.common.dnd5e.item.Race
-import tabletop.common.dnd5e.item.inventory.Equippable
-import tabletop.common.dnd5e.item.inventory.Weapon
+import tabletop.common.dnd5e.Modifier
+import tabletop.common.dnd5e.item.Equippable
+import tabletop.common.dnd5e.item.Weapon
 import tabletop.common.rpg.character.Character
 import tabletop.common.scene.Token
 
 data class DnD5eCharacter(
-    override val id: UUID,
+    override val tokenImageFilePath: String,
+    override val name: String,
     val hp: Int,
     val race: Race,
     val characterClasses: Set<CharacterClass>,
     val skillProficiencies: Set<SkillProficiency>,
-    override val name: String,
     val attributes: Attributes,
     val equipped: Set<Equippable>,
-) : Character(name), Usable.User, Usable.Targetable {
+    override val id: UUID = UUID.generateUUID(),
+) : Character(), Usable.User, Usable.Targetable {
     fun attack(weapon: Weapon, targets: Set<Token<DnD5eCharacter>>) {
 
     }
@@ -81,5 +80,4 @@ class SkillProficiency(
     override val name: String,
     override val subject: Skill,
     val modifier: Modifier<Int>,
-    override val id: UUID = UUID.generateUUID()
 ) : Proficiency<Skill>(name, subject, modifier)

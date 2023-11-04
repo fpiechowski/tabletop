@@ -10,7 +10,6 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.SerializersModuleBuilder
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import tabletop.common.Game
 import tabletop.common.auth.Authentication
 import tabletop.common.command.Command
 import tabletop.common.command.GetGameCommandResult
@@ -18,6 +17,7 @@ import tabletop.common.command.GetGamesCommandResult
 import tabletop.common.command.SignInCommandResult
 import tabletop.common.connection.Connection
 import tabletop.common.error.CommonError
+import tabletop.common.game.Game
 import tabletop.common.server.Server
 import tabletop.common.user.User
 

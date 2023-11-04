@@ -23,10 +23,10 @@ import tabletop.client.event.ConnectionAttempted
 import tabletop.client.event.LoadingGameAttempted
 import tabletop.client.event.UIEvent
 import tabletop.client.event.UserAuthenticated
-import tabletop.common.Game
 import tabletop.common.auth.Credentials
 import tabletop.common.connection.Connection
 import tabletop.common.error.CommonError
+import tabletop.common.game.Game
 
 class ConnectionScene : Scene() {
     private val logger = KotlinLogging.logger { }

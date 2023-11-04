@@ -1,7 +1,7 @@
 package tabletop.common.command
 
 import kotlinx.serialization.Serializable
-import tabletop.common.Game
+import tabletop.common.game.Game
 import tabletop.common.user.User
 
 
@@ -12,8 +12,8 @@ data class GetGamesCommandResult(override val command: Command.GetGames, overrid
 }
 
 @Serializable
-data class GetGameCommandResult(override val command: Command.GetGame, override val data: Game) :
-    Command.Result<Command.GetGame, Game>() {
+data class GetGameCommandResult(override val command: Command.GetGame, override val data: Game<*>) :
+    Command.Result<Command.GetGame, Game<*>>() {
     override val shared: Boolean = false
 }
 

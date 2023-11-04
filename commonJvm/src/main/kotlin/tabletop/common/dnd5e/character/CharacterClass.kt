@@ -1,15 +1,14 @@
-package tabletop.common.dnd5e.item
+package tabletop.common.dnd5e.character
 
+import tabletop.common.Named
 import tabletop.common.dice.Dice
-import tabletop.common.dnd5e.DnD5eCharacter
-import tabletop.common.rpg.item.Item
 
 abstract class CharacterClass(
     val level: Int,
     val features: Set<Feature>,
     val hitDice: Dice,
     val proficiencies: Set<Proficiency<*>>
-) : Item<DnD5eCharacter, DnD5eCharacter>() {
+) : Named {
     abstract val advancement: Advancement<*>
 
     sealed interface Advancement<T> {

@@ -1,14 +1,13 @@
-package tabletop.common.dnd5e.item
+package tabletop.common.dnd5e.character
 
-import tabletop.common.dnd5e.DnD5eCharacter
+import tabletop.common.Named
 import tabletop.common.dnd5e.Modifier
-import tabletop.common.rpg.item.Item
 
 abstract class Proficiency<T : Proficiency.Subject>(
     override val name: String,
     open val subject: T,
     val proficiencyModifier: Modifier<Int>
-) : Item<DnD5eCharacter, Nothing>() {
+) : Named {
 
     interface Subject
 }
