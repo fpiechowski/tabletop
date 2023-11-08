@@ -66,7 +66,7 @@ suspend fun GameScene.sceneView() = with(sceneView) {
     fun tokenPlacing() {
         onEvent(TokenPlacedUIEvent) {
             launch {
-                gameSceneView.await().apply {
+                gameSceneContainer.await().apply {
                     tokenView(it.event.token)
                 }
             }
@@ -74,14 +74,14 @@ suspend fun GameScene.sceneView() = with(sceneView) {
     }
 
     container {
-        name = "GameScene.sceneView.container"
+        name = "gameSceneContainer"
 
         onEvent(SceneOpenedUIEvent) {
             removeChildren()
 
             launch {
                 val contentContainer = container {
-                    name = "GameScene.sceneView.container.content"
+                    name = "contentContainer"
 
                     it.scene.foregroundImagePath?.let {
                         image(applicationVfs[it].readBitmap())
@@ -90,7 +90,7 @@ suspend fun GameScene.sceneView() = with(sceneView) {
                     tokenContainer.complete(container {
                         name = "tokenContainer"
                     })
-                }.also { contentView.complete(it) }
+                }.also { contentContainer.complete(it) }
 
                 tokenPlacing()
 

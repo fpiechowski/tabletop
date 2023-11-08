@@ -67,7 +67,7 @@ suspend fun GameScene.libraryWindow() = with(sceneView) {
 
                 val tokenImage = Image(applicationVfs[tokenizable.tokenImageFilePath].readBitmap())
                     .apply {
-                        val contentScale = contentView.await().scale
+                        val contentScale = contentContainer.await().scale
                         alpha(0.6)
                         zIndex(1)
                         scale(contentScale.scaleX, contentScale.scaleY)
@@ -85,7 +85,7 @@ suspend fun GameScene.libraryWindow() = with(sceneView) {
                         tokenImage.removeFromParent()
                         with(Dependencies.await().eventHandler) {
                             currentScene()?.let { scene ->
-                                val tokenContainerView = contentView.await()
+                                val tokenContainerView = contentContainer.await()
                                 TokenPlacingRequested(
                                     game.id,
                                     tokenizable.id,

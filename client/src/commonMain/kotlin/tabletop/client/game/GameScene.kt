@@ -6,6 +6,7 @@ import korlibs.korge.view.Container
 import korlibs.korge.view.SContainer
 import korlibs.korge.view.View
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import tabletop.client.game.library.libraryButton
 import tabletop.client.scene.sceneView
 import korlibs.korge.scene.Scene as UIScene
@@ -14,13 +15,14 @@ import korlibs.korge.scene.Scene as UIScene
 @KorgeExperimental
 @KorgeInternal
 class GameScene : UIScene() {
-    val gameSceneView = CompletableDeferred<View>()
-    val contentView = CompletableDeferred<View>()
+    val gameSceneContainer = CompletableDeferred<Container>()
+    val contentContainer = CompletableDeferred<Container>()
     val tokenContainer = CompletableDeferred<Container>()
+    val tokenViews = MutableStateFlow(listOf<View>())
 
     override suspend fun SContainer.sceneMain() {
         sceneView()
-            .also { gameSceneView.complete(it) }
+            .also { gameSceneContainer.complete(it) }
         libraryButton()
     }
 }
