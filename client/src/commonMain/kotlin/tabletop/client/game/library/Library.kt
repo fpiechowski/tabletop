@@ -1,6 +1,5 @@
 package tabletop.client.game.library
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import korlibs.image.format.readBitmap
 import korlibs.io.file.std.applicationVfs
 import korlibs.korge.annotations.KorgeExperimental
@@ -65,9 +64,14 @@ suspend fun GameScene.libraryWindow() = with(sceneView) {
 
             suspend fun View.draggableTokenizable(tokenizable: Tokenizable) {
                 var dragging = false
+
                 val tokenImage = Image(applicationVfs[tokenizable.tokenImageFilePath].readBitmap())
-                    .alpha(0.6)
-                    .zIndex(1)
+                    .apply {
+                        val contentScale = contentView.await().scale
+                        alpha(0.6)
+                        zIndex(1)
+                        scale(contentScale.scaleX, contentScale.scaleY)
+                    }
 
                 mouse.onDownCloseable {
                     if (it.button.isLeft) {
@@ -81,18 +85,13 @@ suspend fun GameScene.libraryWindow() = with(sceneView) {
                         tokenImage.removeFromParent()
                         with(Dependencies.await().eventHandler) {
                             currentScene()?.let { scene ->
-                                val logger = KotlinLogging.logger { }
                                 val tokenContainerView = contentView.await()
-                                logger.debug { "gameSceneView.globalPos = ${tokenContainerView.globalPos}" }
-                                logger.debug { "gameSceneView.pos = ${tokenContainerView.pos}" }
-                                logger.debug { "gameSceneView.scale = ${tokenContainerView.scale}" }
                                 TokenPlacingRequested(
                                     game.id,
                                     tokenizable.id,
                                     scene.id,
                                     tokenContainerView.globalToLocal(
                                         it.currentPosGlobal
-                                            .also { logger.debug { "MouseEvents.currentPosGlobal = $it" } }
                                     ).toCommon()
                                 ).handle()
                             }
