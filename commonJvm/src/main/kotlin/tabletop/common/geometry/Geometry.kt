@@ -1,6 +1,10 @@
 package tabletop.common.geometry
 
-import kotlinx.serialization.Serializable
+import java.io.Serializable
 
-@Serializable
-data class Point(val x: Int, val y: Int)
+
+data class Point(val x: Int, val y: Int) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}

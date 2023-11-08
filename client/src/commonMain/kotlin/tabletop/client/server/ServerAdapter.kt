@@ -1,29 +1,31 @@
 package tabletop.client.server
 
 import arrow.core.Either
-import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.recover
 import arrow.fx.stm.TMVar
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.transform
+import korlibs.korge.annotations.KorgeExperimental
+import korlibs.korge.internal.KorgeInternal
 import tabletop.client.di.Dependencies
 import tabletop.common.auth.Credentials
-import tabletop.common.command.Command
-import tabletop.common.command.CommandResult
 import tabletop.common.connection.Connection
+import tabletop.common.connection.ConnectionCommunicator
 import tabletop.common.error.CommonError
-import tabletop.common.handleErrors
+import tabletop.common.event.AuthenticationRequested
+import tabletop.common.event.ResultEvent
 import tabletop.common.server.Server
 
+@KorgeInternal
+@KorgeExperimental
 class ServerAdapter(
     private val dependencies: Dependencies
-) : Server() {
+) : Server(), ConnectionCommunicator.Aware {
     private val logger = KotlinLogging.logger { }
     private val eventHandler by lazy { dependencies.eventHandler }
     private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
@@ -41,38 +43,43 @@ class ServerAdapter(
                     val connectionScopeDependencies = dependencies.ConnectionScope(connection)
 
                     recover<CommonError, Unit>({
-                        with(connectionScopeDependencies.connectionCommunicator) {
-                            (Command.SignIn(credentials.username, credentials.password) as Command).send()
-                        }
+                        with(eventHandler) {
+                            AuthenticationRequested(credentials).handle().bind()
 
-                        receiveIncomingCommandResults(connectionScopeDependencies) {
-                            with(connectionScopeDependencies.commandResultExecutor) {
-                                it.execute().bind()
+                            receiveIncomingResultEvents(connectionScopeDependencies) {
+                                it.handle().bind()
                             }
                         }
-                    }) {
+
+                        logger.debug { "Completed receiving command results" }
+
+                    }, catch = {
+                        close(CloseReason(CloseReason.Codes.GOING_AWAY, "Connection ended"))
+                        raise(Error("Connection with server ended with error", CommonError.ThrowableError(it)))
+                    }, recover = {
                         close(CloseReason(CloseReason.Codes.GOING_AWAY, "Connection ended"))
                         raise(Error("Connection with server ended with error", it))
-                    }
+                    })
+
+                    logger.debug { "$connection ending" }
                 }
         }) { raise(Error("Error on connecting to TabletopServer", CommonError.ThrowableError(it))) }
     }
 
-    private suspend fun receiveIncomingCommandResults(
+    private suspend fun receiveIncomingResultEvents(
         connectionScopeDependencies: Dependencies.ConnectionScope,
-        onEach: suspend Raise<CommonError>.(Command.Result<Command, Command.Result.Data>) -> Unit
-    ) = with(uiErrorHandler) {
-        connectionScopeDependencies.connectionCommunicator.receiveIncomingAsEithersFlow<CommandResult>()
-            .handleErrors(uiErrorHandler)
-            .transform { result ->
-                recover({ onEach(result) }) { it.handle() }
-                emit(result)
-            }.collect()
+        onEach: suspend (ResultEvent) -> Unit
+    ) = with(connectionScopeDependencies) {
+        connectionCommunicator.receiveIncoming<ResultEvent>({
+            onEach(it)
+        }) {
+            with(uiErrorHandler) { it.handle() }
+        }
     }
 
 
     companion object {
-        val httpClient: HttpClient = HttpClient {
+        val httpClient: HttpClient = HttpClient(OkHttp) {
             install(WebSockets)
         }
     }

@@ -1,13 +1,11 @@
 package tabletop.common
 
-import kotlinx.serialization.Serializable
-import kotlinx.uuid.UUID
+import java.io.Serializable
+import java.util.*
 
-@Serializable
-abstract class Entity : Identifiable<UUID>
+abstract class Entity : Identifiable<UUID>, Serializable
 
-@Serializable
-abstract class NamedEntity : Identifiable<UUID>, Named
+abstract class NamedEntity : Entity(), Named, Serializable
 
 interface Named {
     val name: String

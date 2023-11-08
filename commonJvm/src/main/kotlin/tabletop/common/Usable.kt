@@ -1,8 +1,10 @@
 package tabletop.common
 
-interface Usable<USER : Usable.User, TARGET : Usable.Targetable> {
-    fun use(game: Game, user: USER, targets: Set<TARGET>)
+import tabletop.common.game.Game
+
+interface Usable<USER : Usable.User, TARGET : Usable.Target> {
+    fun use(game: Game<*>, user: USER, targets: Set<TARGET>)
 
     interface User
-    interface Targetable
+    interface Target
 }

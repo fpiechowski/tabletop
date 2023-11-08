@@ -4,8 +4,9 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import io.github.oshai.kotlinlogging.KotlinLogging
-import korlibs.event.EventType
+import korlibs.korge.annotations.KorgeExperimental
 import korlibs.korge.input.onClick
+import korlibs.korge.internal.KorgeInternal
 import korlibs.korge.scene.Scene
 import korlibs.korge.ui.uiButton
 import korlibs.korge.ui.uiText
@@ -20,40 +21,36 @@ import korlibs.math.geom.Size
 import kotlinx.coroutines.launch
 import tabletop.client.di.Dependencies
 import tabletop.client.event.ConnectionAttempted
-import tabletop.client.event.LoadingGameAttempted
-import tabletop.client.event.UIEvent
-import tabletop.client.event.UserAuthenticated
-import tabletop.common.Game
 import tabletop.common.auth.Credentials
 import tabletop.common.connection.Connection
 import tabletop.common.error.CommonError
+import tabletop.common.error.ErrorHandler.Companion.use
+import tabletop.common.event.LoadingGameRequested
+import tabletop.client.event.GameListingLoadedUIEvent.Companion as GameListingLoaded
+import tabletop.client.event.UserAuthenticatedUIEvent.Companion as UserAuthenticated
 
+@KorgeExperimental
+@KorgeInternal
 class ConnectionScene : Scene() {
     private val logger = KotlinLogging.logger { }
-
 
     override suspend fun SContainer.sceneMain() {
         gameListing()
         connectionWindow()
     }
 
-    class GameListingUpdated(
-        val gameListing: Game.Listing
-    ) : UIEvent<GameListingUpdated>(GameListingUpdated) {
-
-        companion object : EventType<GameListingUpdated>
-    }
-
     private fun SContainer.gameListing() =
-        onEvent(GameListingUpdated) { event ->
+        onEvent(GameListingLoaded) { event ->
             container {
                 this@container.removeChildren()
 
-                event.gameListing.games.map { gameListingItem ->
+                event.event.listing.games.map { gameListingItem ->
                     uiButton(gameListingItem.name) {
                         onClick {
                             with(Dependencies.await().eventHandler) {
-                                LoadingGameAttempted(gameListingItem).handle()
+                                Dependencies.await().uiErrorHandler.use {
+                                    LoadingGameRequested(gameListingItem).handle().bind()
+                                }
                             }
                         }
                     }
@@ -100,14 +97,16 @@ class ConnectionScene : Scene() {
                             val (host, port) = parseServerUrl(serverUrlInput.text)
 
                             launch {
-                                ConnectionAttempted(
-                                    host = host,
-                                    port = port,
-                                    credentialsData = Credentials.UsernamePassword.Data(
-                                        usernameInput.text,
-                                        passwordInput.text
-                                    )
-                                ).handle()
+                                Dependencies.await().uiErrorHandler.use {
+                                    ConnectionAttempted(
+                                        host = host,
+                                        port = port,
+                                        credentialsData = Credentials.UsernamePassword.Data(
+                                            usernameInput.text,
+                                            passwordInput.text
+                                        )
+                                    ).handle().bind()
+                                }
                             }
                         }
                     }

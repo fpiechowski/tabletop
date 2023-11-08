@@ -52,6 +52,11 @@ dependencies {
 
     api("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
+
+    api("de.ruedigermoeller:fst:2.56")
+
+
+
     api(platform("io.arrow-kt:arrow-stack:1.2.0"))
     api("io.arrow-kt:arrow-core")
     api("io.arrow-kt:arrow-fx-coroutines")
@@ -59,7 +64,7 @@ dependencies {
     api("io.arrow-kt:suspendapp:0.4.0")
 
     api("io.ktor:ktor-client-core:2.3.4")
-    api("io.ktor:ktor-client-cio:2.3.4")
+    api("io.ktor:ktor-client-okhttp:2.3.4")
     api("io.ktor:ktor-client-resources:2.3.4")
 
     api("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")

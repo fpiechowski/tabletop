@@ -1,6 +1,5 @@
 package tabletop.client
 
-import arrow.fx.stm.atomically
 import io.mockk.every
 import io.mockk.mockk
 import korlibs.image.color.Colors
@@ -61,7 +60,7 @@ object OfflineDependenciesScene : Scene() {
             await().apply {
                 stage?.let { userInterface.stage.complete(it) }
                 userInterface.sceneContainer.complete(sceneContainer)
-                atomically { state.game.tryPut(demoGame) }
+                state.game.value = demoGame
 
                 sceneContainer.changeTo { userInterface.gameScene }
             }

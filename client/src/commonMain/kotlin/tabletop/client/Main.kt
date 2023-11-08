@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 import tabletop.client.di.Dependencies
 
 fun main() = runBlocking {
-    val dependencies = Dependencies()
+    val dependencies = Dependencies().also { Dependencies.complete(it) }
     runKorge(dependencies)
 }
 

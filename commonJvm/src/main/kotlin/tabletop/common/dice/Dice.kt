@@ -1,7 +1,9 @@
 package tabletop.common.dice
 
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
+@Serializable
 class Dice(val dice: Int, val sides: Int) {
 
     fun roll(): Int =

@@ -6,10 +6,10 @@ import arrow.core.raise.ensureNotNull
 import arrow.fx.stm.atomically
 import tabletop.common.auth.Authentication
 import tabletop.common.user.User
-import tabletop.server.di.DependenciesAdapter
+import tabletop.server.di.Dependencies
 
 class AuthenticationAdapter(
-    private val dependencies: DependenciesAdapter.ConnectionScope
+    private val dependencies: Dependencies.ConnectionScope
 ) : Authentication() {
 
     override suspend fun authenticate(principal: String, secret: String): Either<Error, User> =

@@ -1,11 +1,16 @@
 package tabletop.common.error
 
-import kotlinx.serialization.Serializable
+import java.io.Serializable
+import java.util.*
+import kotlin.reflect.KClass
 
-@Serializable
-abstract class CommonError {
+abstract class CommonError : Serializable {
     abstract val message: String?
     abstract val cause: CommonError?
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 
 
     override fun toString(): String =
@@ -16,12 +21,14 @@ abstract class CommonError {
         else -> cause?.findThrowable()
     }
 
-    @Serializable
     class ThrowableError(
         override val message: String?,
         override val cause: CommonError?,
         val stackTrace: String
-    ) : CommonError() {
+    ) : CommonError(), Serializable {
+        companion object {
+            private const val serialVersionUID = 1L
+        }
 
         constructor(throwable: Throwable) :
                 this(
@@ -30,4 +37,24 @@ abstract class CommonError {
                     throwable.stackTraceToString()
                 )
     }
+}
+
+class UnsupportedSubtypeError<T : Any>(klass: KClass<T>) : CommonError(), Serializable {
+    override val message: String = "Unsupported subtype of $klass"
+    override val cause: CommonError? = null
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+
+}
+
+class NotFoundError<T : Any>(klass: KClass<T>? = null, id: UUID) : CommonError(), Serializable {
+    override val message: String = "${klass?.qualifiedName ?: "Entity"} with ID $id not found"
+    override val cause: CommonError? = null
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+
 }
