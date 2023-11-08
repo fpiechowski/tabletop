@@ -6,6 +6,8 @@ version: "1.0"
 #Specify inspection profile for code analysis
 profile:
   name: qodana.starter
+linter: jetbrains/qodana-jvm-community:latest
+projectJDK: 11
 #Enable inspections
 #include:
 #  - name: <SomeEnabledInspectionId>
@@ -21,6 +23,6 @@ profile:
 #plugins:
 #  - id: <plugin.id> #(plugin id can be found at https://plugins.jetbrains.com)
 #Specify Qodana linter for analysis (Applied in CI/CD pipeline)
-linter: jetbrains/qodana-jvm:latest
+#linter: jetbrains/qodana-jvm:latest
 include:
   - name: UnusedSymbol
