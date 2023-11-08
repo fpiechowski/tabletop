@@ -46,7 +46,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.4.11")
 
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-server-tomcat:$ktorVersion")
     implementation("io.ktor:ktor-server-websockets:$ktorVersion")
 
     implementation("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")

@@ -1,13 +1,12 @@
 package tabletop.common.dnd5e.item
 
-import kotlinx.uuid.UUID
-import kotlinx.uuid.generateUUID
 import tabletop.common.dnd5e.character.Proficiency
+import java.util.*
 
 class Armor(
     override val name: String,
     val acBonus: Int,
-    override val id: UUID = UUID.generateUUID()
+    override val id: UUID = UUID.randomUUID()
 ) : Item(), Equippable {
 
     enum class Type : Proficiency.Subject {

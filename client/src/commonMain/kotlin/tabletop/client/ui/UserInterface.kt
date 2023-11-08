@@ -3,10 +3,10 @@ package tabletop.client.ui
 import korlibs.korge.scene.SceneContainer
 import korlibs.korge.view.Stage
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.serialization.Serializable
 import tabletop.client.connection.ConnectionScene
 import tabletop.client.game.GameScene
 import tabletop.common.error.CommonError
+import java.io.Serializable
 
 
 class UserInterface {
@@ -18,7 +18,10 @@ class UserInterface {
 
     companion object
 
-    @Serializable
-    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError(), Serializable {
+        companion object {
+            private const val serialVersionUID = 1L
+        }
+    }
 }
 

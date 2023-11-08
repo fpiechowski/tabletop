@@ -1,13 +1,15 @@
 package tabletop.common.dnd5e.character
 
+import kotlinx.serialization.Serializable
 import tabletop.common.Named
 import tabletop.common.dnd5e.Modifier
 
-abstract class Proficiency<T : Proficiency.Subject>(
-    override val name: String,
-    open val subject: T,
-    val proficiencyModifier: Modifier<Int>
-) : Named {
+@Serializable
+abstract class Proficiency<T : Proficiency.Subject> : Named {
+
+    abstract override val name: String
+    abstract val subject: T
+    abstract val proficiencyModifier: Modifier<Int>
 
     interface Subject
 }

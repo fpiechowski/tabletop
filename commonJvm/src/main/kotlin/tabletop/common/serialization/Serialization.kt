@@ -3,75 +3,33 @@ package tabletop.common.serialization
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.SerializersModuleBuilder
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
-import tabletop.common.auth.Authentication
-import tabletop.common.command.Command
-import tabletop.common.command.GetGameCommandResult
-import tabletop.common.command.GetGamesCommandResult
-import tabletop.common.command.SignInCommandResult
-import tabletop.common.connection.Connection
+import org.nustaq.serialization.FSTConfiguration
 import tabletop.common.error.CommonError
-import tabletop.common.game.Game
-import tabletop.common.server.Server
-import tabletop.common.user.User
 
 
 class Serialization {
-    val json: Json = Json {
-        ignoreUnknownKeys = true
+    val fst: FSTConfiguration = FSTConfiguration.createDefaultConfiguration()
 
-        this.serializersModule = SerializersModule {
-            buildCommonSerializersModule()
-        }
-    }
-
-    inline fun <reified T> T.serialize(): Either<Error, String> = either {
+    inline fun <reified T> T.serialize(): Either<Error, ByteArray> = either {
         catch({
-            json.encodeToString<T>(this@serialize)
+            fst.asByteArray(this@serialize)
         }) {
-            raise(Error("Can't encode to string", CommonError.ThrowableError(it)))
+            raise(Error("Can't serialize ${T::class}", CommonError.ThrowableError(it)))
         }
     }
 
-    inline fun <reified T> String.deserialize(): Either<Error, T> = either {
+    inline fun <reified T> ByteArray.deserialize(): Either<Error, T> = either {
         catch({
-            json.decodeFromString<T>(this@deserialize)
+            fst.asObject(this@deserialize) as T
         }) {
-            raise(Error("Can't decode from string ${this@deserialize}", CommonError.ThrowableError(it)))
+            raise(Error("Can't deserialize to ${T::class}", CommonError.ThrowableError(it)))
         }
     }
 
-    companion object {
-        fun SerializersModuleBuilder.buildCommonSerializersModule() {
-            polymorphic(CommonError::class) {
-                subclass(Error::class)
-                subclass(Authentication.Error::class)
-                subclass(Command.Error::class)
-                subclass(Command.Result.Error::class)
-                subclass(Server.Error::class)
-                subclass(Connection.Error::class)
-            }
 
-            polymorphic(Command.Result::class) {
-                subclass(GetGamesCommandResult::class)
-                subclass(GetGameCommandResult::class)
-                subclass(SignInCommandResult::class)
-            }
-
-            polymorphic(Command.Result.Data::class) {
-                subclass(Game::class)
-                subclass(Game.Listing::class)
-                subclass(User::class)
-            }
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError(), java.io.Serializable {
+        companion object {
+            private const val serialVersionUID = 1L
         }
     }
-
-    @Serializable
-    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 }

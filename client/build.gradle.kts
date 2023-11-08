@@ -27,7 +27,7 @@ korge {
     entrypoint("main", "tabletop.client.MainKt")
     entrypoint("offline", "tabletop.client.OfflineMainKt")
 
-    jvmMainClassName = "tabletop.client.OfflineMainKt"
+    jvmMainClassName = "tabletop.client.MainKt"
 }
 
 dependencies {

@@ -1,5 +1,6 @@
 package tabletop.server.di
 
+import kotlinx.coroutines.runBlocking
 import one.microstream.storage.embedded.types.EmbeddedStorage
 import tabletop.common.auth.Authentication
 import tabletop.common.connection.Connection
@@ -10,11 +11,12 @@ import tabletop.common.error.TerminalErrorHandler
 import tabletop.common.serialization.Serialization
 import tabletop.server.ServerAdapter
 import tabletop.server.auth.AuthenticationAdapter
-import tabletop.server.command.CommandExecutor
 import tabletop.server.demo.Demo
+import tabletop.server.event.EventHandler
 import tabletop.server.persistence.Persistence
+import tabletop.server.state.State
 
-class DependenciesAdapter(
+class Dependencies(
     lazyPersistence: Lazy<Persistence> = lazy {
         Persistence(EmbeddedStorage.start(Persistence.Root()))
     }
@@ -24,17 +26,19 @@ class DependenciesAdapter(
     override val persistence: Persistence by lazyPersistence
     val serverAdapter: ServerAdapter by lazy { ServerAdapter(this) }
     val demo: Demo = Demo(persistence)
+    val state: State by lazy { runBlocking { State() } }
 
     inner class ConnectionScope(
         override val connection: Connection,
     ) : CommonDependencies.ConnectionScope() {
 
-        val persistence: Persistence = this@DependenciesAdapter.persistence
+        val persistence: Persistence = this@Dependencies.persistence
 
         val authentication: Authentication by lazy { AuthenticationAdapter(this) }
-        val commandExecutor: CommandExecutor by lazy { CommandExecutor(this) }
+        val eventHandler: EventHandler by lazy { EventHandler(this) }
+        val state: State by lazy { this@Dependencies.state }
 
-        override val connectionCommunicator: ConnectionCommunicator by lazy {
+        override val ConnectionCommunicator.Aware.connectionCommunicator: ConnectionCommunicator by lazy {
             ConnectionCommunicator(this)
         }
         override val connectionErrorHandler: ConnectionErrorHandler by lazy {

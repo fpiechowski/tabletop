@@ -1,8 +1,8 @@
 package tabletop.common.dnd5e.item
 
-import tabletop.common.dnd5e.character.DnD5eCharacter
+import tabletop.common.dnd5e.character.Character
 
 interface Equippable {
-    fun DnD5eCharacter.equip(): DnD5eCharacter = copy(equipped = equipped + this@Equippable)
-    fun DnD5eCharacter.unequip() = copy(equipped = equipped - this@Equippable)
+    fun Character.equip(): Character = TODO()
+    fun Character.unequip(): Unit = TODO()
 }

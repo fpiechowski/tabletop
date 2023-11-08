@@ -6,19 +6,25 @@ import korlibs.korge.annotations.KorgeExperimental
 import korlibs.korge.input.draggableCloseable
 import korlibs.korge.input.mouse
 import korlibs.korge.internal.KorgeInternal
-import korlibs.korge.view.SContainer
 import korlibs.korge.view.View
 import korlibs.korge.view.container
 import korlibs.korge.view.image
 import korlibs.math.geom.Vector2
 import kotlinx.coroutines.launch
-import tabletop.client.event.SceneOpened
+import tabletop.client.di.Dependencies
+import tabletop.client.event.SceneOpenedUIEvent
+import tabletop.client.event.TokenPlacedUIEvent
 import tabletop.client.game.GameScene
+import tabletop.client.scene.token.tokenView
 
 @KorgeInternal
 @KorgeExperimental
-fun GameScene.sceneView() = with(sceneView) {
-    fun SContainer.sceneMouseControl(contentContainer: View) {
+suspend fun currentScene() = Dependencies.await().state.currentScene.value
+
+@KorgeInternal
+@KorgeExperimental
+suspend fun GameScene.sceneView() = with(sceneView) {
+    fun sceneMouseControl(contentContainer: View) {
         var rightClick = false
 
         mouse.onDownCloseable {
@@ -57,19 +63,40 @@ fun GameScene.sceneView() = with(sceneView) {
         }
     }
 
+    fun tokenPlacing() {
+        onEvent(TokenPlacedUIEvent) {
+            launch {
+                gameSceneView.await().apply {
+                    tokenView(it.event.token)
+                }
+            }
+        }
+    }
+
     container {
-        onEvent(SceneOpened) {
+        name = "GameScene.sceneView.container"
+
+        onEvent(SceneOpenedUIEvent) {
             removeChildren()
 
             launch {
                 val contentContainer = container {
+                    name = "GameScene.sceneView.container.content"
+
                     it.scene.foregroundImagePath?.let {
                         image(applicationVfs[it].readBitmap())
                     }
-                }
 
-                this@with.sceneMouseControl(contentContainer)
+                    tokenContainer.complete(container {
+                        name = "tokenContainer"
+                    })
+                }.also { contentView.complete(it) }
+
+                tokenPlacing()
+
+                sceneMouseControl(contentContainer)
             }
         }
     }
 }
+

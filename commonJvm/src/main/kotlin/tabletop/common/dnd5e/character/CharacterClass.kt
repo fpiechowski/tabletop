@@ -1,8 +1,10 @@
 package tabletop.common.dnd5e.character
 
+import kotlinx.serialization.Serializable
 import tabletop.common.Named
 import tabletop.common.dice.Dice
 
+@Serializable
 abstract class CharacterClass(
     val level: Int,
     val features: Set<Feature>,

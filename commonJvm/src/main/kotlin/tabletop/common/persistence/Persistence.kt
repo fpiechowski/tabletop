@@ -3,7 +3,6 @@ package tabletop.common.persistence
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import kotlinx.serialization.Serializable
 import one.microstream.storage.embedded.types.EmbeddedStorageManager
 import tabletop.common.error.CommonError
 
@@ -30,7 +29,10 @@ abstract class Persistence<R> {
             }
         }
 
-    @Serializable
-    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError(), java.io.Serializable {
+        companion object {
+            private const val serialVersionUID = 1L
+        }
+    }
 }
 

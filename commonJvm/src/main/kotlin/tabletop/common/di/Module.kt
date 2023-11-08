@@ -14,7 +14,7 @@ abstract class CommonDependencies {
 
     abstract inner class ConnectionScope {
         abstract val connection: Connection
-        abstract val connectionCommunicator: ConnectionCommunicator
+        abstract val ConnectionCommunicator.Aware.connectionCommunicator: ConnectionCommunicator
         abstract val connectionErrorHandler: ConnectionErrorHandler
         val serialization: Serialization = this@CommonDependencies.serialization
         val terminalErrorHandler: TerminalErrorHandler = this@CommonDependencies.terminalErrorHandler

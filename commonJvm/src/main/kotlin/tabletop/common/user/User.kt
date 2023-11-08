@@ -1,16 +1,12 @@
 package tabletop.common.user
 
-import kotlinx.serialization.Serializable
-import kotlinx.uuid.UUID
-import kotlinx.uuid.generateUUID
 import tabletop.common.NamedEntity
-import tabletop.common.command.Command
+import java.util.*
 
-@Serializable
 data class User(
     override val name: String,
-    override val id: UUID = UUID.generateUUID(),
-) : NamedEntity(), Command.Result.Data {
+    override val id: UUID = UUID.randomUUID(),
+) : NamedEntity() {
 
     interface Role
 }

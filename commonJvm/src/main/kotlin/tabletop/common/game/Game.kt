@@ -1,44 +1,52 @@
 package tabletop.common.game
 
-import kotlinx.serialization.Serializable
-import kotlinx.uuid.UUID
-import kotlinx.uuid.generateUUID
 import tabletop.common.NamedEntity
-import tabletop.common.command.Command
+import tabletop.common.game.player.Player
 import tabletop.common.scene.Scene
+import tabletop.common.scene.token.Tokenizable
 import tabletop.common.system.System
 import tabletop.common.user.GameMaster
-import tabletop.common.user.Player
+import java.io.Serializable
+import java.util.*
 
 
-@Serializable
-abstract class Game<T : System> : NamedEntity(), Command.Result.Data {
+abstract class Game<T : System> : NamedEntity(), Serializable {
 
-    override val id: UUID = UUID.generateUUID()
+    abstract override val id: UUID
     abstract val system: T
     abstract val gameMaster: GameMaster
-    open val players: Set<Player> = setOf()
-    open val scenes: MutableMap<UUID, Scene> = mutableMapOf()
-    open val chat: Chat = Chat()
+    abstract val players: Set<Player>
+    abstract val scenes: MutableMap<UUID, Scene>
+    abstract val tokenizables: Map<UUID, Tokenizable>
+    abstract val chat: Chat
 
-    companion object
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 
-    @Serializable
     data class Listing(
         val games: List<Item>
-    ) : Command.Result.Data {
-        @Serializable
+    ) : Serializable {
+        companion object {
+            private const val serialVersionUID = 1L
+        }
+
+
         data class Item(
             val id: UUID,
             val name: String,
             val systemName: String
-        ) {
+        ) : Serializable {
             constructor(game: Game<*>) : this(game.id, game.name, game.system.name)
+
+            companion object {
+                private const val serialVersionUID = 1L
+            }
+
         }
 
     }
 
-    @Serializable
     class Chat {
         interface Speaker
 

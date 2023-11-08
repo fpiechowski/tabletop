@@ -5,33 +5,33 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.recover
 import arrow.fx.stm.TMVar
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 import io.ktor.server.routing.*
+import io.ktor.server.tomcat.*
 import io.ktor.server.websocket.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import tabletop.common.command.Command
-import tabletop.common.command.CommandResult
 import tabletop.common.connection.Connection
+import tabletop.common.connection.ConnectionCommunicator
 import tabletop.common.error.CommonError
-import tabletop.common.handleErrors
+import tabletop.common.event.Event
 import tabletop.common.server.Server
-import tabletop.server.di.DependenciesAdapter
-import java.util.*
+import tabletop.server.di.Dependencies
 
 class ServerAdapter(
-    private val dependencies: DependenciesAdapter
-) : Server() {
+    private val dependencies: Dependencies
+) : Server(), ConnectionCommunicator.Aware {
+    private val logger = KotlinLogging.logger { }
     val application: CompletableDeferred<Application> = CompletableDeferred()
-    val connections: MutableSet<Connection> = Collections.synchronizedSet(mutableSetOf())
+
 
     fun launch() = either {
         catch({
-            embeddedServer(Netty, port = 8080, host = "127.0.0.1") {
+            embeddedServer(Tomcat, port = 8080, host = "127.0.0.1") {
                 module().also {
                     application.complete(this)
                 }
@@ -54,25 +54,25 @@ class ServerAdapter(
             webSocket {
                 val connection = Connection(this, TMVar.empty())
                 val connectionScopeDependencies = dependencies.ConnectionScope(connection)
-                connections += connection
 
                 with(connectionScopeDependencies) {
                     recover<CommonError, Unit>(
                         block = {
+                            dependencies.state.connections.update { it + connection }
+
                             receiveIncomingCommands(connectionScopeDependencies) {
-                                with(commandExecutor) {
-                                    with(connectionCommunicator) {
-                                        (it.execute().bind() as CommandResult).send().bind()
-                                    }
+                                with(eventHandler) {
+                                    it.handle().bind()
                                 }
                             }
                         },
                         catch = {
                             with(connectionErrorHandler) { CommonError.ThrowableError(it).handle() }
+                            close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, it.message ?: "unknown error"))
                         },
                         recover = {
                             with(connectionErrorHandler) { it.handle() }
-                            //connection.session.close(CloseReason(CloseReason.Codes.NORMAL, "Closing due to error $it"))
+                            close(CloseReason(CloseReason.Codes.INTERNAL_ERROR, it.message ?: "unknown error"))
                         }
                     )
                 }
@@ -81,18 +81,14 @@ class ServerAdapter(
     }
 
     private suspend fun receiveIncomingCommands(
-        connectionScopeDependencies: DependenciesAdapter.ConnectionScope,
-        onEach: suspend Raise<CommonError>.(Command) -> Unit
+        connectionScopeDependencies: Dependencies.ConnectionScope,
+        onEach: suspend Raise<CommonError>.(Event) -> Unit
     ) = with(connectionScopeDependencies) {
-        connectionCommunicator.receiveIncomingAsEithersFlow<Command>()
-            .handleErrors(connectionErrorHandler)
-            .transform {
-                recover({ onEach(it) }) {
-                    with(connectionErrorHandler) { it.handle() }
-                }
-                emit(it)
-            }
-            .collect()
+        connectionCommunicator.receiveIncoming<Event>({
+            onEach(it)
+        }) {
+            with(connectionErrorHandler) { it.handle() }
+        }
     }
 
     companion object;
