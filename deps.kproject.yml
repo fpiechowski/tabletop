@@ -1,8 +1,0 @@
-# KProject: https://github.com/korlibs/kproject
-dependencies:
-  - "maven::common::com.soywiz.korlibs.korge2:korge"
-  - https://github.com/korlibs/korge-ext/tree/v0.1.2/korge-docking##de29df486b4cf755a5ab32b35a64c06f9f7722d0
-targets: [ jvm ]
-
-versions:
-  - "com.soywiz.korlibs.korge2:korge": "4.0.8"

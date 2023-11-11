@@ -41,108 +41,110 @@ fun GameScene.libraryButton() = with(sceneView) {
 @KorgeInternal
 @KorgeExperimental
 suspend fun GameScene.libraryWindow() = with(sceneView) {
-    Dependencies.await().state.game.value?.let { game ->
+    Dependencies.instance.await().run {
+        state.game.value?.let { game ->
 
-        uiWindow("Library", Size(800, 600)) { window ->
+            uiWindow("Library", Size(800, 600)) { window ->
 
-            fun Container.scenesListing(game: Game<*>) {
-                uiText("Scenes")
-                uiGridFill(cols = 4) {
-                    width = 800f
-                    val scenes = game.scenes.values
-                    scenes.map { scene ->
-                        uiButton(scene.name) {
-                            onClick {
-                                with(Dependencies.await().eventHandler) {
-                                    SceneOpened(scene.id).handle()
+                fun Container.scenesListing(game: Game<*>) {
+                    uiText("Scenes")
+                    uiGridFill(cols = 4) {
+                        width = 800f
+                        val scenes = game.scenes.values
+                        scenes.map { scene ->
+                            uiButton(scene.name) {
+                                onClick {
+                                    with(eventHandler) {
+                                        SceneOpened(scene.id).handle()
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            suspend fun View.draggableTokenizable(tokenizable: Tokenizable) {
-                var dragging = false
+                suspend fun View.draggableTokenizable(tokenizable: Tokenizable) {
+                    var dragging = false
 
-                val tokenImage = Image(applicationVfs[tokenizable.tokenImageFilePath].readBitmap())
-                    .apply {
-                        val contentScale = contentContainer.await().scale
-                        alpha(0.6)
-                        zIndex(1)
-                        scale(contentScale.scaleX, contentScale.scaleY)
+                    val tokenImage = Image(applicationVfs[tokenizable.tokenImageFilePath].readBitmap())
+                        .apply {
+                            val contentScale = contentContainer.await().scale
+                            alpha(0.6)
+                            zIndex(1)
+                            scale(contentScale.scaleX, contentScale.scaleY)
+                        }
+
+                    mouse.onDownCloseable {
+                        if (it.button.isLeft) {
+                            dragging = true
+                            tokenImage.addTo(sceneView)
+                        }
                     }
-
-                mouse.onDownCloseable {
-                    if (it.button.isLeft) {
-                        dragging = true
-                        tokenImage.addTo(sceneView)
-                    }
-                }
-                sceneView.mouse.onUpCloseable {
-                    if (it.button.isLeft && dragging) {
-                        dragging = false
-                        tokenImage.removeFromParent()
-                        with(Dependencies.await().eventHandler) {
-                            currentScene()?.let { scene ->
-                                val tokenContainerView = contentContainer.await()
-                                TokenPlacingRequested(
-                                    game.id,
-                                    tokenizable.id,
-                                    scene.id,
-                                    tokenContainerView.globalToLocal(
-                                        it.currentPosGlobal
-                                    ).toCommon()
-                                ).handle()
+                    sceneView.mouse.onUpCloseable {
+                        if (it.button.isLeft && dragging) {
+                            dragging = false
+                            tokenImage.removeFromParent()
+                            with(eventHandler) {
+                                currentScene()?.let { scene ->
+                                    val tokenContainerView = contentContainer.await()
+                                    TokenPlacingRequested(
+                                        game.id,
+                                        tokenizable.id,
+                                        scene.id,
+                                        tokenContainerView.globalToLocal(
+                                            it.currentPosGlobal
+                                        ).toCommon()
+                                    ).handle()
+                                }
                             }
                         }
                     }
-                }
-                draggableCloseable(autoMove = false) {
-                    if (dragging) {
-                        tokenImage.globalPos = it.mouseEvents.currentPosGlobal
+                    draggableCloseable(autoMove = false) {
+                        if (dragging) {
+                            tokenImage.globalPos = it.mouseEvents.currentPosGlobal
+                        }
                     }
                 }
-            }
 
-            @KorgeInternal
-            suspend fun Container.nonPlayerCharactersListing(game: DnD5eGame) {
-                this.uiText("Non Player Characters")
-                this.uiGridFill(cols = 4) {
-                    width = 800f
-                    game.nonPlayerCharacters
-                        .map { npc ->
-                            uiButton(npc.name).draggableTokenizable(npc)
-                        }
-                }
-            }
-
-
-            @KorgeInternal
-            suspend fun Container.playerCharactersListing(game: DnD5eGame) {
-                this.uiText("Player Characters")
-                this.uiGridFill(cols = 4) {
-                    width = 800f
-                    game.nonPlayerCharacters
-                        .map { tokenizable ->
-                            uiButton(tokenizable.name).draggableTokenizable(tokenizable)
-                        }
-                }
-            }
-
-
-            uiVerticalStack {
-                game.let { this@uiVerticalStack.scenesListing(it) }
-
-                when (game) {
-                    is DnD5eGame -> {
-                        this@uiVerticalStack.nonPlayerCharactersListing(game)
-                        this@uiVerticalStack.playerCharactersListing(game)
+                @KorgeInternal
+                suspend fun Container.nonPlayerCharactersListing(game: DnD5eGame) {
+                    this.uiText("Non Player Characters")
+                    this.uiGridFill(cols = 4) {
+                        width = 800f
+                        game.nonPlayerCharacters
+                            .map { npc ->
+                                uiButton(npc.name).draggableTokenizable(npc)
+                            }
                     }
                 }
-            }
 
-        }.centerOnStage()
+
+                @KorgeInternal
+                suspend fun Container.playerCharactersListing(game: DnD5eGame) {
+                    this.uiText("Player Characters")
+                    this.uiGridFill(cols = 4) {
+                        width = 800f
+                        game.nonPlayerCharacters
+                            .map { tokenizable ->
+                                uiButton(tokenizable.name).draggableTokenizable(tokenizable)
+                            }
+                    }
+                }
+
+
+                uiVerticalStack {
+                    game.let { this@uiVerticalStack.scenesListing(it) }
+
+                    when (game) {
+                        is DnD5eGame -> {
+                            this@uiVerticalStack.nonPlayerCharactersListing(game)
+                            this@uiVerticalStack.playerCharactersListing(game)
+                        }
+                    }
+                }
+
+            }.centerOnStage()
+        }
     }
 
 }

@@ -1,7 +1,6 @@
 package tabletop.client.scene
 
 import korlibs.image.format.readBitmap
-import korlibs.io.file.std.applicationVfs
 import korlibs.korge.annotations.KorgeExperimental
 import korlibs.korge.input.draggableCloseable
 import korlibs.korge.input.mouse
@@ -16,85 +15,94 @@ import tabletop.client.event.SceneOpenedUIEvent
 import tabletop.client.event.TokenPlacedUIEvent
 import tabletop.client.game.GameScene
 import tabletop.client.scene.token.tokenView
+import tabletop.common.error.ErrorHandler.Companion.use
 
 @KorgeInternal
 @KorgeExperimental
-suspend fun currentScene() = Dependencies.await().state.currentScene.value
+suspend fun currentScene() = Dependencies.instance.await().state.currentScene.value
 
 @KorgeInternal
 @KorgeExperimental
 suspend fun GameScene.sceneView() = with(sceneView) {
-    fun sceneMouseControl(contentContainer: View) {
-        var rightClick = false
+    Dependencies.instance.await().run {
+        fun sceneMouseControl(contentContainer: View) {
+            var rightClick = false
 
-        mouse.onDownCloseable {
-            if (it.button.isRight) {
-                rightClick = true
+            mouse.onDownCloseable {
+                if (it.button.isRight) {
+                    rightClick = true
+                }
+            }
+            mouse.onUpCloseable {
+                if (it.button.isRight) {
+                    rightClick = false
+                }
+            }
+            draggableCloseable(autoMove = false) {
+                val dragging = rightClick
+
+                if (dragging) {
+                    val dragDeltaX = it.deltaDx
+                    val dragDeltaY = it.deltaDy
+
+                    contentContainer.pos -= Vector2(dragDeltaX, dragDeltaY)
+                }
+            }
+            mouse.scroll { event ->
+                val zoomFactor = 1.1f
+                val scale = if (event.scrollDeltaYPixels < 0) 1 / zoomFactor else zoomFactor
+
+                // Calculate the position to zoom in/out on
+                val mouseXY = event.currentPosGlobal
+                val containerXY = contentContainer.pos
+
+                contentContainer.scaleX *= scale
+                contentContainer.scaleY *= scale
+
+                contentContainer.x = mouseXY.x - (mouseXY.x - containerXY.x) * scale
+                contentContainer.y = mouseXY.y - (mouseXY.y - containerXY.y) * scale
             }
         }
-        mouse.onUpCloseable {
-            if (it.button.isRight) {
-                rightClick = false
-            }
-        }
-        draggableCloseable(autoMove = false) {
-            val dragging = rightClick
 
-            if (dragging) {
-                val dragDeltaX = it.deltaDx
-                val dragDeltaY = it.deltaDy
 
-                contentContainer.pos -= Vector2(dragDeltaX, dragDeltaY)
-            }
-        }
-        mouse.scroll { event ->
-            val zoomFactor = 1.1f
-            val scale = if (event.scrollDeltaYPixels < 0) 1 / zoomFactor else zoomFactor
-
-            // Calculate the position to zoom in/out on
-            val mouseXY = event.currentPosGlobal
-            val containerXY = contentContainer.pos
-
-            contentContainer.scaleX *= scale
-            contentContainer.scaleY *= scale
-
-            contentContainer.x = mouseXY.x - (mouseXY.x - containerXY.x) * scale
-            contentContainer.y = mouseXY.y - (mouseXY.y - containerXY.y) * scale
-        }
-    }
-
-    fun tokenPlacing() {
-        onEvent(TokenPlacedUIEvent) {
-            launch {
-                gameSceneContainer.await().apply {
-                    tokenView(it.event.token)
+        fun tokenPlacing() {
+            onEvent(TokenPlacedUIEvent) {
+                launch {
+                    gameSceneContainer.await().apply {
+                        tokenView(it.event.token)
+                    }
                 }
             }
         }
-    }
 
-    container {
-        name = "gameSceneContainer"
+        container {
+            name = "gameSceneContainer"
 
-        onEvent(SceneOpenedUIEvent) {
-            removeChildren()
+            onEvent(SceneOpenedUIEvent) {
+                removeChildren()
 
-            launch {
-                val contentContainer = container {
-                    name = "contentContainer"
+                launch {
+                    val contentContainer = container {
+                        name = "contentContainer"
 
-                    it.scene.foregroundImagePath?.let {
-                        image(applicationVfs[it].readBitmap())
-                    }
+                        it.scene.foregroundImagePath?.let {
+                            uiErrorHandler.use {
+                                state.connectionScope.value?.assetStorage?.get(it)?.bind()
+                                    ?.readBitmap()
+                                    ?.let { image(it) }
+                            }
 
-                    tokenContainer.complete(container {
-                        name = "tokenContainer"
-                    })
-                }.also { contentContainer.complete(it) }
+                        }
 
-                tokenPlacing()
+                        tokenContainer.complete(container {
+                            name = "tokenContainer"
+                        })
+                    }.also { contentContainer.complete(it) }
 
-                sceneMouseControl(contentContainer)
+                    tokenPlacing()
+
+                    sceneMouseControl(contentContainer)
+                }
             }
         }
     }

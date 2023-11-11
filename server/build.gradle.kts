@@ -1,3 +1,5 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
@@ -7,8 +9,9 @@ val kotlinxDateTime: String by project
 val mainClass = "tabletop.server.MainKt"
 
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
     kotlin("plugin.serialization")
+    id("com.bmuschko.docker-remote-api") version "9.3.7"
     application
 }
 
@@ -35,35 +38,51 @@ repositories {
     maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
-dependencies {
-    api(project(":commonJvm"))
+kotlin {
+    jvm()
 
-    implementation("app.softwork:kotlinx-uuid-core:0.0.21")
+    sourceSets {
+        val jvmMain by getting {
+            dependencies {
+                api(project(":common"))
 
-    implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
+                implementation("app.softwork:kotlinx-uuid-core:0.0.21")
 
-    implementation("org.slf4j:slf4j-api:2.0.9")
+                implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
 
-    implementation("ch.qos.logback:logback-classic:1.4.11")
+                implementation("org.slf4j:slf4j-api:2.0.9")
 
-    implementation("io.ktor:ktor-server-tomcat:$ktorVersion")
-    implementation("io.ktor:ktor-server-websockets:$ktorVersion")
+                implementation("ch.qos.logback:logback-classic:1.4.11")
 
-    implementation("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")
-    implementation("one.microstream:microstream-storage-embedded-configuration:08.01.01-MS-GA")
+                implementation("io.ktor:ktor-server-netty:$ktorVersion")
+                implementation("io.ktor:ktor-server-websockets:$ktorVersion")
 
-    testImplementation("io.ktor:ktor-client-core:$ktorVersion")
-    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
-    testImplementation("io.ktor:ktor-client-resources:$ktorVersion")
+                implementation("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")
+                implementation("one.microstream:microstream-storage-embedded-configuration:08.01.01-MS-GA")
 
-    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+                implementation("io.ktor:ktor-client-core:$ktorVersion")
+                implementation("io.ktor:ktor-client-cio:$ktorVersion")
+                implementation("io.ktor:ktor-client-resources:$ktorVersion")
 
-    testImplementation("io.kotest:kotest-assertions-core:5.7.2")
-    testImplementation("io.kotest:kotest-runner-junit5:5.7.2")
+                implementation("io.ktor:ktor-server-test-host:$ktorVersion")
 
-    testImplementation("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
-    testImplementation("io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
-    testImplementation("io.kotest.extensions:kotest-extensions-koin:1.3.0")
+                implementation("io.kotest:kotest-assertions-core:5.7.2")
+                implementation("io.kotest:kotest-runner-junit5:5.7.2")
 
-    testImplementation("io.mockk:mockk:1.13.8")
+                implementation("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
+                implementation("io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
+                implementation("io.kotest.extensions:kotest-extensions-koin:1.3.0")
+
+                implementation("io.mockk:mockk:1.13.8")
+            }
+        }
+    }
+}
+
+tasks.create("buildDockerImage", DockerBuildImage::class) {
+    group = "docker"
+    dependsOn("shadowJar")
+    inputDir.set(project.projectDir)
+    images.add("${project.group}/${rootProject.name}-${project.name}:${version}")
+    images.add("${project.group}/${rootProject.name}-${project.name}:latest")
 }

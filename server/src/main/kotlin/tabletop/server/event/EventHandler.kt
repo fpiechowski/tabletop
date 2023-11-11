@@ -6,7 +6,6 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.update
-import tabletop.common.connection.ConnectionCommunicator
 import tabletop.common.error.CommonError
 import tabletop.common.error.ErrorHandler.Companion.use
 import tabletop.common.error.UnsupportedSubtypeError
@@ -16,7 +15,7 @@ import tabletop.server.di.Dependencies
 
 class EventHandler(
     private val connectionScopeDependencies: Dependencies.ConnectionScope,
-) : ConnectionCommunicator.Aware {
+) {
     private val persistence by lazy { connectionScopeDependencies.persistence }
     private val authentication by lazy { connectionScopeDependencies.authentication }
     private val state by lazy { connectionScopeDependencies.state }
@@ -28,7 +27,7 @@ class EventHandler(
                 when (this@handle) {
                     is RequestEvent -> when (this@handle) {
                         is AuthenticationRequested -> handle().bind()
-                        is LoadingGameRequested -> handle().bind()
+                        is GameLoadingRequested -> handle().bind()
                         is GameListingRequested -> handle().bind()
                         is TokenPlacingRequested -> handle().bind()
                         is SceneOpeningRequested -> SceneOpened(sceneId).handle().bind()
@@ -77,22 +76,22 @@ class EventHandler(
                             .toSet()
             }.bind()
             val listing = Game.Listing(games.map { Game.Listing.Item(it) })
-            GameListingLoaded(listing).handle()
+            GameListingLoaded(listing).handle().bind()
         }
 
-    private suspend fun LoadingGameRequested.handle(): Either<CommonError, Unit> =
+    private suspend fun GameLoadingRequested.handle(): Either<CommonError, Unit> =
         either {
             val game = ensureNotNull(persistence.retrieve { games[gameListingItem.id] }.bind()) {
                 Event.Error("Game not found for ID $gameListingItem.id", null)
             }
 
-            GameLoaded(game).handle()
+            GameLoaded(game).handle().bind()
         }
 
     private suspend fun AuthenticationRequested.handle(): Either<CommonError, Unit> =
         either {
             val user = authentication.authenticate(credentialsData.username, credentialsData.password).bind()
-            UserAuthenticated(user).handle()
+            UserAuthenticated(user).handle().bind()
         }
 
     private suspend fun TokenPlacingRequested.handle(): Either<CommonError, Unit> =

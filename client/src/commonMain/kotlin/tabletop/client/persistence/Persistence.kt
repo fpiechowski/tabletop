@@ -15,6 +15,10 @@ class Persistence(
         storageManager.storeRoot()
     }
 
+    fun dispose() {
+        storageManager.close()
+    }
+
     class Root(
         val settings: Settings = Settings()
     )

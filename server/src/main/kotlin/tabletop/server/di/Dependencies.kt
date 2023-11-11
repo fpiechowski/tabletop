@@ -20,30 +20,33 @@ class Dependencies(
     lazyPersistence: Lazy<Persistence> = lazy {
         Persistence(EmbeddedStorage.start(Persistence.Root()))
     }
-) : CommonDependencies() {
+) : CommonDependencies {
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
     override val persistence: Persistence by lazyPersistence
-    val serverAdapter: ServerAdapter by lazy { ServerAdapter(this) }
+    private val connectionScopeFactory get() = { connection: Connection -> ConnectionScope(connection) }
+    val serverAdapter: ServerAdapter by lazy { ServerAdapter(connectionScopeFactory) }
     val demo: Demo = Demo(persistence)
     val state: State by lazy { runBlocking { State() } }
 
     inner class ConnectionScope(
         override val connection: Connection,
-    ) : CommonDependencies.ConnectionScope() {
+        val persistence: Persistence = this@Dependencies.persistence,
+        val state: State = this@Dependencies.state,
+        override val serialization: Serialization = this@Dependencies.serialization,
+        override val terminalErrorHandler: TerminalErrorHandler = this@Dependencies.terminalErrorHandler,
+        override val connectionCommunicator: ConnectionCommunicator =
+            ConnectionCommunicator(connection, serialization),
+        override val connectionErrorHandler: ConnectionErrorHandler =
+            ConnectionErrorHandler(terminalErrorHandler, connectionCommunicator)
+    ) : CommonDependencies.ConnectionScope {
 
-        val persistence: Persistence = this@Dependencies.persistence
+        val authentication: Authentication = AuthenticationAdapter(this@ConnectionScope)
+        val eventHandler: EventHandler = EventHandler(this)
+    }
 
-        val authentication: Authentication by lazy { AuthenticationAdapter(this) }
-        val eventHandler: EventHandler by lazy { EventHandler(this) }
-        val state: State by lazy { this@Dependencies.state }
-
-        override val ConnectionCommunicator.Aware.connectionCommunicator: ConnectionCommunicator by lazy {
-            ConnectionCommunicator(this)
-        }
-        override val connectionErrorHandler: ConnectionErrorHandler by lazy {
-            ConnectionErrorHandler(this)
-        }
+    fun interface ConnectionScopeFactory {
+        operator fun invoke(connection: Connection): ConnectionScope
     }
 }
 

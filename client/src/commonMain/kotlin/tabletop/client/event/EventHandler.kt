@@ -11,8 +11,10 @@ import korlibs.korge.annotations.KorgeExperimental
 import korlibs.korge.internal.KorgeInternal
 import kotlinx.coroutines.Job
 import tabletop.client.di.Dependencies
+import tabletop.client.error.UIErrorHandler
 import tabletop.client.server.ServerAdapter
-import tabletop.common.connection.ConnectionCommunicator
+import tabletop.client.state.State
+import tabletop.client.ui.UserInterface
 import tabletop.common.error.CommonError
 import tabletop.common.error.NotFoundError
 import tabletop.common.error.UnsupportedSubtypeError
@@ -22,13 +24,13 @@ import tabletop.common.scene.Scene
 @KorgeInternal
 @KorgeExperimental
 class EventHandler(
-    private val dependencies: Dependencies
-) : ConnectionCommunicator.Aware {
+    private val dependencies: Dependencies,
+    private val userInterface: UserInterface,
+    private val state: State,
+    private val uiErrorHandler: UIErrorHandler
+) {
     private val logger = KotlinLogging.logger {}
 
-    private val userInterface by lazy { dependencies.userInterface }
-    private val state by lazy { dependencies.state }
-    private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
 
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
@@ -47,7 +49,10 @@ class EventHandler(
                     is ConnectionAttempted -> {
                         val connectionJob = Job()
                         launch(connectionJob) {
-                            recover({ ServerAdapter(dependencies).connect(host, port, credentialsData).bind() }) {
+                            recover({
+                                ServerAdapter(dependencies, this@EventHandler, uiErrorHandler)
+                                    .connect(host, port, credentialsData).bind()
+                            }) {
                                 with(uiErrorHandler) { it.handle() }
                             }
                         }
@@ -63,7 +68,7 @@ class EventHandler(
 
     private suspend fun <T : ResultEvent> T.handle(): Either<CommonError, Unit> =
         either {
-            dependencies.connectionScope.value?.run {
+            dependencies.state.connectionScope.value?.run {
                 with(connectionCommunicator) {
                     when (this@handle) {
                         is GameLoaded -> {
@@ -115,7 +120,7 @@ class EventHandler(
 
     private suspend inline fun <reified T : RequestEvent> T.sendToServer(): Either<CommonError, Unit> =
         either {
-            dependencies.connectionScope.value?.run {
+            dependencies.state.connectionScope.value?.run {
                 with(connectionCommunicator) {
                     this@sendToServer.send().bind()
                 }

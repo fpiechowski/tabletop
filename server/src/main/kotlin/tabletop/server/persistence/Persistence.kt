@@ -1,10 +1,10 @@
 package tabletop.server.persistence
 
+import kotlinx.uuid.UUID
 import one.microstream.storage.embedded.types.EmbeddedStorageManager
 import tabletop.common.auth.Credentials
 import tabletop.common.game.Game
 import tabletop.common.user.User
-import java.util.*
 import tabletop.common.persistence.Persistence as CommonPersistence
 
 class Persistence(
@@ -16,5 +16,5 @@ class Persistence(
         val credentials: MutableMap<User, Credentials.UsernamePassword> = mutableMapOf()
     )
 
-    override val persistenceRoot: Root get() = storageManager.root() as Root
+    override val persistenceRoot: Root get() = storageManager.root()
 }
