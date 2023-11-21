@@ -5,9 +5,10 @@ import arrow.core.raise.either
 import arrow.core.raise.fold
 import arrow.core.raise.recover
 import io.ktor.websocket.*
+import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
-import tabletop.common.Identifiable
+import tabletop.common.entity.Identifiable
 import tabletop.common.error.CommonError
 import tabletop.common.serialization.Serialization
 
@@ -19,6 +20,7 @@ class Connection(
 ) : Identifiable<UUID> {
     companion object
 
+    @Serializable
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 }
 
@@ -60,16 +62,16 @@ class ConnectionCommunicator(val connection: Connection, val serialization: Seri
 
         for (frame in connection.session.incoming) {
             either {
-                val frameBytes = (frame as Frame.Binary).readBytes()
+                val frameText = (frame as Frame.Text).readText()
 
                 recover<CommonError, T>(
                     block = {
-                        with(serialization) { frameBytes.deserialize<T>().bind() }
+                        with(serialization) { frameText.deserialize<T>().bind() }
                     },
                     recover = { error ->
                         if (error is Serialization.Error) {
                             val incomingError = recover({
-                                with(serialization) { frameBytes.deserialize<CommonError>().bind() }
+                                with(serialization) { frameText.deserialize<CommonError>().bind() }
                             }) {
                                 raise(Connection.Error("Unhandled incoming message", it))
                             }

@@ -2,21 +2,27 @@ val kotlinxSerialization: String by project
 val kotlinVersion: String by project
 
 plugins {
-    application
     kotlin("multiplatform")
     kotlin("plugin.serialization")
+    id("com.google.devtools.ksp")
 }
 
 group = "com.github.mesayah"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
 kotlin {
-    jvm()
+    jvm {
+        jvmToolchain(17)
+        withJava()
+        testRuns.named("test") {
+            executionTask.configure {
+                useJUnitPlatform()
+            }
+        }
+    }
     js(IR) {
         browser()
+        binaries.executable()
     }
 
     sourceSets {
@@ -26,13 +32,14 @@ kotlin {
 
                 api("app.softwork:kotlinx-uuid-core:0.0.22")
 
-                api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+                api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.1")
 
                 api("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
-                api("io.arrow-kt:arrow-core:1.2.0")
-                api("io.arrow-kt:arrow-fx-coroutines:1.2.0")
+                api("io.arrow-kt:arrow-core:1.2.1")
+                api("io.arrow-kt:arrow-fx-coroutines:1.2.1")
                 api("io.arrow-kt:suspendapp:0.4.0")
+                api("io.arrow-kt:arrow-optics:1.2.1")
 
                 api("io.ktor:ktor-client-core:2.3.6")
                 api("io.ktor:ktor-client-resources:2.3.6")
@@ -41,13 +48,11 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                api("de.ruedigermoeller:fst:2.56")
                 api("ch.qos.logback:logback-classic:1.4.11")
 
-                api("io.ktor:ktor-client-cio:2.3.6")
+                api("io.github.oshai:kotlin-logging-jvm:5.1.0")
 
-                api("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")
-                api("one.microstream:microstream-storage-embedded-configuration:08.01.01-MS-GA")
+                api("io.ktor:ktor-client-cio:2.3.6")
             }
         }
 
@@ -60,6 +65,8 @@ kotlin {
         val jsMain by getting {
             dependencies {
                 api("io.ktor:ktor-client-js:2.3.6")
+
+                api("io.github.oshai:kotlin-logging-js:5.1.0")
             }
         }
 
@@ -77,4 +84,10 @@ kotlin {
             }
         }
     }
+}
+
+dependencies {
+    add("kspCommonMainMetadata","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }

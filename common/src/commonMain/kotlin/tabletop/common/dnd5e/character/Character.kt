@@ -1,9 +1,10 @@
 package tabletop.common.dnd5e.character
 
+import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
-import tabletop.common.Identifiable
-import tabletop.common.Named
+import tabletop.common.entity.Identifiable
+import tabletop.common.entity.Named
 import tabletop.common.Usable
 import tabletop.common.dnd5e.Modifier
 import tabletop.common.dnd5e.item.Equippable
@@ -14,6 +15,8 @@ import tabletop.common.scene.token.Token
 import tabletop.common.scene.token.Tokenizable
 import kotlin.math.floor
 
+
+@Serializable
 class PlayerCharacter(
     override val hp: Int,
     override val race: Race,
@@ -25,7 +28,7 @@ class PlayerCharacter(
     override val tokenImageFilePath: String,
     val player: Player,
     override val id: UUID = UUID.generateUUID()
-) : Character {
+) : Character() {
 
 
     override fun tokenize(scene: Scene, position: Point): Token<*> {
@@ -33,6 +36,7 @@ class PlayerCharacter(
     }
 }
 
+@Serializable
 class NonPlayerCharacter(
     override val hp: Int,
     override val race: Race,
@@ -43,29 +47,31 @@ class NonPlayerCharacter(
     override val name: String,
     override val tokenImageFilePath: String,
     override val id: UUID = UUID.generateUUID()
-) : Character {
+) : Character() {
 
 
     override fun tokenize(scene: Scene, position: Point): Token<NonPlayerCharacter> = Token(
         name,
         position,
-        scene,
-        this,
+        scene.gameId,
+        scene.id,
+        this.id,
         tokenImageFilePath
     )
 }
 
-interface Character : Tokenizable, Named, Identifiable<UUID>, Usable.User,
+@Serializable
+abstract class Character : Tokenizable, Named, Identifiable<UUID>, Usable.User,
     Usable.Target {
-    override val tokenImageFilePath: String
-    override val name: String
-    val hp: Int
-    val race: Race
-    val characterClasses: Set<CharacterClass>
-    val skillProficiencies: Set<SkillProficiency>
-    val attributes: Attributes
-    val equipped: Set<Equippable>
-    override val id: UUID
+    abstract override val tokenImageFilePath: String
+    abstract override val name: String
+    abstract val hp: Int
+    abstract val race: Race
+    abstract val characterClasses: Set<CharacterClass>
+    abstract val skillProficiencies: Set<SkillProficiency>
+    abstract val attributes: Attributes
+    abstract val equipped: Set<Equippable>
+    abstract override val id: UUID
 
     val level: Int get() = characterClasses.map { it.level }.reduce { acc, level -> acc + level }
 
@@ -76,6 +82,7 @@ interface Character : Tokenizable, Named, Identifiable<UUID>, Usable.User,
             )
         )
 
+    @Serializable
     class Attributes(
         val strength: Int = 10,
         val dexterity: Int = 10,
@@ -139,6 +146,7 @@ enum class Skill : Proficiency.Subject {
 
 }
 
+@Serializable
 class SkillProficiency(
     override val name: String,
     override val subject: Skill,

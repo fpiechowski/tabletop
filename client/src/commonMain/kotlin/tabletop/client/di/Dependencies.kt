@@ -1,28 +1,32 @@
 package tabletop.client.di
 
+import dev.fritz2.routing.Router
+import dev.fritz2.routing.routerOf
 import kotlinx.coroutines.CompletableDeferred
-import tabletop.client.assets.AssetStorage
+import kotlinx.coroutines.flow.MutableStateFlow
+import tabletop.client.entity.StateEntityGraph
 import tabletop.client.error.UIErrorHandler
 import tabletop.client.event.EventHandler
-import tabletop.client.persistence.Persistence
 import tabletop.client.state.State
 import tabletop.client.ui.UserInterface
 import tabletop.common.connection.Connection
 import tabletop.common.connection.ConnectionCommunicator
 import tabletop.common.di.CommonDependencies
+import tabletop.common.entity.EntityGraph
 import tabletop.common.error.CommonError
 import tabletop.common.error.ConnectionErrorHandler
 import tabletop.common.error.TerminalErrorHandler
 import tabletop.common.serialization.Serialization
+import tabletop.common.user.User
 
 class Dependencies(
-    override val persistence: Persistence = Persistence(),
+    val router: Router<String> = routerOf("connection"),
     override val serialization: Serialization = Serialization(),
     override val terminalErrorHandler: TerminalErrorHandler = TerminalErrorHandler(),
     val state: State = State(),
-    val userInterface: UserInterface = UserInterface(state),
-    val uiErrorHandler: UIErrorHandler = UIErrorHandler(userInterface, terminalErrorHandler)
 ) : CommonDependencies {
+    val userInterface: UserInterface = UserInterface(this)
+    val uiErrorHandler: UIErrorHandler = UIErrorHandler(userInterface, terminalErrorHandler)
     val eventHandler: EventHandler = EventHandler(this, userInterface, state, uiErrorHandler)
 
     init {
@@ -52,12 +56,13 @@ class Dependencies(
             terminalErrorHandler,
             connectionCommunicator
         ),
-        val assetStorage: AssetStorage = AssetStorage(connection),
         val userInterface: UserInterface = this@Dependencies.userInterface,
         val eventHandler: EventHandler = this@Dependencies.eventHandler,
         val state: State = this@Dependencies.state,
         val uiErrorHandler: UIErrorHandler = this@Dependencies.uiErrorHandler
     ) : CommonDependencies.ConnectionScope {
+
+
 
         init {
             state.connectionScope.value = this

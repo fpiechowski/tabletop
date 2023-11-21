@@ -2,6 +2,7 @@ package tabletop.common.error
 
 import arrow.core.raise.Raise
 import arrow.core.raise.recover
+import io.github.oshai.kotlinlogging.KotlinLogging
 import tabletop.common.connection.ConnectionCommunicator
 
 interface ErrorHandler<T : CommonError> {

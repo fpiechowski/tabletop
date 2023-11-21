@@ -1,8 +1,9 @@
 package tabletop.common.auth
 
+import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
-import tabletop.common.Entity
+import tabletop.common.entity.Entity
 
 data class CredentialsData(
     val principal: String,
@@ -32,14 +33,11 @@ sealed class Credentials<P, S> : Entity() {
         }
 
 
+        @Serializable
         data class Data(
             val username: String,
             val password: String
-        ) {
-            companion object {
-                private const val serialVersionUID = 1L
-            }
-        }
+        )
     }
 }
 

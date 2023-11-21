@@ -1,6 +1,6 @@
 package tabletop.common.dnd5e.item
 
-import tabletop.common.NamedEntity
+import tabletop.common.entity.NamedEntity
 import tabletop.common.dnd5e.Money
 import tabletop.common.dnd5e.character.Feature
 import tabletop.common.dnd5e.magic.Spell

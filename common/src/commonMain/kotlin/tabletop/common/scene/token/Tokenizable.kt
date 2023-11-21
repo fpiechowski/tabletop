@@ -1,7 +1,7 @@
 package tabletop.common.scene.token
 
 import kotlinx.uuid.UUID
-import tabletop.common.Identifiable
+import tabletop.common.entity.Identifiable
 import tabletop.common.geometry.Point
 import tabletop.common.scene.Scene
 

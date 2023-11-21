@@ -1,21 +1,17 @@
 plugins {
-    kotlin("multiplatform").apply(false) version "1.7.20"
-    kotlin("plugin.serialization").apply(false) version "1.7.20"
+    kotlin("multiplatform").apply(false) version "1.9.20"
+    kotlin("plugin.serialization").apply(false) version "1.9.20"
+    id("com.google.devtools.ksp").apply(false) version "1.9.20-1.0.14"
 }
 
 repositories {
     mavenCentral()
-    google()
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
 }
 
 subprojects {
     repositories {
+        maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
         mavenCentral()
-        maven { url = uri("https://s01.oss.sonatype.org") }
-        mavenLocal()
-        google()
-        gradlePluginPortal()
-        maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
-        maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
     }
 }

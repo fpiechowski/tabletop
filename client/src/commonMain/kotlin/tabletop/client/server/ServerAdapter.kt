@@ -6,11 +6,8 @@ import arrow.core.raise.either
 import arrow.core.raise.recover
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
-import korlibs.korge.annotations.KorgeExperimental
-import korlibs.korge.internal.KorgeInternal
 import tabletop.client.di.Dependencies
 import tabletop.client.error.UIErrorHandler
 import tabletop.client.event.EventHandler
@@ -21,14 +18,13 @@ import tabletop.common.event.AuthenticationRequested
 import tabletop.common.event.ResultEvent
 import tabletop.common.server.Server
 
-@KorgeInternal
-@KorgeExperimental
 class ServerAdapter(
     private val dependencies: Dependencies,
     private val eventHandler: EventHandler,
     private val uiErrorHandler: UIErrorHandler,
 ) : Server() {
     private val logger = KotlinLogging.logger { }
+
 
 
     suspend fun connect(
@@ -81,7 +77,7 @@ class ServerAdapter(
 
 
     companion object {
-        val httpClient: HttpClient = HttpClient(OkHttp) {
+        val httpClient: HttpClient = HttpClient {
             install(WebSockets)
         }
     }

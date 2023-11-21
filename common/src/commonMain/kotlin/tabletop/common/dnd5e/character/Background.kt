@@ -1,6 +1,6 @@
 package tabletop.common.dnd5e.character
 
-import tabletop.common.Named
+import tabletop.common.entity.Named
 import tabletop.common.dnd5e.item.Item
 
 abstract class Background(

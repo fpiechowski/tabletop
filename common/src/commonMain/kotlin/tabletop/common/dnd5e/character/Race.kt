@@ -1,8 +1,10 @@
 package tabletop.common.dnd5e.character
 
-import tabletop.common.Named
+import kotlinx.serialization.Serializable
+import tabletop.common.entity.Named
 
 
+@Serializable
 abstract class Race : Named {
 
     abstract val age: Age
@@ -11,12 +13,14 @@ abstract class Race : Named {
     abstract val speed: Int
 
 
+    @Serializable
     data class Age(
         val adulteryInYears: Int,
         val lifespanInYears: Int
     )
 }
 
+@Serializable
 object Human : Race() {
 
     private fun readResolve(): Any = Human

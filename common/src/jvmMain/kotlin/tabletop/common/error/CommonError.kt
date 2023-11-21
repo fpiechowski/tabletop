@@ -1,5 +1,8 @@
 package tabletop.common.error
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 actual abstract class CommonError {
     actual abstract val message: String?
     actual abstract val cause: CommonError?
@@ -12,7 +15,7 @@ actual abstract class CommonError {
         else -> cause?.findThrowable()
     }
 
-
+    @Serializable
     actual class ThrowableError(
         actual override val message: String?,
         actual override val cause: CommonError?,
@@ -26,6 +29,4 @@ actual abstract class CommonError {
                     throwable.stackTraceToString()
                 )
     }
-
-
 }

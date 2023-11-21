@@ -1,5 +1,8 @@
 package tabletop.common.dnd5e
 
+import arrow.optics.optics
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
 import tabletop.common.dnd5e.character.NonPlayerCharacter
@@ -10,26 +13,58 @@ import tabletop.common.scene.Scene
 import tabletop.common.scene.token.Tokenizable
 import tabletop.common.system.System
 import tabletop.common.user.GameMaster
+import tabletop.common.user.User
 
-object DnD5e : System("Dungeons & Dragons - 5th Edition") {
-    private fun readResolve(): Any = DnD5e
+@Serializable
+data class DnD5e(
+    override val id: UUID = UUID(defaultIdValue),
+    override val name: String = "Dungeons & Dragons - 5th Edition"
+) : System() {
 
-    private const val idUUIDValue = "70452e48-ae88-43e3-b3f2-ea17d20b5bc3"
-    override val id: UUID = UUID(idUUIDValue)
+    companion object {
+        private const val defaultIdValue = "70452e48-ae88-43e3-b3f2-ea17d20b5bc3"
+    }
 }
 
-class DnD5eGame(
+@Serializable
+@optics
+data class DnD5eGame constructor(
     override val name: String,
-    override val gameMaster: GameMaster,
-    val playerCharacters: MutableSet<PlayerCharacter> = mutableSetOf(),
-    val nonPlayerCharacters: MutableSet<NonPlayerCharacter> = mutableSetOf(),
+    val playerCharacters: Set<PlayerCharacter> = setOf(),
+    val nonPlayerCharacters: Set<NonPlayerCharacter> = setOf(),
+    override val system: DnD5e,
     override val players: Set<Player> = setOf(),
-    override val scenes: MutableMap<UUID, Scene> = mutableMapOf(),
-    override val id: UUID = UUID.generateUUID()
+    override val scenes: Set<Scene> = setOf(),
+    override val tokenizables: Set<Tokenizable> = setOf(),
+    override val gameMaster: GameMaster,
+    override val id: UUID = UUID.generateUUID(),
 ) : Game<DnD5e>() {
-    override val system: DnD5e = DnD5e
 
+    companion object {}
+
+    constructor(
+        name: String,
+        playerCharacters: Set<PlayerCharacter> = setOf(),
+        nonPlayerCharacters: Set<NonPlayerCharacter> = setOf(),
+        system: DnD5e,
+        players: Set<Player> = setOf(),
+        scenes: Set<Scene> = setOf(),
+        tokenizables: Set<Tokenizable> = setOf(),
+        initialGameMasterUser: User,
+        id: UUID = UUID.generateUUID()
+    ) : this(
+        id= id,
+        name = name,
+        gameMaster = GameMaster("Game Master", id, initialGameMasterUser),
+        playerCharacters = playerCharacters,
+        nonPlayerCharacters = nonPlayerCharacters,
+        system = system,
+        players = players,
+        scenes = scenes,
+        tokenizables = tokenizables
+    )
+
+
+    @Transient
     override val chat: Chat = Chat()
-
-    override val tokenizables: Map<UUID, Tokenizable> = (playerCharacters + nonPlayerCharacters).associateBy { it.id }
 }

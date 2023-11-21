@@ -1,15 +1,18 @@
 package tabletop.client.ui
 
-import tabletop.client.connection.ConnectionScene
+import dev.fritz2.core.Store
+import dev.fritz2.core.storeOf
+import kotlinx.coroutines.Job
+import tabletop.client.connection.ConnectionScreen
+import tabletop.client.di.Dependencies
 import tabletop.client.game.GameScene
-import tabletop.client.state.State
 import tabletop.common.error.CommonError
 
 
-class UserInterface(val state: State) {
-
-    val connectionScene = ConnectionScene(state)
-    val gameScene = GameScene()
+class UserInterface(private val dependencies: Dependencies) {
+    val gameScene: Store<GameScene> = storeOf(GameScene(dependencies), Job())
+    val connectionScreen: Store<ConnectionScreen> = storeOf(ConnectionScreen(dependencies), Job())
+    val notifications: Notifications = Notifications(dependencies)
 
     companion object
 

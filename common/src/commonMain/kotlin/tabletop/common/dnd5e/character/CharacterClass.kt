@@ -1,7 +1,7 @@
 package tabletop.common.dnd5e.character
 
 import kotlinx.serialization.Serializable
-import tabletop.common.Named
+import tabletop.common.entity.Named
 import tabletop.common.dice.Dice
 
 @Serializable
