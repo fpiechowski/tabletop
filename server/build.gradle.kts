@@ -25,14 +25,13 @@ repositories {
 
 kotlin {
     jvm {
-        jvmToolchain(17)
+        jvmToolchain(11)
         withJava()
         testRuns.named("test") {
             executionTask.configure {
                 useJUnitPlatform()
             }
         }
-        mainRun { mainClass.set("tabletop.server.MainKt") }
     }
 
     sourceSets {

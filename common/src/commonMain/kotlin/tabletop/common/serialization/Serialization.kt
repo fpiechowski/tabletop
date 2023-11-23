@@ -12,6 +12,8 @@ import kotlinx.serialization.modules.subclass
 import tabletop.common.auth.Authentication
 import tabletop.common.connection.Connection
 import tabletop.common.dnd5e.DnD5eGame
+import tabletop.common.dnd5e.character.Human
+import tabletop.common.dnd5e.character.Race
 import tabletop.common.error.CommonError
 import tabletop.common.event.Event
 import tabletop.common.game.Game
@@ -28,10 +30,15 @@ class Serialization {
                 subclass(Connection.Error::class)
                 subclass(Server.Error::class)
                 subclass(Authentication.Error::class)
+                subclass(CommonError.ThrowableError::class)
             }
 
             polymorphic(Game::class) {
                 subclass(DnD5eGame::class)
+            }
+
+            polymorphic(Race::class) {
+                subclass(Human::class)
             }
         }
     }

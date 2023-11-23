@@ -1,5 +1,6 @@
 package tabletop.server.di
 
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import one.microstream.storage.embedded.types.EmbeddedStorage
 import tabletop.common.auth.Authentication
@@ -25,30 +26,33 @@ class Dependencies(
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
     val persistence: Persistence by lazyPersistence
-    private val connectionScopeFactory get() = { connection: Connection -> ConnectionScope(connection) }
-    val serverAdapter: ServerAdapter by lazy { ServerAdapter(connectionScopeFactory) }
+    val connectionDependenciesFactory: ConnectionDependencies.Factory =
+        ConnectionDependencies.Factory { connection: Connection ->
+            ConnectionDependencies(
+                this,
+                connection
+            )
+        }
+    val authentication = AuthenticationAdapter(this)
+    val serverAdapter: ServerAdapter by lazy { ServerAdapter(this) }
     val demo: Demo = Demo(persistence)
     val state: State by lazy { runBlocking { State() } }
-
-    inner class ConnectionScope(
-        override val connection: Connection,
-        val persistence: Persistence = this@Dependencies.persistence,
-        val state: State = this@Dependencies.state,
-        override val serialization: Serialization = this@Dependencies.serialization,
-        override val terminalErrorHandler: TerminalErrorHandler = this@Dependencies.terminalErrorHandler,
-        override val connectionCommunicator: ConnectionCommunicator =
-            ConnectionCommunicator(connection, serialization),
-        override val connectionErrorHandler: ConnectionErrorHandler =
-            ConnectionErrorHandler(terminalErrorHandler, connectionCommunicator)
-    ) : CommonDependencies.ConnectionScope {
-
-        val authentication: Authentication = AuthenticationAdapter(this@ConnectionScope)
-        val eventHandler: EventHandler = EventHandler(this)
-    }
-
-    fun interface ConnectionScopeFactory {
-        operator fun invoke(connection: Connection): ConnectionScope
-    }
+    val serverJob: Job = Job()
 }
 
+class ConnectionDependencies(
+    dependencies: Dependencies,
+    override val connection: Connection,
+    override val connectionCommunicator: ConnectionCommunicator =
+        ConnectionCommunicator(connection, dependencies.serialization),
+    override val connectionErrorHandler: ConnectionErrorHandler =
+        ConnectionErrorHandler(dependencies.terminalErrorHandler, connectionCommunicator)
+) : CommonDependencies.ConnectionScope {
+
+    val eventHandler: EventHandler = EventHandler(dependencies, this)
+
+    fun interface Factory : (Connection) -> ConnectionDependencies {
+        override operator fun invoke(connection: Connection): ConnectionDependencies
+    }
+}
 

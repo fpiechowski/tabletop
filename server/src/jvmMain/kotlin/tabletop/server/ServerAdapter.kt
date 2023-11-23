@@ -1,7 +1,6 @@
 package tabletop.server
 
 import arrow.core.raise.Raise
-import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.recover
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -23,55 +22,55 @@ import tabletop.common.error.CommonError
 import tabletop.common.event.Event
 import tabletop.common.event.RequestEvent
 import tabletop.common.server.Server
+import tabletop.server.di.ConnectionDependencies
 import tabletop.server.di.Dependencies
 import java.io.File
 
 class ServerAdapter(
-    private val connectionScopeFactory: Dependencies.ConnectionScopeFactory
+    private val dependencies: Dependencies,
 ) : Server() {
     private val logger = KotlinLogging.logger { }
-    val application: CompletableDeferred<Application> = CompletableDeferred()
+    private val application: CompletableDeferred<Application> = CompletableDeferred()
 
     fun launch() = either {
-        catch({
-            embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
-                module().also {
-                    application.complete(this)
-                }
-            }.start(wait = true)
-        }) {
+        recover<CommonError, Unit>({
+            embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = {
+                eventsModule()
+            }).start(wait = true)
+        }, recover = {
+            raise(Error("Error on starting server", it))
+        }, catch = {
             raise(Error("Error on starting server", CommonError.ThrowableError(it)))
-        }
+        })
     }
 
-    private fun Application.module() = apply {
+    private fun Application.eventsModule() {
+        application.complete(this)
+        install(WebSockets)
         launch {
-            install(WebSockets)
-            serve()
+            serveEvents()
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private suspend fun serve() {
+    private suspend fun serveEvents() {
         application.await().routing {
-            staticFiles("/assets", File("assets"))
-
             get("/status") {
                 call.respond(HttpStatusCode.OK, "healthy")
             }
 
+            staticFiles("/assets", File("assets"))
+
             webSocket {
-
-
                 val connection = with(this.call.request.origin) {
                     Connection(remoteHost, remotePort, this@webSocket)
                 }
-                val connectionScopeDependencies = connectionScopeFactory(connection)
+                val connectionScopeDependencies = dependencies.connectionDependenciesFactory(connection)
 
                 with(connectionScopeDependencies) {
                     recover<CommonError, Unit>(
                         block = {
-                            state.connections.update { it + connection }
+                            dependencies.state.connections.update { it + connection }
 
                             receiveIncomingEvents(connectionScopeDependencies) {
                                 with(eventHandler) {
@@ -94,9 +93,10 @@ class ServerAdapter(
     }
 
     private suspend fun receiveIncomingEvents(
-        connectionScopeDependencies: Dependencies.ConnectionScope,
+        connectionScopeDependencies: ConnectionDependencies,
         onEach: suspend Raise<CommonError>.(Event) -> Unit
     ) = with(connectionScopeDependencies) {
+        logger.debug { "Receiving incoming events" }
         connectionCommunicator.receiveIncoming<RequestEvent>({
             onEach(it)
         }) {

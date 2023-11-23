@@ -14,8 +14,6 @@ interface CommonDependencies {
         val connection: Connection
         val connectionCommunicator: ConnectionCommunicator
         val connectionErrorHandler: ConnectionErrorHandler
-        val serialization: Serialization
-        val terminalErrorHandler: TerminalErrorHandler
     }
 }
 

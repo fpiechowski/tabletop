@@ -5,7 +5,7 @@ import io.github.oshai.kotlinlogging.KotlinLoggingConfiguration
 import io.github.oshai.kotlinlogging.Level
 import tabletop.client.connection.connectionScene
 import tabletop.client.di.Dependencies
-import tabletop.client.game.gameScene
+import tabletop.client.game.gameScreen
 import tabletop.client.ui.importantFrame
 
 fun main() {
@@ -18,7 +18,7 @@ fun main() {
         dependencies.router.data.render {
             when (it) {
                 "connection" -> connectionScene(dependencies)
-                "game" -> gameScene(dependencies)
+                "game" -> gameScreen(dependencies)
                 "important" -> div("w-1/4 p-10") { importantFrame { +"LAlala" } }
             }
         }

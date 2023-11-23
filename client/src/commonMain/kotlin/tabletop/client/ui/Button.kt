@@ -2,10 +2,9 @@ package tabletop.client.ui
 
 import dev.fritz2.core.HtmlTag
 import dev.fritz2.core.RenderContext
-import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.HTMLDivElement
 
-fun RenderContext.button(text: String, classes: String = "", block: HtmlTag<HTMLDivElement>.() -> Unit) =
+fun RenderContext.customButton(text: String, classes: String = "", block: HtmlTag<HTMLDivElement>.() -> Unit) =
     Button(text, classes, block).run { render() }
 
 class Button(

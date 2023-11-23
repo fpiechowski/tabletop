@@ -70,6 +70,5 @@ abstract class Game<T : System> : NamedEntity() {
                 set = { _, gameWithSystem -> gameWithSystem }
             )
         }
-
     }
 }

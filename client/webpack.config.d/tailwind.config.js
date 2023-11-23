@@ -48,4 +48,6 @@ const tailwind = {
             }
         ]
     });
+
+
 })(config);

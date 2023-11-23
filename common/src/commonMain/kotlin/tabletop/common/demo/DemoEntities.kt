@@ -50,7 +50,7 @@ val demoScene = Scene(
 
 val demoNonPlayerCharacter = NonPlayerCharacter(
     10,
-    Human,
+    Human(),
     setOf(),
     setOf(),
     Character.Attributes(),

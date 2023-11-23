@@ -6,7 +6,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import tabletop.common.error.CommonError
 import tabletop.server.di.Dependencies
 
-
 private val logger = KotlinLogging.logger { }
 
 fun main() = SuspendApp {
@@ -16,6 +15,7 @@ fun main() = SuspendApp {
         fold<CommonError, Unit, Unit>(
             block = {
                 dependencies.serverAdapter.launch()
+                Unit
             },
             recover = { it.handle() },
             catch = { CommonError.ThrowableError(it).handle() },

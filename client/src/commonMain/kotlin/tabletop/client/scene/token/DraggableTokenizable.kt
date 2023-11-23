@@ -39,7 +39,7 @@ class DraggableTokenizable(
                 )
                 img {
                     src(tokenizable.tokenImageFilePath)
-                    inlineStyle("transform: scale(${dependencies.userInterface.gameScene.current.zoomScaleStore.current})")
+                    inlineStyle("transform: scale(${dependencies.userInterface.gameScreen.current.zoomScaleStore.current})")
                 }
 
 
@@ -55,7 +55,7 @@ class DraggableTokenizable(
                     if (!dragging) {
                         with(dependencies.eventHandler) {
                             currentScene()?.let { scene ->
-                                val tokensDiv = dependencies.userInterface.gameScene.current.sceneView.tokensDiv.await()
+                                val tokensDiv = dependencies.userInterface.gameScreen.current.sceneView.tokensDiv.await()
                                 val rect = tokensDiv.domNode.getBoundingClientRect()
                                 val localX = mouseEvent.clientX - rect.left
                                 val localY = mouseEvent.clientY - rect.top

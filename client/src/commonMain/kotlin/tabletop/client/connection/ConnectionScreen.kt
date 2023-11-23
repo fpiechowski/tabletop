@@ -17,7 +17,7 @@ import tabletop.common.connection.Connection
 import tabletop.common.error.CommonError
 import tabletop.common.error.ErrorHandler.Companion.use
 import tabletop.common.event.GameLoadingRequested
-import tabletop.client.ui.button as fancyButton
+import tabletop.client.ui.customButton as fancyButton
 
 fun RenderContext.connectionScene(dependencies: Dependencies) = with(ConnectionScreen(dependencies)) { render() }
 

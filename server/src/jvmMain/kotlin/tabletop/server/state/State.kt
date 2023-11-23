@@ -7,4 +7,4 @@ import tabletop.common.game.Game
 data class State(
     val connections: MutableStateFlow<Set<Connection>> = MutableStateFlow(setOf()),
     val connectionToGame: MutableStateFlow<Map<Connection, Game<*>>> = MutableStateFlow(mapOf())
-)
+) : tabletop.common.state.State

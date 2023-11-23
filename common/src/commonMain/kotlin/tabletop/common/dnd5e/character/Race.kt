@@ -21,7 +21,7 @@ abstract class Race : Named {
 }
 
 @Serializable
-object Human : Race() {
+class Human : Race() {
 
     private fun readResolve(): Any = Human
     override val name: String = "Human"
@@ -29,6 +29,4 @@ object Human : Race() {
     override val alignment: Set<Character.Alignment> = setOf()
     override val size: Character.Size = Character.Size.Medium
     override val speed: Int = 30
-
-    private const val serialVersionUID = 1L
 }

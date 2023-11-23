@@ -2,12 +2,12 @@ package tabletop.client.event
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import tabletop.client.di.Dependencies
 import tabletop.client.error.UIErrorHandler
-import tabletop.client.idLensOf
 import tabletop.client.server.ServerAdapter
 import tabletop.client.state.State
 import tabletop.client.ui.UserInterface
@@ -70,7 +70,7 @@ class EventHandler(
 
     private suspend fun <T : ResultEvent> T.handle(): Either<CommonError, Unit> =
         either {
-            dependencies.state.connectionScope.value?.run {
+            dependencies.state.connectionDependencies.value?.run {
                 with(connectionCommunicator) {
                     when (this@handle) {
                         is GameLoaded -> {
@@ -120,7 +120,9 @@ class EventHandler(
 
     private suspend inline fun <reified T : RequestEvent> T.sendToServer(): Either<CommonError, Unit> =
         either {
-            dependencies.state.connectionScope.value?.run {
+            ensureNotNull(dependencies.state.connectionDependencies.value){
+                Error("Connection dependencies are not initialized", null)
+            }.run {
                 with(connectionCommunicator) {
                     this@sendToServer.send().bind()
                 }

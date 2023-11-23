@@ -8,6 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
+import tabletop.client.di.ConnectionDependencies
 import tabletop.client.di.Dependencies
 import tabletop.client.error.UIErrorHandler
 import tabletop.client.event.EventHandler
@@ -37,13 +38,13 @@ class ServerAdapter(
             httpClient
                 .webSocket(host = host, port = port) {
                     val connection = Connection(host, port, this)
-                    val connectionScopeDependencies = dependencies.ConnectionScope(connection)
+                    val connectionDependencies = dependencies.connectionDependenciesFactory(connection)
 
                     recover<CommonError, Unit>({
                         with(eventHandler) {
                             AuthenticationRequested(credentials).handle().bind()
 
-                            receiveIncomingResultEvents(connectionScopeDependencies) {
+                            receiveIncomingResultEvents(connectionDependencies) {
                                 it.handle().bind()
                             }
 
@@ -65,7 +66,7 @@ class ServerAdapter(
     }
 
     private suspend fun receiveIncomingResultEvents(
-        connectionScopeDependencies: Dependencies.ConnectionScope,
+        connectionScopeDependencies: ConnectionDependencies,
         onEach: suspend (ResultEvent) -> Unit
     ) = with(connectionScopeDependencies) {
         connectionCommunicator.receiveIncoming<ResultEvent>({

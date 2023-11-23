@@ -1,8 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
     id("com.google.devtools.ksp")
-    id("com.palantir.docker") version "0.35.0"
 }
 
 group = "com.github.mesayah"
@@ -18,8 +19,15 @@ val fritz2Version = "1.0-RC12"
 kotlin {
     js(IR) {
         browser {
+            testTask {
+                useKarma {
+                    useChromeHeadless()
+                }
+            }
+
             webpackTask {
                 devServer?.port = 8081
+
             }
         }
         binaries.executable()
@@ -48,11 +56,13 @@ kotlin {
         val jsMain by getting {
             dependencies {
                 implementation(npm("tailwindcss", "3.3.5"))
+                implementation(npm("rpg-awesome", "0.2.0"))
 
                 implementation(devNpm("postcss", "8.4.17"))
                 implementation(devNpm("postcss-loader", "7.0.1"))
                 implementation(devNpm("autoprefixer", "10.4.12"))
                 implementation(devNpm("css-loader", "6.7.1"))
+                implementation(devNpm("file-loader", "6.2.0"))
                 implementation(devNpm("style-loader", "3.3.1"))
                 implementation(devNpm("cssnano", "5.1.13"))
 
@@ -68,16 +78,12 @@ kotlin {
 
 dependencies {
     add("kspCommonMainMetadata", "dev.fritz2:lenses-annotation-processor:$fritz2Version")
+    add("kspCommonMainMetadata","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }
 
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 
-tasks.withType<Test> {
-    dependsOn(":server:buildDockerImage")
+/*tasks.withType<KotlinCompile<*>>().all {
+    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+}*/
 
-    useJUnitPlatform()
-}
-
-dependencies {
-    add("kspCommonMainMetadata","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
-}

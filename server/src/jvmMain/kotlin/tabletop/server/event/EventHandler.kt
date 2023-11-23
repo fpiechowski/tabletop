@@ -13,15 +13,17 @@ import tabletop.common.error.UnsupportedSubtypeError
 import tabletop.common.event.*
 import tabletop.common.scene.Scene
 import tabletop.common.scene.token.Tokenizable
+import tabletop.server.di.ConnectionDependencies
 import tabletop.server.di.Dependencies
 
 
 class EventHandler(
-    private val connectionScopeDependencies: Dependencies.ConnectionScope,
+    private val dependencies: Dependencies,
+    private val connectionDependencies: ConnectionDependencies,
 ) {
-    private val persistence by lazy { connectionScopeDependencies.persistence }
-    private val authentication by lazy { connectionScopeDependencies.authentication }
-    private val state by lazy { connectionScopeDependencies.state }
+    private val persistence by lazy { dependencies.persistence }
+    private val state by lazy { dependencies.state }
+    private val authentication by lazy { dependencies.authentication }
     private val logger = KotlinLogging.logger { }
     suspend fun Event.handle(): Either<Event.Error, Unit> =
         either {
@@ -40,17 +42,17 @@ class EventHandler(
                     is ResultEvent -> {
                         when (this@handle) {
                             is GameLoaded -> state.connectionToGame.update {
-                                it.plus(connectionScopeDependencies.connection to game)
+                                it.plus(connectionDependencies.connection to game)
                             }
 
                             else -> Unit
                         }
 
-                        with(connectionScopeDependencies) {
+                        with(connectionDependencies) {
                             with(connectionCommunicator) {
                                 connectionErrorHandler.use {
                                     if (shared) {
-                                        state.connectionToGame.value[connectionScopeDependencies.connection]
+                                        state.connectionToGame.value[connectionDependencies.connection]
                                             ?.let { game ->
                                                 state.connectionToGame.value
                                                     .filterValues { it == game }
@@ -78,7 +80,7 @@ class EventHandler(
             val user = persistence.retrieve { users[userId] }.bind()
 
             val games = persistence.retrieve {
-                games.values.filter { it.gameMaster?.user == user } +
+                games.values.filter { it.gameMaster.user == user } +
                         games.values.filter { it.players.any { it.user == user } }
                             .toSet()
             }.bind()

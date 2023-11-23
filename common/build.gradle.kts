@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
+
 val kotlinxSerialization: String by project
 val kotlinVersion: String by project
 
@@ -12,7 +14,7 @@ version = "1.0-SNAPSHOT"
 
 kotlin {
     jvm {
-        jvmToolchain(17)
+        jvmToolchain(11)
         withJava()
         testRuns.named("test") {
             executionTask.configure {
@@ -58,7 +60,6 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                api(kotlin("test"))
             }
         }
 
@@ -86,8 +87,14 @@ kotlin {
     }
 }
 
+
 dependencies {
     add("kspCommonMainMetadata","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
-    add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
-    add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }
+
+kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
+
+tasks.withType<KotlinCompile<*>>().all {
+    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+}
+

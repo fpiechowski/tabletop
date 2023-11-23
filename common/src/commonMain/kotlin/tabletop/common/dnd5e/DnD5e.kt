@@ -1,5 +1,6 @@
 package tabletop.common.dnd5e
 
+import arrow.optics.Lens
 import arrow.optics.optics
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -28,7 +29,7 @@ data class DnD5e(
 
 @Serializable
 @optics
-data class DnD5eGame constructor(
+data class DnD5eGame(
     override val name: String,
     val playerCharacters: Set<PlayerCharacter> = setOf(),
     val nonPlayerCharacters: Set<NonPlayerCharacter> = setOf(),
@@ -40,7 +41,16 @@ data class DnD5eGame constructor(
     override val id: UUID = UUID.generateUUID(),
 ) : Game<DnD5e>() {
 
-    companion object {}
+    companion object {
+        val nonPlayerCharactersLens: Lens<DnD5eGame, Set<NonPlayerCharacter>> = Lens(
+            { it.nonPlayerCharacters },
+            { game, nonPlayerCharacters -> game.copy(nonPlayerCharacters = nonPlayerCharacters) }
+        )
+        val playerCharactersLens: Lens<DnD5eGame, Set<PlayerCharacter>> = Lens(
+            { it.playerCharacters },
+            { game, playerCharacters -> game.copy(playerCharacters = playerCharacters) }
+        )
+    }
 
     constructor(
         name: String,
@@ -53,7 +63,7 @@ data class DnD5eGame constructor(
         initialGameMasterUser: User,
         id: UUID = UUID.generateUUID()
     ) : this(
-        id= id,
+        id = id,
         name = name,
         gameMaster = GameMaster("Game Master", id, initialGameMasterUser),
         playerCharacters = playerCharacters,
