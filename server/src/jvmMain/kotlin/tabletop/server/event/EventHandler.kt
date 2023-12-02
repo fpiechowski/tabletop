@@ -81,7 +81,7 @@ class EventHandler(
 
             val games = persistence.retrieve {
                 games.values.filter { it.gameMaster.user == user } +
-                        games.values.filter { it.players.any { it.user == user } }
+                        games.values.filter { it.players.any { it.value.user == user } }
                             .toSet()
             }.bind()
                 .toSet()
@@ -107,9 +107,9 @@ class EventHandler(
         either {
             val game = persistence.retrieve { games[gameId] }.bind()
 
-            val tokenizable = game.tokenizables.find { it.id == tokenizableId } ?: raise(NotFoundError(Tokenizable::class, tokenizableId))
+            val tokenizable = game.tokenizables[tokenizableId] ?: raise(NotFoundError(Tokenizable::class, tokenizableId))
 
-            val scene = game.scenes.find { it.id == sceneId } ?: raise(NotFoundError(Scene::class, sceneId))
+            val scene = game.scenes[sceneId] ?: raise(NotFoundError(Scene::class, sceneId))
 
             val token = tokenizable.tokenize(scene, position)
                 .also {

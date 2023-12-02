@@ -1,10 +1,11 @@
 package tabletop.client.ui
 
-import dev.fritz2.core.Store
-import dev.fritz2.core.storeOf
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.uuid.UUID
 import tabletop.client.connection.ConnectionScreen
 import tabletop.client.di.Dependencies
 import tabletop.client.game.GameScreen
@@ -13,9 +14,10 @@ import kotlin.coroutines.CoroutineContext
 
 
 class UserInterface(private val dependencies: Dependencies) : CoroutineScope {
-    val gameScreen: Store<GameScreen> = storeOf(GameScreen(dependencies), Job())
-    val connectionScreen: Store<ConnectionScreen> = storeOf(ConnectionScreen(dependencies), Job())
-    val notifications: Notifications = Notifications(dependencies)
+
+    val openedWindows: MutableStateFlow<Map<UUID, WindowModel>> = MutableStateFlow(mapOf())
+    val gameScreenModel = CompletableDeferred<GameScreen.Model>()
+    val connectionScreenModel = CompletableDeferred<ConnectionScreen.Model>()
 
     companion object
 

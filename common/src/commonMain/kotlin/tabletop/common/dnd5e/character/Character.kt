@@ -8,6 +8,7 @@ import tabletop.common.entity.Named
 import tabletop.common.Usable
 import tabletop.common.dnd5e.Modifier
 import tabletop.common.dnd5e.item.Equippable
+import tabletop.common.entity.Entity
 import tabletop.common.game.player.Player
 import tabletop.common.geometry.Point
 import tabletop.common.scene.Scene
@@ -27,6 +28,7 @@ class PlayerCharacter(
     override val name: String,
     override val tokenImageFilePath: String,
     val player: Player,
+    override val image: String? = null,
     override val id: UUID = UUID.generateUUID()
 ) : Character() {
 
@@ -46,6 +48,7 @@ class NonPlayerCharacter(
     override val equipped: Set<Equippable>,
     override val name: String,
     override val tokenImageFilePath: String,
+    override val image: String? = null,
     override val id: UUID = UUID.generateUUID()
 ) : Character() {
 
@@ -61,7 +64,7 @@ class NonPlayerCharacter(
 }
 
 @Serializable
-abstract class Character : Tokenizable, Named, Identifiable<UUID>, Usable.User,
+abstract class Character : Entity(), Tokenizable, Named, Identifiable<UUID>, Usable.User,
     Usable.Target {
     abstract override val tokenImageFilePath: String
     abstract override val name: String

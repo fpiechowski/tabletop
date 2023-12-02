@@ -4,13 +4,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
 import tabletop.common.entity.Entity
+import tabletop.common.entity.Identifiable
 
 data class CredentialsData(
     val principal: String,
     val secret: String
 )
 
-sealed class Credentials<P, S> : Entity() {
+sealed class Credentials<P, S> : Identifiable<UUID> {
     abstract val principal: P
     abstract val secret: S
 

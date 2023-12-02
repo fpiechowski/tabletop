@@ -8,25 +8,27 @@ import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import tabletop.common.dnd5e.DnD5e
 import tabletop.common.dnd5e.DnD5eGame
-import tabletop.common.entity.NamedEntity
+import tabletop.common.entity.Entity
 import tabletop.common.error.CommonError
 import tabletop.common.error.UnsupportedSubtypeError
 import tabletop.common.game.player.Player
+import tabletop.common.idLens
 import tabletop.common.scene.Scene
 import tabletop.common.scene.token.Tokenizable
 import tabletop.common.system.System
 import tabletop.common.user.GameMaster
 
 @Serializable
-abstract class Game<T : System> : NamedEntity() {
+abstract class Game<T : System> : Entity() {
 
     abstract override val id: UUID
     abstract val system: T
     abstract val gameMaster: GameMaster
-    abstract val players: Set<Player>
-    abstract val scenes: Set<Scene>
-    abstract val tokenizables: Set<Tokenizable>
+    abstract val players: Map<UUID, Player>
+    abstract val scenes: Map<UUID, Scene>
+    abstract val tokenizables: Map<UUID, Tokenizable>
     abstract val chat: Chat
+    abstract val entities: Map<UUID, Entity>
 
 
     class Chat {
@@ -36,7 +38,7 @@ abstract class Game<T : System> : NamedEntity() {
     }
 
     companion object {
-        val scenes: Either<CommonError, Lens<Game<*>, Set<Scene>>> = either {
+        val scenes: Either<CommonError, Lens<Game<*>, Map<UUID, Scene>>> = either {
             Lens(
                 get = { game -> game.scenes },
                 set = { game, scenes ->
@@ -47,6 +49,12 @@ abstract class Game<T : System> : NamedEntity() {
                 }
             )
         }
+
+        fun scene(id: UUID) = either {
+            scenes.bind()
+                .compose(idLens<Scene>(id).bind())
+        }
+
 
         @Suppress("UNCHECKED_CAST")
         fun <T : System> system(): Either<CommonError, Lens<Game<T>, T>> = either {
@@ -64,7 +72,7 @@ abstract class Game<T : System> : NamedEntity() {
         }
 
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T : System, G: Game<T>> withSystem(): Either<CommonError, Lens<Game<*>, G>> = either {
+        inline fun <reified T : System, G : Game<T>> withSystem(): Either<CommonError, Lens<Game<*>, G>> = either {
             Lens(
                 get = { game -> game.also { ensure(game.system is T) { UnsupportedSubtypeError(System::class) } } as G },
                 set = { _, gameWithSystem -> gameWithSystem }

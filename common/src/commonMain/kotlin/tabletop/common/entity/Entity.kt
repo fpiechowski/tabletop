@@ -14,10 +14,10 @@ import tabletop.common.user.User
 import kotlin.reflect.KClass
 
 
-abstract class Entity : Identifiable<UUID>
+abstract class Entity : Identifiable<UUID>, Named {
+    abstract val image: String?
+}
 
-
-abstract class NamedEntity : Entity(), Named
 
 interface Named {
     val name: String
@@ -25,11 +25,4 @@ interface Named {
 
 interface Identifiable<T> {
     val id: T
-}
-
-interface EntityGraph {
-    fun <T : Tokenizable> Token<T>.tokenizable(): Either<CommonError, Tokenizable>
-    val Game<*>.tokenizables: Set<Tokenizable>
-    val Scene.game: Either<CommonError, Game<*>>
-    val Token<*>.scene: Either<CommonError, Scene>
 }

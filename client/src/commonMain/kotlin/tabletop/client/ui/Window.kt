@@ -1,77 +1,94 @@
 package tabletop.client.ui
 
-import dev.fritz2.core.RenderContext
-import dev.fritz2.core.Store
-import dev.fritz2.core.Tag
-import dev.fritz2.core.storeOf
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import org.w3c.dom.HTMLDivElement
-import tabletop.common.geometry.Point
+import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Card
+import androidx.compose.material.IconButton
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.uuid.UUID
+import kotlinx.uuid.generateUUID
+import tabletop.client.di.Dependencies
 
-class Window(
+data class WindowModel(
     val title: String,
-    val content: Tag<HTMLDivElement>.() -> Unit,
-    val position: Store<Point> = storeOf(Point(0, 0), Job()),
-    val dragging: Store<Boolean> = storeOf(false, Job()),
-) {
+    val modifier: Modifier,
+    val offsetState: MutableStateFlow<IntOffset>,
+    val id: UUID,
+    val content: @Composable () -> Unit,
+)
 
-    fun RenderContext.render(): Tag<HTMLDivElement> =
-        div("window grid gap-0") {
-            inlineStyle("position: absolute; left: ${position.current.x}px; top: ${position.current.y}px;")
-            inlineStyle("grid-template-columns: auto 1fr auto; grid-template-rows: auto 1fr auto;")
-            position.data.render {
-                div("window-top-left window-corner justify-self-end align-self-end") { }
-                div("window-top window-edge-horizontal align-self-end") { }
-                div("window-top-right window-corner") { }
-                div("window-left window-edge-vertical justify-self-end") { }
-                div("window-center text-white") {
-                    div("window-title flex justify-center items-center") {
-                        dragging()
-                        h1("text-2xl") { +title }
+@Composable
+fun Window(
+    title: String, modifier: Modifier,
+    userInterface: UserInterface,
+    offsetState: MutableStateFlow<IntOffset>,
+    id: UUID,
+    content: @Composable () -> Unit,
+) {
+    val offset by offsetState.collectAsState()
+
+    Card(
+        Modifier
+            .then(modifier)
+            .offset { offset }
+    ) {
+        Column {
+            Box(
+                Modifier.fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            offsetState.apply {
+                                value += dragAmount.round()
+                            }
+                        }
                     }
-                    div("content p-2") {
-                        content()
+            ) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.align(Alignment.Center).padding(8.dp)
+                )
+
+                Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+                    IconButton(onClick = {
+                        userInterface.openedWindows.value -= id
+                    }) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
-                div("window-right window-edge-vertical justify-self-start") { }
-                div("window-bottom-left window-corner justify-self-end") { }
-                div("window-bottom window-edge-horizontal align-self-start") { }
-                div("window-bottom-right window-corner") { }
             }
+
+            content()
         }
-
-
-    private fun Tag<*>.dragging() {
-        var lastMousePosition: Point? = null
-
-        mousedowns
-            .onEach { console.log("$it position=${position.current}; dragging=${dragging.current}; lastMousePosition=$lastMousePosition") }
-            .map { it.buttons == 1.toShort() }
-            .handledBy(dragging.update)
-
-        mouseups
-            .onEach { console.log("$it position=${position.current}; dragging=${dragging.current}; lastMousePosition=$lastMousePosition") }
-            .filter { it.button == 1.toShort() }
-            .map { false }
-            .handledBy(dragging.update)
-
-        mousemoves
-            .onEach { lastMousePosition = Point(it.clientX, it.clientY) }
-            .filter { dragging.current }
-            .onEach { console.log("$it position=${position.current}; dragging=${dragging.current}; lastMousePosition=$lastMousePosition") }
-            .map { position.current + Point(it.clientX - lastMousePosition!!.x, it.clientY - lastMousePosition!!.y) }
-            .onEach { console.log("new position=$it") }
-            .handledBy(position.update)
     }
 }
 
-fun RenderContext.window(
-    title: String,
-    content: Tag<HTMLDivElement>.() -> Unit
-): Tag<HTMLDivElement> =
-    Window(title, content).run {
-        render()
+@Preview
+@Composable
+fun WindowPreview() {
+    val dependencies = Dependencies()
+    val offsetState = MutableStateFlow(IntOffset(0, 0))
+    Window("Test", Modifier, dependencies.userInterface, offsetState, UUID.generateUUID()) {
+        Text("Test")
     }
+}

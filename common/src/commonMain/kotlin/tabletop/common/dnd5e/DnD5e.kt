@@ -1,6 +1,5 @@
 package tabletop.common.dnd5e
 
-import arrow.optics.Lens
 import arrow.optics.optics
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -8,10 +7,11 @@ import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
 import tabletop.common.dnd5e.character.NonPlayerCharacter
 import tabletop.common.dnd5e.character.PlayerCharacter
+import tabletop.common.entity.Entity
 import tabletop.common.game.Game
 import tabletop.common.game.player.Player
 import tabletop.common.scene.Scene
-import tabletop.common.scene.token.Tokenizable
+import tabletop.common.scene.token.TokenizableEntity
 import tabletop.common.system.System
 import tabletop.common.user.GameMaster
 import tabletop.common.user.User
@@ -19,7 +19,8 @@ import tabletop.common.user.User
 @Serializable
 data class DnD5e(
     override val id: UUID = UUID(defaultIdValue),
-    override val name: String = "Dungeons & Dragons - 5th Edition"
+    override val name: String = "Dungeons & Dragons - 5th Edition",
+    override val image: String? = null
 ) : System() {
 
     companion object {
@@ -31,35 +32,27 @@ data class DnD5e(
 @optics
 data class DnD5eGame(
     override val name: String,
-    val playerCharacters: Set<PlayerCharacter> = setOf(),
-    val nonPlayerCharacters: Set<NonPlayerCharacter> = setOf(),
+    val playerCharacters: Map<UUID, PlayerCharacter> = mapOf(),
+    val nonPlayerCharacters: Map<UUID, NonPlayerCharacter> = mapOf(),
     override val system: DnD5e,
-    override val players: Set<Player> = setOf(),
-    override val scenes: Set<Scene> = setOf(),
-    override val tokenizables: Set<Tokenizable> = setOf(),
+    override val players: Map<UUID, Player> = mapOf(),
+    override val scenes: Map<UUID, Scene> = mapOf(),
+    override val tokenizables: Map<UUID, TokenizableEntity> = mapOf(),
     override val gameMaster: GameMaster,
+    override val image: String? = null,
     override val id: UUID = UUID.generateUUID(),
 ) : Game<DnD5e>() {
 
-    companion object {
-        val nonPlayerCharactersLens: Lens<DnD5eGame, Set<NonPlayerCharacter>> = Lens(
-            { it.nonPlayerCharacters },
-            { game, nonPlayerCharacters -> game.copy(nonPlayerCharacters = nonPlayerCharacters) }
-        )
-        val playerCharactersLens: Lens<DnD5eGame, Set<PlayerCharacter>> = Lens(
-            { it.playerCharacters },
-            { game, playerCharacters -> game.copy(playerCharacters = playerCharacters) }
-        )
-    }
+    companion object {}
 
     constructor(
         name: String,
-        playerCharacters: Set<PlayerCharacter> = setOf(),
-        nonPlayerCharacters: Set<NonPlayerCharacter> = setOf(),
+        playerCharacters: Map<UUID, PlayerCharacter> = mapOf(),
+        nonPlayerCharacters: Map<UUID, NonPlayerCharacter> = mapOf(),
         system: DnD5e,
-        players: Set<Player> = setOf(),
-        scenes: Set<Scene> = setOf(),
-        tokenizables: Set<Tokenizable> = setOf(),
+        players: Map<UUID, Player> = mapOf(),
+        scenes: Map<UUID, Scene> = mapOf(),
+        tokenizables: Map<UUID, TokenizableEntity> = mapOf(),
         initialGameMasterUser: User,
         id: UUID = UUID.generateUUID()
     ) : this(
@@ -77,4 +70,6 @@ data class DnD5eGame(
 
     @Transient
     override val chat: Chat = Chat()
+    override val entities: Map<UUID, Entity>
+        get() = playerCharacters + nonPlayerCharacters + players + scenes + tokenizables + gameMaster.let { it.id to it }
 }

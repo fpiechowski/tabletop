@@ -41,8 +41,8 @@ class Demo(private val persistence: Persistence) {
                 val games = listOf(demoGame, demoGame2)
                     .map {
                         it.copy {
-                            DnD5eGame.scenes set it.scenes + demoScene
-                            DnD5eGame.nonPlayerCharacters set it.nonPlayerCharacters + demoNonPlayerCharacter
+                            DnD5eGame.scenes set it.scenes + (demoScene.id to demoScene)
+                            DnD5eGame.nonPlayerCharacters set it.nonPlayerCharacters + demoNonPlayerCharacter.let { it.id to it }
                         }
                     }.onEach { game ->
                         persistenceRoot.copy {

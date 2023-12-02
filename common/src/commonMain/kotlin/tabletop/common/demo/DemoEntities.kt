@@ -57,6 +57,6 @@ val demoNonPlayerCharacter = NonPlayerCharacter(
     setOf(),
     "Demo",
     "assets/demo/tokenImage.png",
-    UUID("9186fb5e-9387-4527-a02c-15f5dabd3932")
+    id = UUID("9186fb5e-9387-4527-a02c-15f5dabd3932")
 )
 

@@ -1,89 +1,102 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization")
+    alias(libs.plugins.multiplatform)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.android.application)
     id("com.google.devtools.ksp")
 }
 
-group = "com.github.mesayah"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-    google()
-}
-
-val fritz2Version = "1.0-RC12"
-
 kotlin {
-    js(IR) {
-        browser {
-            testTask {
-                useKarma {
-                    useChromeHeadless()
-                }
-            }
-
-            webpackTask {
-                devServer?.port = 8081
-
+    androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "17"
             }
         }
-        binaries.executable()
     }
 
+    jvm()
+
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation(project(":common"))
-
-                implementation("dev.fritz2:core:$fritz2Version")
-                implementation("dev.fritz2:headless:$fritz2Version")
+        all {
+            languageSettings {
+                optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
             }
         }
+        commonMain.dependencies {
+            implementation(project(":common"))
 
-        val commonTest by getting {
-            dependencies {
-                implementation("io.kotest:kotest-assertions-core:5.7.2")
-                implementation("io.kotest:kotest-framework-engine:5.7.2")
+            implementation(compose.runtime)
+            implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
+            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+            implementation(compose.components.resources)
+            implementation(libs.voyager.navigator)
+            implementation(libs.kotlinx.coroutines.core)
+            api(libs.imageloader)
 
-                implementation("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
-                implementation("io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
-            }
         }
 
-        val jsMain by getting {
-            dependencies {
-                implementation(npm("tailwindcss", "3.3.5"))
-                implementation(npm("rpg-awesome", "0.2.0"))
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
 
-                implementation(devNpm("postcss", "8.4.17"))
-                implementation(devNpm("postcss-loader", "7.0.1"))
-                implementation(devNpm("autoprefixer", "10.4.12"))
-                implementation(devNpm("css-loader", "6.7.1"))
-                implementation(devNpm("file-loader", "6.2.0"))
-                implementation(devNpm("style-loader", "3.3.1"))
-                implementation(devNpm("cssnano", "5.1.13"))
+        jvmMain.dependencies {
+            implementation(compose.desktop.common)
+            implementation(compose.desktop.currentOs)
+        }
+    }
+}
 
-                implementation ("io.nacular.doodle:core:0.9.3"   )
-                implementation ("io.nacular.doodle:browser:0.9.3") {
-                    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-                    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-datetime")
-                }
-            }
+android {
+    namespace = "org.company.app"
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 24
+        targetSdk = 34
+
+        applicationId = "org.company.app.androidApp"
+        versionCode = 1
+        versionName = "1.0.0"
+    }
+    sourceSets["main"].apply {
+        manifest.srcFile("src/androidMain/AndroidManifest.xml")
+        res.srcDirs("src/androidMain/resources")
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.4"
+    }
+}
+
+compose.desktop {
+    application {
+        mainClass = "MainKt"
+
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "com.github.mesayah.desktopApp"
+            packageVersion = "1.0.0"
         }
     }
 }
 
 dependencies {
-    add("kspCommonMainMetadata", "dev.fritz2:lenses-annotation-processor:$fritz2Version")
-    add("kspCommonMainMetadata","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    add("kspCommonMainMetadata", libs.arrow.optics.ksp.plugin)
+    //add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    //add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }
 
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 
-/*tasks.withType<KotlinCompile<*>>().all {
-    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
-}*/
-
+//tasks.withType<KotlinCompile<*>>().all {
+//    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+//}

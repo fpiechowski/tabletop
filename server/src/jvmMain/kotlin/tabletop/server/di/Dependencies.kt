@@ -37,7 +37,6 @@ class Dependencies(
     val serverAdapter: ServerAdapter by lazy { ServerAdapter(this) }
     val demo: Demo = Demo(persistence)
     val state: State by lazy { runBlocking { State() } }
-    val serverJob: Job = Job()
 }
 
 class ConnectionDependencies(

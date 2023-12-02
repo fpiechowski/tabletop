@@ -1,11 +1,12 @@
 package tabletop.client.error
 
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import tabletop.client.ui.Notification
 import tabletop.client.ui.UserInterface
-import tabletop.client.update
 import tabletop.common.error.CommonError
 import tabletop.common.error.ErrorHandler
 import tabletop.common.error.TerminalErrorHandler
@@ -23,11 +24,7 @@ class UIErrorHandler(
         with(terminalErrorHandler) { handle() }
 
         with(userInterface) {
-            notifications.notifications.update {
-                it + Notification(
-                    this@handle.message ?: (this::class.simpleName ?: "Unknown Error"), Notification.Type.Error
-                )
-            }
+            connectionScreenModel.await().errors.value += this@handle
         }
     }
 

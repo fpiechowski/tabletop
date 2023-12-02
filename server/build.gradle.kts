@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
+
 val ktorVersion: String by project
 
 plugins {
@@ -38,23 +40,25 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(project(":common"))
-                implementation("io.ktor:ktor-server-netty:$ktorVersion")
-                implementation("io.ktor:ktor-server-websockets:$ktorVersion")
-                implementation("io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+                implementation(libs.ktor.server.netty)
+                implementation(libs.ktor.server.websockets)
             }
         }
 
         val jvmMain by getting {
             dependencies {
-                implementation("one.microstream:microstream-storage-embedded:08.01.01-MS-GA")
-                implementation("one.microstream:microstream-storage-embedded-configuration:08.01.01-MS-GA")
+                implementation(libs.microstream.storage.embedded)
+                implementation(libs.microstream.storage.embedded.configuration)
             }
         }
     }
 }
 
 dependencies {
-    add("kspCommonMainMetadata","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
-    add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
-    add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    add("kspCommonMainMetadata",libs.arrow.optics.ksp.plugin)
+    add("kspJvm",libs.arrow.optics.ksp.plugin)
+    add("kspJvmTest",libs.arrow.optics.ksp.plugin)
 }
+
+kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
+

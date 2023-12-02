@@ -1,8 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 
-val kotlinxSerialization: String by project
-val kotlinVersion: String by project
-
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
@@ -22,39 +19,35 @@ kotlin {
             }
         }
     }
-    js(IR) {
-        browser()
-        binaries.executable()
-    }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api("io.github.oshai:kotlin-logging:5.1.0")
+                api(libs.kotlin.logging)
 
-                api("app.softwork:kotlinx-uuid-core:0.0.22")
+                api(libs.kotlinx.uuid)
 
-                api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.1")
+                api(libs.kotlinx.serialization.json)
 
-                api("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+                api(libs.kotlinx.datetime)
 
-                api("io.arrow-kt:arrow-core:1.2.1")
-                api("io.arrow-kt:arrow-fx-coroutines:1.2.1")
-                api("io.arrow-kt:suspendapp:0.4.0")
-                api("io.arrow-kt:arrow-optics:1.2.1")
+                api(libs.arrow.core)
+                api(libs.arrow.core.serialization)
+                api(libs.arrow.fx.coroutines)
+                api(libs.arrow.optics)
+                api(libs.suspendapp)
 
-                api("io.ktor:ktor-client-core:2.3.6")
-                api("io.ktor:ktor-client-resources:2.3.6")
+                api(libs.ktor.client.core)
             }
         }
 
         val jvmMain by getting {
             dependencies {
-                api("ch.qos.logback:logback-classic:1.4.11")
+                api(libs.logback)
 
-                api("io.github.oshai:kotlin-logging-jvm:5.1.0")
+                api(libs.kotlin.logging.jvm)
 
-                api("io.ktor:ktor-client-cio:2.3.6")
+                api(libs.ktor.client.cio)
             }
         }
 
@@ -63,38 +56,29 @@ kotlin {
             }
         }
 
-        val jsMain by getting {
-            dependencies {
-                api("io.ktor:ktor-client-js:2.3.6")
-
-                api("io.github.oshai:kotlin-logging-js:5.1.0")
-            }
-        }
-
         val jvmTest by getting {
             dependencies {
-                api("io.kotest:kotest-assertions-core:5.7.2")
-                api("io.kotest:kotest-assertions-json:5.7.2")
-                api("io.kotest:kotest-runner-junit5:5.7.2")
+                api(libs.kotest.assertions.core)
+                api(libs.kotest.assertions.json)
+                api(libs.kotest.runner.junit5)
 
-                api("io.kotest.extensions:kotest-extensions-koin:1.3.0")
-                api("io.kotest.extensions:kotest-assertions-arrow:1.4.0")
-                api("io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
+                api(libs.kotest.assertions.arrow)
+                api(libs.kotest.assertions.arrow.fx.coroutines)
 
-                api("io.mockk:mockk:1.13.8")
+                api(libs.mockk)
             }
         }
     }
 }
 
-
 dependencies {
-    add("kspCommonMainMetadata","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    add("kspCommonMainMetadata", "io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    //add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }
 
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 
-tasks.withType<KotlinCompile<*>>().all {
-    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
-}
-
+//tasks.withType<KotlinCompile<*>>().all {
+//    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+//}

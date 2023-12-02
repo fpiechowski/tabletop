@@ -7,6 +7,7 @@ import tabletop.common.dnd5e.character.Proficiency
 class Armor(
     override val name: String,
     val acBonus: Int,
+    override val image: String? = null,
     override val id: UUID = UUID.generateUUID()
 ) : Item(), Equippable {
 

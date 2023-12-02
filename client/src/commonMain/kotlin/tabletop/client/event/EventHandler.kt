@@ -4,27 +4,36 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
+import arrow.optics.copy
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
+import tabletop.client.connection.ConnectionScreen
 import tabletop.client.di.Dependencies
 import tabletop.client.error.UIErrorHandler
+import tabletop.client.game.GameScreen
+import tabletop.client.navigation.Navigation
 import tabletop.client.server.ServerAdapter
 import tabletop.client.state.State
 import tabletop.client.ui.UserInterface
-import tabletop.client.update
 import tabletop.common.error.CommonError
+import tabletop.common.error.NotFoundError
 import tabletop.common.error.UnsupportedSubtypeError
 import tabletop.common.event.*
+import tabletop.common.game.Game
+import tabletop.common.scene.Scene
+import tabletop.common.scene.tokens
 import kotlin.coroutines.CoroutineContext
 
 class EventHandler(
     private val dependencies: Dependencies,
-    private val userInterface: UserInterface,
-    private val state: State,
-    private val uiErrorHandler: UIErrorHandler
-) : CoroutineScope {
+
+    ) : CoroutineScope {
     private val logger = KotlinLogging.logger {}
 
+    private val userInterface: UserInterface = dependencies.userInterface
+    private val state: State = dependencies.state
+    private val uiErrorHandler: UIErrorHandler = dependencies.uiErrorHandler
+    private suspend fun navigation(): Navigation = dependencies.navigation.await()
 
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
@@ -63,55 +72,65 @@ class EventHandler(
             }
         }
 
-    private fun ConnectionEnded.handle(): Either<CommonError, Unit> =
+    private suspend fun ConnectionEnded.handle(): Either<CommonError, Unit> =
         either {
-            dependencies.router.navTo("connection")
+            navigation().popUntil { it is ConnectionScreen }
         }
 
     private suspend fun <T : ResultEvent> T.handle(): Either<CommonError, Unit> =
         either {
             dependencies.state.connectionDependencies.value?.run {
-                with(connectionCommunicator) {
-                    when (this@handle) {
-                        is GameLoaded -> {
-                            state.game.bind().update(this@handle.game)
+                when (this@handle) {
+                    is GameLoaded -> {
+                        state.maybeGame.value = this@handle.game
 
-                            dependencies.router.navTo("game")
-                        }
+                        navigation().push(GameScreen(dependencies))
+                    }
 
-                        is GamesLoaded -> {
-                            state.games.update(this@handle.games)
-                        }
+                    is GamesLoaded -> {
+                        state.games.value = this@handle.games
+                    }
 
-                        is UserAuthenticated -> {
-                            state.user.update(this@handle.user)
-                            GameListingRequested(user.id)
-                                .handle()
-                                .bind()
-                        }
+                    is UserAuthenticated -> {
+                        state.maybeUser.value = this@handle.user
+                        GameListingRequested(user.id)
+                            .handle()
+                            .bind()
+                    }
 
-                        is TokenPlaced -> {
-                            with(state) {
-                                game.bind()
-                                    .scene(token.sceneId).bind()
-                                    .tokens.bind()
-                                    .update { tokens -> tokens + token }
-                            }
-                        }
-
-
-                        is SceneOpened -> {
-                            with(state) {
-                                currentScene.update {
-                                    game.bind()
-                                        .scene(sceneId).bind()
-                                        .current
+                    is TokenPlaced -> {
+                        with(state) {
+                            val game = game.bind()
+                            val scene = ensureNotNull(game.scenes[token.sceneId]) {
+                                NotFoundError(
+                                    Scene::class,
+                                    token.sceneId
+                                )
+                            }.let {
+                                it.copy {
+                                    Scene.tokens set it.tokens + (token.id to token)
                                 }
                             }
-                        }
 
-                        else -> raise(UnsupportedSubtypeError(ResultEvent::class))
+                            game.copy {
+                                Game.scenes.bind() set game.scenes + (scene.id to scene)
+                            }
+
+                            maybeGame.value = game
+                        }
                     }
+
+
+                    is SceneOpened -> {
+                        with(state) {
+                            val scene =
+                                ensureNotNull(game.bind().scenes[sceneId]) { NotFoundError(Scene::class, sceneId) }
+
+                            currentScene.value = scene
+                        }
+                    }
+
+                    else -> raise(UnsupportedSubtypeError(ResultEvent::class))
                 }
             }
 
@@ -120,7 +139,7 @@ class EventHandler(
 
     private suspend inline fun <reified T : RequestEvent> T.sendToServer(): Either<CommonError, Unit> =
         either {
-            ensureNotNull(dependencies.state.connectionDependencies.value){
+            ensureNotNull(dependencies.state.connectionDependencies.value) {
                 Error("Connection dependencies are not initialized", null)
             }.run {
                 with(connectionCommunicator) {
