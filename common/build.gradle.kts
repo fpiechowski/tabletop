@@ -45,7 +45,7 @@ kotlin {
             dependencies {
                 api(libs.logback)
 
-                api(libs.kotlin.logging.jvm)
+                //api(libs.kotlin.logging.jvm)
 
                 api(libs.ktor.client.cio)
             }

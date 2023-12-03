@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 
 plugins {
     alias(libs.plugins.multiplatform)
@@ -34,8 +35,16 @@ kotlin {
             implementation(compose.components.resources)
             implementation(libs.voyager.navigator)
             implementation(libs.kotlinx.coroutines.core)
-            api(libs.imageloader)
+            implementation(libs.imageloader)
+            implementation(libs.kotlinx.coroutines.core)
 
+        }
+
+        androidMain.dependencies {
+            implementation(libs.androidx.appcompat)
+            implementation(libs.androidx.activityCompose)
+            implementation(libs.compose.uitooling)
+            implementation(libs.kotlinx.coroutines.android)
         }
 
         commonTest.dependencies {
@@ -50,6 +59,10 @@ kotlin {
 }
 
 android {
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
+
     namespace = "org.company.app"
     compileSdk = 34
 
@@ -75,6 +88,11 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
     }
+
+    packagingOptions {
+        exclude("META-INF/INDEX.LIST")
+        exclude("META-INF/versions/9/previous-compilation-data.bin")
+    }
 }
 
 compose.desktop {
@@ -97,6 +115,6 @@ dependencies {
 
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 
-//tasks.withType<KotlinCompile<*>>().all {
-//    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
-//}
+tasks.withType<KotlinCompile<*>>().all {
+    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+}

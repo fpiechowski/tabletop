@@ -1,9 +1,7 @@
 package tabletop.client.connection
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,7 +59,7 @@ class ConnectionScreen(
             )
         }
 
-        Surface(
+        Surface (
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
@@ -176,73 +174,3 @@ class ConnectionScreen(
 
 }
 
-@Preview
-@Composable
-private fun connectionWindow() =
-    Card {
-        val dependencies = Dependencies()
-        fun Raise<Connection.Error>.parseServerUrl(serverUrl: String) = catch({
-            serverUrl.split(":", limit = 2).let { it[0] to it[1].toInt() }
-        }) { raise(Connection.Error("Can't parse server URL", CommonError.ThrowableError(it))) }
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            Text(
-                "Connection",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally)
-            )
-            val host = remember { mutableStateOf("localhost:8080") }
-            val username = remember { mutableStateOf("gm") }
-            val password = remember { mutableStateOf("gm") }
-
-
-            Column {
-                TextField(
-                    label = { Text("Host") },
-                    value = host.value,
-                    onValueChange = { host.value = it }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    label = { Text("Username") },
-                    value = username.value,
-                    onValueChange = { username.value = it }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    label = { Text("Password") },
-                    value = password.value,
-                    onValueChange = { password.value = it },
-                    visualTransformation = PasswordVisualTransformation()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(modifier = Modifier.align(Alignment.CenterHorizontally),
-                    onClick = {
-                        logger.debug { "connectionButton.onClick" }
-                        dependencies.run {
-                            logger.debug { eventHandler.toString() }
-                            with(eventHandler) {
-                                either<CommonError, Any> {
-                                    launch {
-                                        uiErrorHandler.use {
-                                            val (host, port) = parseServerUrl(host.value)
-
-                                            ConnectionAttempted(
-                                                host = host,
-                                                port = port,
-                                                credentialsData = tabletop.common.auth.Credentials.UsernamePassword.Data(
-                                                    username.value,
-                                                    password.value
-                                                )
-                                            ).handle().bind()
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }) {
-                    Text("Connect")
-                }
-            }
-        }
-    }

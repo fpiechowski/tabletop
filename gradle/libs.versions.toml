@@ -20,6 +20,8 @@ suspendapp = "0.4.0"
 voyager = "1.0.0-rc10"
 imageloader = "1.7.1"
 ksp = "1.9.20-1.0.14"
+androidx-appcompat = "1.6.1"
+androidx-activityCompose = "1.7.2"
 
 
 [libraries]
@@ -59,6 +61,8 @@ microstream-storage-embedded-configuration = { module = "one.microstream:microst
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 suspendapp = { module = "io.arrow-kt:suspendapp", version.ref = "suspendapp" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
+androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 
 [plugins]
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
