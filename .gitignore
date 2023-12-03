@@ -43,16 +43,5 @@ bin/
 .DS_Store
 /common/src/main/kotlin/tabletop/dnd5e/Race.kt
 
-
-### KorGE
-/.gradle
-/.idea
-/build
-/modules
-/bundles
-/deps
-*.hprof
-*.log
-korge.keystore
-local.properties
-src/main/*
+### MicroStream
+/server/storage/
