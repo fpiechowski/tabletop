@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.multiplatform)
     alias(libs.plugins.compose)
     alias(libs.plugins.android.application)
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -90,7 +90,7 @@ compose.desktop {
 }
 
 dependencies {
-    add("kspCommonMainMetadata", libs.arrow.optics.ksp.plugin)
+    add("kspCommonMainMetadata", "io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
     //add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
     //add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }
