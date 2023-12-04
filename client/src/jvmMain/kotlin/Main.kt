@@ -1,4 +1,5 @@
-import androidx.compose.material.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.window.Window
@@ -18,7 +19,7 @@ fun main() = Dependencies().run {
                 Navigator(ConnectionScreen(this@run)) {
                     navigation.complete(Navigation(userInterface, it))
 
-                    Scaffold {
+                    Scaffold{
                         CurrentScreen()
                     }
                 }

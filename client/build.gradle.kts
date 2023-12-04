@@ -70,7 +70,7 @@ android {
         minSdk = 24
         targetSdk = 34
 
-        applicationId = "org.company.app.androidApp"
+        applicationId = "tabletop.client.AndroidApp"
         versionCode = 1
         versionName = "1.0.0"
     }
