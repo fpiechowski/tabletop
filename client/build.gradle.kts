@@ -63,7 +63,7 @@ android {
         baseline = file("lint-baseline.xml")
     }
 
-    namespace = "org.company.app"
+    namespace = "tabletop.client"
     compileSdk = 34
 
     defaultConfig {

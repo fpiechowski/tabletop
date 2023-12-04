@@ -1,4 +1,4 @@
-package org.company.app.theme
+package tabletop.client.theme
 
 import androidx.compose.ui.graphics.Color
 
