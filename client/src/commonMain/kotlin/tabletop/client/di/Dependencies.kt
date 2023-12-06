@@ -1,7 +1,9 @@
 package tabletop.client.di
 
-import io.ktor.http.*
+import androidx.compose.ui.ExperimentalComposeUiApi
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
+import tabletop.client.asset.Assets
 import tabletop.client.error.UIErrorHandler
 import tabletop.client.event.EventHandler
 import tabletop.client.navigation.Navigation
@@ -15,12 +17,13 @@ import tabletop.common.error.ConnectionErrorHandler
 import tabletop.common.error.TerminalErrorHandler
 import tabletop.common.serialization.Serialization
 
+@ExperimentalComposeUiApi
 class Dependencies(
     override val serialization: Serialization = Serialization(),
     override val terminalErrorHandler: TerminalErrorHandler = TerminalErrorHandler(),
     val state: State = State(),
 ) : CommonDependencies {
-
+    private val logger = KotlinLogging.logger {  }
 
     val navigation: CompletableDeferred<Navigation> = CompletableDeferred()
     val userInterface: UserInterface = UserInterface(this)
@@ -42,6 +45,10 @@ class Dependencies(
         }
     }
 
+
+
+
+
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
     companion object {
@@ -49,6 +56,7 @@ class Dependencies(
     }
 }
 
+@ExperimentalComposeUiApi
 class ConnectionDependencies(
     dependencies: Dependencies,
     override val connection: Connection,
@@ -60,12 +68,7 @@ class ConnectionDependencies(
     ),
 ) : CommonDependencies.ConnectionScope {
 
-    fun serverUrl(path: String): Url = URLBuilder(
-        protocol = URLProtocol.HTTP,
-        host = connection.host,
-        port = connection.port,
-        pathSegments = path.split("/")
-    ).build()
+    val assets: Assets = Assets(this)
 
     fun interface Factory {
         operator fun invoke(connection: Connection): ConnectionDependencies
