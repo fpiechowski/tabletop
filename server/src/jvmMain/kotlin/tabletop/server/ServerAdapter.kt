@@ -59,7 +59,7 @@ class ServerAdapter(
                 call.respond(HttpStatusCode.OK, "healthy")
             }
 
-            staticFiles("/assets", File("assets"))
+            staticFiles("/assets", File("assets").also { logger.info { "Serving assets from absolute path: ${it.absolutePath}" } })
 
             webSocket {
                 val connection = with(this.call.request.origin) {

@@ -3,6 +3,7 @@ package tabletop.client.error
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.ui.ExperimentalComposeUiApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -13,6 +14,7 @@ import tabletop.common.error.TerminalErrorHandler
 import kotlin.coroutines.CoroutineContext
 
 
+@ExperimentalComposeUiApi
 class UIErrorHandler(
     private val userInterface: UserInterface,
     private val terminalErrorHandler: TerminalErrorHandler

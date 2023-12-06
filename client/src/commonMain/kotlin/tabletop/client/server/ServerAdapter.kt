@@ -1,5 +1,6 @@
 package tabletop.client.server
 
+import androidx.compose.ui.ExperimentalComposeUiApi
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
@@ -19,6 +20,7 @@ import tabletop.common.event.AuthenticationRequested
 import tabletop.common.event.ResultEvent
 import tabletop.common.server.Server
 
+@ExperimentalComposeUiApi
 class ServerAdapter(
     private val dependencies: Dependencies,
     private val eventHandler: EventHandler,
