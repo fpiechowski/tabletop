@@ -55,10 +55,12 @@ kotlin {
 }
 
 dependencies {
-    add("kspCommonMainMetadata",libs.arrow.optics.ksp.plugin)
-    add("kspJvm",libs.arrow.optics.ksp.plugin)
-    add("kspJvmTest",libs.arrow.optics.ksp.plugin)
+    //add("kspCommonMainMetadata", "io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    add("kspJvm", "io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }
 
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 
+//tasks.withType<KotlinCompile<*>>().all {
+//    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+//}

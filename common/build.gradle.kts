@@ -1,18 +1,26 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization")
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.multiplatform)
+    alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.ksp)
+    id("com.android.library")
 }
 
 group = "com.github.mesayah"
 version = "1.0-SNAPSHOT"
 
 kotlin {
+    androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+    }
+
     jvm {
         jvmToolchain(17)
-        withJava()
         testRuns.named("test") {
             executionTask.configure {
                 useJUnitPlatform()
@@ -71,14 +79,42 @@ kotlin {
     }
 }
 
+android {
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = false
+    }
+
+    namespace = "tabletop.common"
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 24
+        targetSdk = 34
+    }
+    sourceSets["main"].apply {
+        manifest.srcFile("src/androidMain/AndroidManifest.xml")
+        res.srcDirs("src/androidMain/resources")
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        exclude("META-INF/INDEX.LIST")
+        exclude("META-INF/versions/9/previous-compilation-data.bin")
+    }
+}
+
 dependencies {
     add("kspCommonMainMetadata", "io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
-    add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    //add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
     //add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }
 
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 
-//tasks.withType<KotlinCompile<*>>().all {
-//    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
-//}
+tasks.withType<KotlinCompile<*>>().all {
+    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+}

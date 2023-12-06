@@ -1,7 +1,7 @@
 package tabletop.client.game
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -29,6 +28,7 @@ import tabletop.client.ui.Window
 import tabletop.client.ui.WindowModel
 import tabletop.common.entity.Entity
 import tabletop.common.game.Game
+import tabletop.common.scene.Scene
 
 class GameScreen(
     private val dependencies: Dependencies
@@ -36,7 +36,7 @@ class GameScreen(
     data class Model(
         val game: MutableStateFlow<Game<*>?>,
         val windowsOpened: MutableStateFlow<Map<UUID, WindowModel>>,
-        val libraryWindowPosition: MutableStateFlow<IntOffset> = MutableStateFlow(IntOffset(100, 100)),
+        val libraryWindowPosition: MutableStateFlow<IntOffset> = MutableStateFlow(IntOffset(100, 100))
     ) : ScreenModel
 
     @Composable
@@ -87,7 +87,9 @@ class GameScreen(
                     searchText.value = it
                 })
                 LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.fillMaxSize()) {
-                    this.items(game.entities.values.toList()) {
+                    this.items(game.entities.values.filter {
+                        it.name.lowercase().indexOf(searchText.value.lowercase()) != -1
+                    }.toList()) {
                         LibraryEntityGridItem(it)
                     }
                 }
@@ -97,7 +99,14 @@ class GameScreen(
 
     @Composable
     fun LibraryEntityGridItem(entity: Entity) {
-        Box(modifier = Modifier.fillMaxSize().background(color = Color.DarkGray)) {
+        Box(
+            modifier = Modifier
+                .clickable {
+                    when (entity) {
+                        is Scene -> dependencies.state.currentScene.value = entity
+                    }
+                }
+        ) {
             entity.image?.let {
 
                 Image(
@@ -112,17 +121,24 @@ class GameScreen(
         }
     }
 
-    fun LibraryWindowModel(offsetState: MutableStateFlow<IntOffset>, content: @Composable () -> Unit) = WindowModel(
-        "Library",
-        Modifier.size(800.dp, 600.dp),
-        offsetState,
-        UUID(libraryWindowModelId),
-        content
-    )
+    private fun LibraryWindowModel(offsetState: MutableStateFlow<IntOffset>, content: @Composable () -> Unit) =
+        WindowModel(
+            "Library",
+            Modifier.width(600.dp),
+            offsetState,
+            UUID(libraryWindowModelId),
+            content
+        )
 
     @Composable
     fun SceneView(screenModel: Model) {
-
+        dependencies.state.currentScene.value
+            ?.let {
+                it.foregroundImagePath?.let {
+                    val painter = rememberImagePainter(dependencies.state.connectionDependencies.value?.serverUrl(it).toString())
+                    //Image(painter)
+                }
+            }
     }
 
     companion object {

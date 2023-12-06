@@ -40,6 +40,7 @@ fun Window(
     Card(
         Modifier
             .then(modifier)
+            .height(300.dp)
             .offset { offset }
     ) {
         Column {
