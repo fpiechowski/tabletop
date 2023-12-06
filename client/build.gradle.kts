@@ -1,71 +1,121 @@
-import korlibs.korge.gradle.korge
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 
 plugins {
-    id("com.soywiz.korge")
+    alias(libs.plugins.multiplatform)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.ksp)
 }
 
-group = "com.github.mesayah"
-version = "1.0-SNAPSHOT"
+kotlin {
+    androidTarget {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+    }
 
-repositories {
-    mavenCentral()
-    maven { url = uri("https://s01.oss.sonatype.org") }
-    mavenLocal()
-    google()
-    gradlePluginPortal()
-    maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
-    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    jvm()
+
+    sourceSets {
+        all {
+            languageSettings {
+                optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
+            }
+        }
+        commonMain.dependencies {
+            implementation(project(":common"))
+
+            implementation(compose.runtime)
+            implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
+            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+            implementation(compose.components.resources)
+            implementation(libs.voyager.navigator)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.imageloader)
+            implementation(libs.kotlinx.coroutines.core)
+
+        }
+
+        androidMain.dependencies {
+            implementation(libs.androidx.appcompat)
+            implementation(libs.androidx.activityCompose)
+            implementation(libs.compose.uitooling)
+            implementation(libs.kotlinx.coroutines.android)
+        }
+
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
+
+        jvmMain.dependencies {
+            implementation(compose.desktop.common)
+            implementation(compose.desktop.currentOs)
+        }
+    }
 }
 
-korge {
-    id = "com.github.mesayah"
+android {
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = false
+    }
 
-    targetJvm()
+    namespace = "tabletop.client"
+    compileSdk = 34
 
-    serializationJson()
+    defaultConfig {
+        minSdk = 24
+        targetSdk = 34
 
-    entrypoint("main", "tabletop.client.MainKt")
-    entrypoint("offline", "tabletop.client.OfflineMainKt")
+        applicationId = "tabletop.client.AndroidApp"
+        versionCode = 1
+        versionName = "1.0.0"
+    }
+    sourceSets["main"].apply {
+        manifest.srcFile("src/androidMain/AndroidManifest.xml")
+        res.srcDirs("src/androidMain/resources")
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.4"
+    }
 
-    jvmMainClassName = "tabletop.client.MainKt"
+    packagingOptions {
+        exclude("META-INF/INDEX.LIST")
+        exclude("META-INF/versions/9/previous-compilation-data.bin")
+    }
+}
+
+compose.desktop {
+    application {
+        mainClass = "MainKt"
+
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "com.github.mesayah.desktopApp"
+            packageVersion = "1.0.0"
+        }
+    }
 }
 
 dependencies {
-    add("commonMainApi", project(":deps"))
-    add("commonMainApi", project(":commonJvm"))
-
-    add("commonMainApi", "app.softwork:kotlinx-uuid-core:0.0.21")
-
-    add("commonMainApi", "io.github.oshai:kotlin-logging-jvm:5.1.0")
-
-    add("commonMainApi", "org.slf4j:slf4j-api:2.0.9")
-
-    add("commonMainApi", "ch.qos.logback:logback-classic:1.4.11")
-
-    add("commonMainApi", "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-
-    add("commonMainApi", platform("io.arrow-kt:arrow-stack:1.2.0"))
-    add("commonMainApi", "io.arrow-kt:arrow-core")
-    add("commonMainApi", "io.arrow-kt:arrow-fx-coroutines")
-    add("commonMainApi", "io.arrow-kt:suspendapp:0.4.0")
-
-    add("commonMainApi", "io.ktor:ktor-client-core:2.3.4")
-    add("commonMainApi", "io.ktor:ktor-client-cio:2.3.4")
-    add("commonMainApi", "io.ktor:ktor-client-resources:2.3.4")
-
-    add("commonTestApi", kotlin("test"))
-
-    add("commonTestApi", "io.kotest:kotest-assertions-core:5.7.2")
-    add("commonTestApi", "io.kotest:kotest-runner-junit5:5.7.2")
-
-    add("commonTestApi", "io.kotest.extensions:kotest-assertions-arrow:1.4.0")
-    add("commonTestApi", "io.kotest.extensions:kotest-assertions-arrow-fx-coroutines:1.4.0")
-
-    add("commonTestApi", "io.mockk:mockk:1.13.7")
-    add("commonMainApi", "io.mockk:mockk:1.13.7")
-
+    add("kspCommonMainMetadata", "io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    //add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
+    //add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
+
+tasks.withType<KotlinCompile<*>>().all {
+    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
 }

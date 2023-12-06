@@ -1,26 +1,14 @@
 rootProject.name = "tabletop"
 
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
     repositories {
-        mavenLocal()
-        mavenCentral()
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         google()
         gradlePluginPortal()
-    }
-
-    val kotlinVersion: String by settings
-
-    plugins {
-        kotlin("multiplatform") version kotlinVersion
-        kotlin("plugin.serialization") version kotlinVersion
+        mavenCentral()
     }
 }
 
-plugins {
-    id("com.soywiz.kproject.settings") version "0.3.1" // Substitute by the latest version
-}
-
-include("commonJvm", "server")
-include("client")
-
-kproject("./deps")
+include("common", "server", "client")

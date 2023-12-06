@@ -1,27 +1,28 @@
 package tabletop.client.ui
 
-import korlibs.korge.scene.SceneContainer
-import korlibs.korge.view.Stage
 import kotlinx.coroutines.CompletableDeferred
-import tabletop.client.connection.ConnectionScene
-import tabletop.client.game.GameScene
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.uuid.UUID
+import tabletop.client.connection.ConnectionScreen
+import tabletop.client.di.Dependencies
+import tabletop.client.game.GameScreen
 import tabletop.common.error.CommonError
-import java.io.Serializable
+import kotlin.coroutines.CoroutineContext
 
 
-class UserInterface {
+class UserInterface(private val dependencies: Dependencies) : CoroutineScope {
 
-    val stage = CompletableDeferred<Stage>()
-    val sceneContainer = CompletableDeferred<SceneContainer>()
-    val connectionScene = ConnectionScene()
-    val gameScene = GameScene()
+    val openedWindows: MutableStateFlow<Map<UUID, WindowModel>> = MutableStateFlow(mapOf())
+    val gameScreenModel = CompletableDeferred<GameScreen.Model>()
+    val connectionScreenModel = CompletableDeferred<ConnectionScreen.Model>()
 
     companion object
 
-    class Error(override val message: String?, override val cause: CommonError?) : CommonError(), Serializable {
-        companion object {
-            private const val serialVersionUID = 1L
-        }
-    }
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
+
+    override val coroutineContext: CoroutineContext = Job() + Dispatchers.Default
 }
 

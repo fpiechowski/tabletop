@@ -1,34 +1,39 @@
 package tabletop.client.event
 
 import arrow.core.Either
-import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
+import arrow.optics.copy
 import io.github.oshai.kotlinlogging.KotlinLogging
-import korlibs.io.async.launch
-import korlibs.korge.annotations.KorgeExperimental
-import korlibs.korge.internal.KorgeInternal
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
+import tabletop.client.connection.ConnectionScreen
 import tabletop.client.di.Dependencies
+import tabletop.client.error.UIErrorHandler
+import tabletop.client.game.GameScreen
+import tabletop.client.navigation.Navigation
 import tabletop.client.server.ServerAdapter
-import tabletop.common.connection.ConnectionCommunicator
+import tabletop.client.state.State
+import tabletop.client.ui.UserInterface
 import tabletop.common.error.CommonError
 import tabletop.common.error.NotFoundError
 import tabletop.common.error.UnsupportedSubtypeError
 import tabletop.common.event.*
+import tabletop.common.game.Game
 import tabletop.common.scene.Scene
+import tabletop.common.scene.tokens
+import kotlin.coroutines.CoroutineContext
 
-@KorgeInternal
-@KorgeExperimental
 class EventHandler(
-    private val dependencies: Dependencies
-) : ConnectionCommunicator.Aware {
+    private val dependencies: Dependencies,
+
+    ) : CoroutineScope {
     private val logger = KotlinLogging.logger {}
 
-    private val userInterface by lazy { dependencies.userInterface }
-    private val state by lazy { dependencies.state }
-    private val uiErrorHandler by lazy { dependencies.uiErrorHandler }
+    private val userInterface: UserInterface = dependencies.userInterface
+    private val state: State = dependencies.state
+    private val uiErrorHandler: UIErrorHandler = dependencies.uiErrorHandler
+    private suspend fun navigation(): Navigation = dependencies.navigation.await()
 
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
@@ -36,24 +41,12 @@ class EventHandler(
         either {
             logger.debug { "Handling ${this@handle}" }
 
-            recover<CommonError, Unit>({
+            recover({
                 when (this@handle) {
                     is RequestEvent -> sendToServer().bind()
                     is ResultEvent -> handle().bind()
-                    is UIEvent<*, *> -> {
-                        dispatchToUI().bind()
-                    }
-
-                    is ConnectionAttempted -> {
-                        val connectionJob = Job()
-                        launch(connectionJob) {
-                            recover({ ServerAdapter(dependencies).connect(host, port, credentialsData).bind() }) {
-                                with(uiErrorHandler) { it.handle() }
-                            }
-                        }
-                        state.connectionJob.value = connectionJob
-                    }
-
+                    is ConnectionAttempted -> handle().bind()
+                    is ConnectionEnded -> handle().bind()
                     else -> logger.warn { "Unhandled event ${this@handle}" }
                 }
             }) {
@@ -61,75 +54,101 @@ class EventHandler(
             }
         }
 
+
+    private fun ConnectionAttempted.handle(): Either<CommonError, Unit> =
+        either {
+            state.connectionJob.value?.cancel(CancellationException("New Connection Attempted"))
+            state.connectionJob.value = Job()
+            state.connectionJob.value?.let {
+                launch(it) {
+                    recover({
+                        ServerAdapter(dependencies, this@EventHandler, uiErrorHandler)
+                            .connect(host, port, credentialsData).bind()
+                    }) {
+                        ConnectionEnded(it).handle().bind()
+                        with(uiErrorHandler) { it.handle() }
+                    }
+                }
+            }
+        }
+
+    private suspend fun ConnectionEnded.handle(): Either<CommonError, Unit> =
+        either {
+            navigation().popUntil { it is ConnectionScreen }
+        }
+
     private suspend fun <T : ResultEvent> T.handle(): Either<CommonError, Unit> =
         either {
-            dependencies.connectionScope.value?.run {
-                with(connectionCommunicator) {
-                    when (this@handle) {
-                        is GameLoaded -> {
-                            state.game.value = this@handle.game
+            dependencies.state.connectionDependencies.value?.run {
+                when (this@handle) {
+                    is GameLoaded -> {
+                        state.maybeGame.value = this@handle.game
 
-                            GameLoadedUIEvent(this@handle).dispatchToUI().bind()
-
-                            with(userInterface) {
-                                sceneContainer.await().changeTo { gameScene }
-                            }
-                        }
-
-                        is GameListingLoaded -> {
-                            state.gameListing.value = this@handle.listing
-                            GameListingLoadedUIEvent(this@handle).dispatchToUI().bind()
-                        }
-
-                        is UserAuthenticated -> {
-                            state.user.value = this@handle.user
-                            UserAuthenticatedUIEvent(this@handle).dispatchToUI().bind()
-                            GameListingRequested(user.id)
-                                .send()
-                                .bind()
-                        }
-
-                        is TokenPlaced -> {
-                            state.game.value?.scenes?.get(token.scene.id)?.tokens?.set(token.id, token)
-                            TokenPlacedUIEvent(this@handle).dispatchToUI().bind()
-                        }
-
-                        is SceneOpened -> {
-                            val scene =
-                                ensureNotNull(state.game.value?.scenes?.get(sceneId)) {
-                                    NotFoundError(
-                                        Scene::class,
-                                        sceneId
-                                    )
-                                }
-                            state.currentScene.value = scene
-                            SceneOpenedUIEvent(this@handle, scene).dispatchToUI().bind()
-                        }
-
-                        else -> raise(UnsupportedSubtypeError(ResultEvent::class))
+                        navigation().push(GameScreen(dependencies))
                     }
+
+                    is GamesLoaded -> {
+                        state.games.value = this@handle.games
+                    }
+
+                    is UserAuthenticated -> {
+                        state.maybeUser.value = this@handle.user
+                        GameListingRequested(user.id)
+                            .handle()
+                            .bind()
+                    }
+
+                    is TokenPlaced -> {
+                        with(state) {
+                            val game = game.bind()
+                            val scene = ensureNotNull(game.scenes[token.sceneId]) {
+                                NotFoundError(
+                                    Scene::class,
+                                    token.sceneId
+                                )
+                            }.let {
+                                it.copy {
+                                    Scene.tokens set it.tokens + (token.id to token)
+                                }
+                            }
+
+                            game.copy {
+                                Game.scenes.bind() set game.scenes + (scene.id to scene)
+                            }
+
+                            maybeGame.value = game
+                        }
+                    }
+
+
+                    is SceneOpened -> {
+                        with(state) {
+                            val scene =
+                                ensureNotNull(game.bind().scenes[sceneId]) { NotFoundError(Scene::class, sceneId) }
+
+                            currentScene.value = scene
+                        }
+                    }
+
+                    else -> raise(UnsupportedSubtypeError(ResultEvent::class))
                 }
             }
 
         }
 
+
     private suspend inline fun <reified T : RequestEvent> T.sendToServer(): Either<CommonError, Unit> =
         either {
-            dependencies.connectionScope.value?.run {
+            ensureNotNull(dependencies.state.connectionDependencies.value) {
+                Error("Connection dependencies are not initialized", null)
+            }.run {
                 with(connectionCommunicator) {
                     this@sendToServer.send().bind()
                 }
             }
         }
 
-    private suspend fun <T : UIEvent<*, *>> T.dispatchToUI(): Either<CommonError, Unit> =
-        either {
-            logger.debug { "Handling ${this@dispatchToUI}" }
 
-            catch({
-                userInterface.stage.await().dispatch(this@dispatchToUI)
-            }) {
-                raise(CommonError.ThrowableError(it))
-            }
-        }
+    override val coroutineContext: CoroutineContext = Dispatchers.Default
 }
+

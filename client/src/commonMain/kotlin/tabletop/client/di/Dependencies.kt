@@ -1,69 +1,74 @@
 package tabletop.client.di
 
-import io.ktor.websocket.*
-import korlibs.korge.annotations.KorgeExperimental
-import korlibs.korge.internal.KorgeInternal
+import io.ktor.http.*
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
 import tabletop.client.error.UIErrorHandler
 import tabletop.client.event.EventHandler
-import tabletop.client.persistence.Persistence
+import tabletop.client.navigation.Navigation
 import tabletop.client.state.State
 import tabletop.client.ui.UserInterface
 import tabletop.common.connection.Connection
 import tabletop.common.connection.ConnectionCommunicator
 import tabletop.common.di.CommonDependencies
+import tabletop.common.error.CommonError
 import tabletop.common.error.ConnectionErrorHandler
 import tabletop.common.error.TerminalErrorHandler
 import tabletop.common.serialization.Serialization
 
-@KorgeExperimental
-@KorgeInternal
-open class Dependencies(
-    persistence: Lazy<Persistence> = lazy { Persistence() },
-) : CommonDependencies() {
+class Dependencies(
+    override val serialization: Serialization = Serialization(),
+    override val terminalErrorHandler: TerminalErrorHandler = TerminalErrorHandler(),
+    val state: State = State(),
+) : CommonDependencies {
 
-    companion object : CompletableDeferred<Dependencies> by CompletableDeferred();
 
-    override val persistence: Persistence by persistence
-    override val serialization: Serialization by lazy { Serialization() }
-    override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }
-    val uiErrorHandler: UIErrorHandler by lazy { UIErrorHandler(this) }
-    val userInterface: UserInterface by lazy { UserInterface() }
-    val eventHandler: EventHandler by lazy { EventHandler(this) }
-    val state: State by lazy { State() }
+    val navigation: CompletableDeferred<Navigation> = CompletableDeferred()
+    val userInterface: UserInterface = UserInterface(this)
+    val uiErrorHandler: UIErrorHandler = UIErrorHandler(userInterface, terminalErrorHandler)
+    val eventHandler: EventHandler = EventHandler(this)
+    val connectionDependenciesFactory = ConnectionDependencies.Factory { connection ->
+        ConnectionDependencies(this, connection)
+            .also { state.connectionDependencies.value = it }
+    }
 
-    val connectionScope: MutableStateFlow<ConnectionScope?> = MutableStateFlow(null)
-
-    inner class ConnectionScope(override val connection: Connection) : CommonDependencies.ConnectionScope(),
-        CoroutineScope by CoroutineScope(Dispatchers.Default) {
-
-        init {
-            runBlocking {
-                connectionScope.value?.connection?.session?.close(
-                    CloseReason(
-                        CloseReason.Codes.GOING_AWAY,
-                        "Client attempt another connection"
-                    )
-                )
-                connectionScope.value = this@ConnectionScope
+    init {
+        if (!instance.isCompleted) {
+            instance.complete(this)
+        } else {
+            with(terminalErrorHandler) {
+                Error("${Dependencies::class.simpleName} instance already completed", null)
+                    .handleSync()
             }
         }
+    }
 
-        override val ConnectionCommunicator.Aware.connectionCommunicator: ConnectionCommunicator by lazy {
-            ConnectionCommunicator(
-                this
-            )
-        }
-        override val connectionErrorHandler: ConnectionErrorHandler by lazy { ConnectionErrorHandler(this) }
+    class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
-        val eventHandler: EventHandler by lazy { this@Dependencies.eventHandler }
-        val uiErrorHandler: UIErrorHandler by lazy { this@Dependencies.uiErrorHandler }
-        val state: State by lazy { this@Dependencies.state }
-        val userInterface: UserInterface by lazy { this@Dependencies.userInterface }
+    companion object {
+        val instance: CompletableDeferred<Dependencies> = CompletableDeferred()
+    }
+}
+
+class ConnectionDependencies(
+    dependencies: Dependencies,
+    override val connection: Connection,
+    override val connectionCommunicator: ConnectionCommunicator =
+        ConnectionCommunicator(connection, dependencies.serialization),
+    override val connectionErrorHandler: ConnectionErrorHandler = ConnectionErrorHandler(
+        dependencies.terminalErrorHandler,
+        connectionCommunicator
+    ),
+) : CommonDependencies.ConnectionScope {
+
+    fun serverUrl(path: String): Url = URLBuilder(
+        protocol = URLProtocol.HTTP,
+        host = connection.host,
+        port = connection.port,
+        pathSegments = path.split("/")
+    ).build()
+
+    fun interface Factory {
+        operator fun invoke(connection: Connection): ConnectionDependencies
     }
 }
 
