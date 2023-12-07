@@ -1,57 +1,53 @@
 package tabletop.client.game
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LibraryBooks
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.gestures.TransformableState
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
-import com.seiko.imageloader.rememberImagePainter
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.uuid.UUID
+import com.seiko.imageloader.LocalImageLoader
+import io.github.oshai.kotlinlogging.KotlinLogging
 import tabletop.client.di.Dependencies
+import tabletop.client.generateImageLoader
+import tabletop.client.io.loadImageFile
+import tabletop.client.ui.AsyncImage
 import tabletop.client.ui.Window
-import tabletop.client.ui.WindowModel
-import tabletop.common.entity.Entity
-import tabletop.common.game.Game
-import tabletop.common.scene.Scene
+import kotlin.math.roundToInt
 
+@ExperimentalComposeUiApi
 class GameScreen(
     private val dependencies: Dependencies
 ) : Screen {
-    data class Model(
-        val game: MutableStateFlow<Game<*>?>,
-        val windowsOpened: MutableStateFlow<Map<UUID, WindowModel>>,
-        val libraryWindowPosition: MutableStateFlow<IntOffset> = MutableStateFlow(IntOffset(100, 100))
-    ) : ScreenModel
+    private val logger = KotlinLogging.logger { }
+
+    val library: Library = Library(dependencies)
 
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel {
-            Model(dependencies.state.maybeGame, dependencies.userInterface.openedWindows)
-                .also { dependencies.userInterface.gameScreenModel.complete(it) }
-        }
-
-        val windowsOpened by screenModel.windowsOpened.collectAsState()
+        val windowsOpened by dependencies.userInterface.openedWindows.collectAsState()
 
         Box(modifier = Modifier.fillMaxSize()) {
-            SceneView(screenModel)
+            SceneView()
 
-            LibraryButton(screenModel, Modifier.align(Alignment.TopStart).padding(16.dp))
+            with(library) {
+                LibraryButton(Modifier.align(Alignment.TopStart).padding(16.dp))
+            }
 
             windowsOpened.forEach { (_, it) ->
                 Window(it.title, it.modifier, dependencies.userInterface, it.offsetState, it.id) {
@@ -61,87 +57,73 @@ class GameScreen(
         }
     }
 
+
     @Composable
-    fun LibraryButton(screenModel: Model, modifier: Modifier) {
-        Button(onClick = {
-            if (screenModel.windowsOpened.value.containsKey(UUID(libraryWindowModelId))) {
-                screenModel.windowsOpened.value -= UUID(libraryWindowModelId)
-            } else {
-                screenModel.windowsOpened.value += LibraryWindowModel(screenModel.libraryWindowPosition) {
-                    LibraryWindowContent(screenModel)
-                }.let { it.id to it }
-            }
-        }, modifier = modifier) {
-            Icon(Icons.Default.LibraryBooks, contentDescription = "Library")
+    fun SceneView() {
+        val currentScene by dependencies.state.currentScene.collectAsState()
+
+        val positionState = remember { mutableStateOf(Offset.Zero) }
+        val scaleState = remember { mutableStateOf(1f) }
+        val transformableState = rememberTransformableState { zoomChange, panChange, rotationChange ->
+            scaleState.value *= zoomChange
         }
-    }
 
-    @Composable
-    fun LibraryWindowContent(screenModel: Model) {
-        val maybeGame by screenModel.game.collectAsState()
-        val searchText = remember { mutableStateOf("") }
+        val connectionDependencies by dependencies.state.connectionDependencies.collectAsState()
 
-        maybeGame?.let { game ->
-            Column(modifier = Modifier.padding(16.dp)) {
-                OutlinedTextField(searchText.value, modifier = Modifier.fillMaxWidth(), onValueChange = {
-                    searchText.value = it
-                })
-                LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.fillMaxSize()) {
-                    this.items(game.entities.values.filter {
-                        it.name.lowercase().indexOf(searchText.value.lowercase()) != -1
-                    }.toList()) {
-                        LibraryEntityGridItem(it)
-                    }
-                }
-            }
-        }
-    }
-
-    @Composable
-    fun LibraryEntityGridItem(entity: Entity) {
         Box(
-            modifier = Modifier
-                .clickable {
-                    when (entity) {
-                        is Scene -> dependencies.state.currentScene.value = entity
-                    }
-                }
+            modifier = Modifier.fillMaxSize()
+                .sceneViewControlModifier(scaleState, positionState, transformableState)
         ) {
-            entity.image?.let {
 
-                Image(
-                    painter = rememberImagePainter(
-                        dependencies.state.connectionDependencies.value!!.serverUrl(it).toString()
-                    ),
-                    contentDescription = entity.name,
-                    modifier = Modifier.size(100.dp, 100.dp)
-                )
-            }
-            Text(entity.name, modifier = Modifier.align(Alignment.BottomCenter))
+            currentScene
+                ?.let {
+                    Box(modifier = Modifier.offset {
+                        IntOffset(
+                            positionState.value.x.roundToInt(),
+                            positionState.value.y.roundToInt()
+                        )
+                    }.scale(scaleState.value)) {
+                        CompositionLocalProvider(
+                            LocalImageLoader provides remember { generateImageLoader() },
+                        ) {
+                            it.foregroundImagePath?.let { foregroundPath ->
+                                AsyncImage(
+                                    load = {
+                                        loadImageFile(connectionDependencies!!.assets.assetFile(foregroundPath))
+                                    },
+                                    painterFor = { remember { BitmapPainter(it) } },
+                                    contentDescription = "Foreground image"
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        it.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.align(Alignment.TopCenter).padding(16.dp)
+                    )
+                }
         }
     }
 
-    private fun LibraryWindowModel(offsetState: MutableStateFlow<IntOffset>, content: @Composable () -> Unit) =
-        WindowModel(
-            "Library",
-            Modifier.width(600.dp),
-            offsetState,
-            UUID(libraryWindowModelId),
-            content
-        )
-
-    @Composable
-    fun SceneView(screenModel: Model) {
-        dependencies.state.currentScene.value
-            ?.let {
-                it.foregroundImagePath?.let {
-                    val painter = rememberImagePainter(dependencies.state.connectionDependencies.value?.serverUrl(it).toString())
-                    //Image(painter)
-                }
-            }
-    }
 
     companion object {
         const val libraryWindowModelId = "5d4d1968-7fbd-4d67-9320-650c65671815"
     }
 }
+
+expect fun Modifier.sceneViewControlModifier(
+    scaleState: MutableState<Float>,
+    positionState: MutableState<Offset>,
+    transformableState: TransformableState
+): Modifier
+
+fun Modifier.nonDesktopViewControlModifier(
+    positionState: MutableState<Offset>,
+    transformableState: TransformableState
+) = pointerInput(Unit) {
+    detectDragGestures { change, dragAmount ->
+        positionState.value += dragAmount
+    }
+}.transformable(transformableState)

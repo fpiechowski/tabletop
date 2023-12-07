@@ -1,5 +1,6 @@
 package tabletop.client.ui
 
+import androidx.compose.ui.ExperimentalComposeUiApi
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,10 +14,11 @@ import tabletop.common.error.CommonError
 import kotlin.coroutines.CoroutineContext
 
 
+@ExperimentalComposeUiApi
 class UserInterface(private val dependencies: Dependencies) : CoroutineScope {
 
+
     val openedWindows: MutableStateFlow<Map<UUID, WindowModel>> = MutableStateFlow(mapOf())
-    val gameScreenModel = CompletableDeferred<GameScreen.Model>()
     val connectionScreenModel = CompletableDeferred<ConnectionScreen.Model>()
 
     companion object

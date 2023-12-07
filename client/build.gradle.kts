@@ -36,7 +36,6 @@ kotlin {
             implementation(libs.voyager.navigator)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.imageloader)
-            implementation(libs.kotlinx.coroutines.core)
 
         }
 
@@ -109,6 +108,7 @@ compose.desktop {
 }
 
 dependencies {
+    implementation(project(mapOf("path" to ":common")))
     add("kspCommonMainMetadata", "io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
     //add("kspJvm","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")
     //add("kspJvmTest","io.arrow-kt:arrow-optics-ksp-plugin:1.2.1")

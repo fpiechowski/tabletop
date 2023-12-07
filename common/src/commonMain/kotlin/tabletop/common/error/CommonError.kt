@@ -5,19 +5,33 @@ import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import kotlin.reflect.KClass
 
+
 @Serializable
-expect abstract class CommonError() {
-    abstract val message: String?
-    abstract val cause: CommonError?
+ abstract class CommonError {
+     abstract val message: String?
+     abstract val cause: CommonError?
 
-    override fun toString(): String
+     override fun toString() =
+        """${this::class.qualifiedName}${message?.let { ": $it" }}${cause?.let { ", cause: $it" } ?: ""}""".trimMargin()
 
-    fun CommonError.findThrowable(): ThrowableError?
+     fun CommonError.findThrowable(): ThrowableError? = when {
+        this is ThrowableError -> this
+        else -> cause?.findThrowable()
+    }
 
-    class ThrowableError(throwable: Throwable) : CommonError {
-        override val message: String?
-        override val cause: CommonError?
-        val stackTrace: String
+    @Serializable
+     class ThrowableError(
+         override val message: String?,
+         override val cause: CommonError?,
+         val stackTrace: String
+    ) : CommonError() {
+
+         constructor(throwable: Throwable) :
+                this(
+                    "${throwable::class.qualifiedName}: ${throwable.message}",
+                    throwable.cause?.let { ThrowableError(it) },
+                    throwable.stackTraceToString()
+                )
     }
 }
 

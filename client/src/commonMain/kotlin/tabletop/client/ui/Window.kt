@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
@@ -27,6 +28,7 @@ data class WindowModel(
     val content: @Composable () -> Unit,
 )
 
+@ExperimentalComposeUiApi
 @Composable
 fun Window(
     title: String, modifier: Modifier,

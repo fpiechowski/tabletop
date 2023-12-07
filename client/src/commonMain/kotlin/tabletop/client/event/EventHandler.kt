@@ -1,5 +1,6 @@
 package tabletop.client.event
 
+import androidx.compose.ui.ExperimentalComposeUiApi
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
@@ -24,6 +25,7 @@ import tabletop.common.scene.Scene
 import tabletop.common.scene.tokens
 import kotlin.coroutines.CoroutineContext
 
+@ExperimentalComposeUiApi
 class EventHandler(
     private val dependencies: Dependencies,
 

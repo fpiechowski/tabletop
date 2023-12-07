@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.LayoutDirection
 import cafe.adriel.voyager.navigator.CurrentScreen
@@ -25,6 +26,7 @@ class AndroidApp : Application() {
     }
 }
 
+@ExperimentalComposeUiApi
 class AppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
