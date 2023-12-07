@@ -1,5 +1,6 @@
 package tabletop.client.game
 
+import androidx.compose.foundation.gestures.TransformableState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -16,8 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -65,26 +64,15 @@ class GameScreen(
 
         val positionState = remember { mutableStateOf(Offset.Zero) }
         val scaleState = remember { mutableStateOf(1f) }
-        val zoomState = rememberTransformableState { zoomChange, panChange, rotationChange ->
+        val transformableState = rememberTransformableState { zoomChange, panChange, rotationChange ->
             scaleState.value *= zoomChange
         }
 
         val connectionDependencies by dependencies.state.connectionDependencies.collectAsState()
 
-        Box(modifier = Modifier.fillMaxSize()
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    logger.debug { "dragAmount: $dragAmount" }
-                    positionState.value += dragAmount
-                }
-            }.transformable(zoomState)
-            .onPointerEvent(PointerEventType.Scroll) {
-                if (it.changes.first().scrollDelta.y > 0) {
-                    scaleState.value *= 1.1f
-                } else {
-                    scaleState.value *= 0.9f
-                }
-            }
+        Box(
+            modifier = Modifier.fillMaxSize()
+                .sceneViewControlModifier(scaleState, positionState, transformableState)
         ) {
 
             currentScene
@@ -119,7 +107,23 @@ class GameScreen(
         }
     }
 
+
     companion object {
         const val libraryWindowModelId = "5d4d1968-7fbd-4d67-9320-650c65671815"
     }
 }
+
+expect fun Modifier.sceneViewControlModifier(
+    scaleState: MutableState<Float>,
+    positionState: MutableState<Offset>,
+    transformableState: TransformableState
+): Modifier
+
+fun Modifier.nonDesktopViewControlModifier(
+    positionState: MutableState<Offset>,
+    transformableState: TransformableState
+) = pointerInput(Unit) {
+    detectDragGestures { change, dragAmount ->
+        positionState.value += dragAmount
+    }
+}.transformable(transformableState)
