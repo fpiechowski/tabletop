@@ -1,3 +1,4 @@
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -11,20 +12,14 @@ import tabletop.client.navigation.Navigation
 import tabletop.common.ApplicationInfo
 
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
-fun main() = Dependencies().run {
+fun main() =
     application {
         MaterialTheme {
             Window(onCloseRequest = ::exitApplication, title = ApplicationInfo.Name) {
-
-                Navigator(ConnectionScreen(this@run)) {
-                    navigation.complete(Navigation(userInterface, it))
-
-                    Scaffold{
-                        CurrentScreen()
-                    }
-                }
+                tabletop.client.application()
             }
         }
     }
-}
+

@@ -1,5 +1,6 @@
 package tabletop.client.event
 
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.ExperimentalComposeUiApi
 import arrow.core.Either
 import arrow.core.raise.either
@@ -25,6 +26,7 @@ import tabletop.common.scene.Scene
 import tabletop.common.scene.tokens
 import kotlin.coroutines.CoroutineContext
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class EventHandler(
     private val dependencies: Dependencies,
@@ -76,6 +78,8 @@ class EventHandler(
 
     private suspend fun ConnectionEnded.handle(): Either<CommonError, Unit> =
         either {
+            dependencies.state.maybeUser.value = null
+            dependencies.state.maybeGame.value = null
             navigation().popUntil { it is ConnectionScreen }
         }
 
@@ -119,6 +123,7 @@ class EventHandler(
                             }
 
                             maybeGame.value = game
+                            currentScene.value = scene
                         }
                     }
 

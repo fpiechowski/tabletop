@@ -1,5 +1,6 @@
 package tabletop.client.di
 
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.ExperimentalComposeUiApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
@@ -17,6 +18,7 @@ import tabletop.common.error.ConnectionErrorHandler
 import tabletop.common.error.TerminalErrorHandler
 import tabletop.common.serialization.Serialization
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class Dependencies(
     override val serialization: Serialization = Serialization(),
@@ -27,7 +29,7 @@ class Dependencies(
 
     val navigation: CompletableDeferred<Navigation> = CompletableDeferred()
     val userInterface: UserInterface = UserInterface(this)
-    val uiErrorHandler: UIErrorHandler = UIErrorHandler(userInterface, terminalErrorHandler)
+    val uiErrorHandler: UIErrorHandler = UIErrorHandler(this)
     val eventHandler: EventHandler = EventHandler(this)
     val connectionDependenciesFactory = ConnectionDependencies.Factory { connection ->
         ConnectionDependencies(this, connection)
@@ -56,9 +58,10 @@ class Dependencies(
     }
 }
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class ConnectionDependencies(
-    dependencies: Dependencies,
+     dependencies: Dependencies,
     override val connection: Connection,
     override val connectionCommunicator: ConnectionCommunicator =
         ConnectionCommunicator(connection, dependencies.serialization),
@@ -68,7 +71,7 @@ class ConnectionDependencies(
     ),
 ) : CommonDependencies.ConnectionScope {
 
-    val assets: Assets = Assets(this)
+    val assets: Assets = Assets(dependencies, this)
 
     fun interface Factory {
         operator fun invoke(connection: Connection): ConnectionDependencies

@@ -15,6 +15,8 @@ import tabletop.common.dnd5e.DnD5eGame
 import tabletop.common.dnd5e.character.Human
 import tabletop.common.dnd5e.character.Race
 import tabletop.common.error.CommonError
+import tabletop.common.error.InvalidSubtypeError
+import tabletop.common.error.NotFoundError
 import tabletop.common.event.Event
 import tabletop.common.game.Game
 import tabletop.common.server.Server
@@ -31,6 +33,8 @@ class Serialization {
                 subclass(Server.Error::class)
                 subclass(Authentication.Error::class)
                 subclass(CommonError.ThrowableError::class)
+                subclass(NotFoundError::class)
+                subclass(InvalidSubtypeError::class)
             }
 
             polymorphic(Game::class) {

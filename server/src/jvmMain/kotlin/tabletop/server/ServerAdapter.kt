@@ -34,9 +34,14 @@ class ServerAdapter(
 
     fun launch() = either {
         recover<CommonError, Unit>({
-            embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = {
-                eventsModule()
-            }).start(wait = true)
+            embeddedServer(
+                Netty,
+                port = 8080,
+                host = "0.0.0.0",
+                configure = { responseWriteTimeoutSeconds = -1 },
+                module = {
+                    eventsModule()
+                }).start(wait = true)
         }, recover = {
             raise(Error("Error on starting server", it))
         }, catch = {
@@ -59,7 +64,9 @@ class ServerAdapter(
                 call.respond(HttpStatusCode.OK, "healthy")
             }
 
-            staticFiles("/assets", File("assets").also { logger.info { "Serving assets from absolute path: ${it.absolutePath}" } })
+            staticFiles(
+                "/assets",
+                File("assets").also { logger.info { "Serving assets from absolute path: ${it.absolutePath}" } })
 
             webSocket {
                 val connection = with(this.call.request.origin) {

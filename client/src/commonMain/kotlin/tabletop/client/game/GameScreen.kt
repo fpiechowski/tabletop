@@ -1,5 +1,7 @@
 package tabletop.client.game
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.TransformableState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
@@ -8,21 +10,30 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import arrow.core.raise.recover
 import cafe.adriel.voyager.core.screen.Screen
 import com.seiko.imageloader.LocalImageLoader
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.MutableStateFlow
 import tabletop.client.di.Dependencies
 import tabletop.client.generateImageLoader
 import tabletop.client.io.loadImageFile
@@ -30,6 +41,7 @@ import tabletop.client.ui.AsyncImage
 import tabletop.client.ui.Window
 import kotlin.math.roundToInt
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class GameScreen(
     private val dependencies: Dependencies
@@ -63,47 +75,119 @@ class GameScreen(
         val currentScene by dependencies.state.currentScene.collectAsState()
 
         val positionState = remember { mutableStateOf(Offset.Zero) }
-        val scaleState = remember { mutableStateOf(1f) }
+
+        val sceneForegroundImageScale = dependencies.state.sceneForeGroundImageScale
         val transformableState = rememberTransformableState { zoomChange, panChange, rotationChange ->
-            scaleState.value *= zoomChange
+            sceneForegroundImageScale.value *= zoomChange
         }
 
         val connectionDependencies by dependencies.state.connectionDependencies.collectAsState()
+        val selectedToken by dependencies.state.selectedToken.collectAsState()
+
+        val zoom by sceneForegroundImageScale.collectAsState()
 
         Box(
             modifier = Modifier.fillMaxSize()
-                .sceneViewControlModifier(scaleState, positionState, transformableState)
+                .border(1.dp, Color.Blue)
+                .sceneViewControlModifier(sceneForegroundImageScale, positionState, transformableState)
         ) {
-
             currentScene
-                ?.let {
+                ?.let { scene ->
                     Box(modifier = Modifier.offset {
                         IntOffset(
                             positionState.value.x.roundToInt(),
                             positionState.value.y.roundToInt()
                         )
-                    }.scale(scaleState.value)) {
+                    }.scale(zoom)) {
                         CompositionLocalProvider(
                             LocalImageLoader provides remember { generateImageLoader() },
                         ) {
-                            it.foregroundImagePath?.let { foregroundPath ->
-                                AsyncImage(
-                                    load = {
-                                        loadImageFile(connectionDependencies!!.assets.assetFile(foregroundPath))
-                                    },
-                                    painterFor = { remember { BitmapPainter(it) } },
-                                    contentDescription = "Foreground image"
-                                )
+                            recover({
+                                scene.foregroundImagePath?.let { foregroundPath ->
+                                    AsyncImage(
+                                        load = {
+                                            loadImageFile(
+                                                connectionDependencies!!.assets.assetFile(foregroundPath).bind()
+                                            )
+                                        },
+                                        painterFor = { remember { BitmapPainter(it) } },
+                                        contentDescription = "Foreground image",
+                                        modifier = Modifier.onGloballyPositioned {
+                                            dependencies.state.sceneForegroundImagePositionInWindow.value =
+                                                it.positionInWindow()
+                                                    .also { logger.debug { "Scene image window pos = $it" } }
+                                        }
+                                    )
+                                }
+
+                                scene.tokens.forEach { (id, token) ->
+                                    Box(
+                                        modifier = Modifier.offset { IntOffset(token.position.x, token.position.y) }
+                                            .clickable { dependencies.state.selectedToken.value = token }
+                                            .let {
+                                                if (token == selectedToken) {
+                                                    it.border(1.dp, Color.Yellow)
+                                                } else {
+                                                    it
+                                                }
+                                            }
+                                    ) {
+                                        AsyncImage(
+                                            load = {
+                                                loadImageFile(
+                                                    connectionDependencies!!.assets.assetFile(token.imageFilePath)
+                                                        .bind()
+                                                )
+                                            },
+                                            painterFor = { remember { BitmapPainter(it) } },
+                                            contentDescription = "Token $id"
+                                        )
+                                    }
+                                }
+                            }) {
+                                AlertDialog(onDismissRequest = {}) {
+                                    Text(it.message ?: "Unknown error")
+                                }
                             }
                         }
                     }
 
                     Text(
-                        it.name,
+                        scene.name,
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.align(Alignment.TopCenter).padding(16.dp)
                     )
                 }
+
+
+            val tokenizableDragging by dependencies.state.tokenizableDragging.collectAsState()
+
+            tokenizableDragging?.let {
+                recover({
+                    Box(modifier = Modifier.offset {
+                        IntOffset(
+                            it.offset.x.roundToInt(),
+                            it.offset.y.roundToInt()
+                        )
+                    }.zIndex(10f).scale(zoom)) {
+                        AsyncImage(
+                            load = {
+                                loadImageFile(
+                                    connectionDependencies!!.assets.assetFile(it.tokenizable.tokenImageFilePath).bind()
+                                )
+                            },
+                            painterFor = { remember { BitmapPainter(it) } },
+                            contentDescription = "Token image",
+                            modifier = Modifier.alpha(0.6f).zIndex(5f)
+                                .border(1.dp, Color.Red)
+                        )
+                    }
+                }) {
+                    AlertDialog(onDismissRequest = {}) {
+                        Text(it.message ?: "Unknown error")
+                    }
+                }
+            }
         }
     }
 
@@ -114,7 +198,7 @@ class GameScreen(
 }
 
 expect fun Modifier.sceneViewControlModifier(
-    scaleState: MutableState<Float>,
+    scaleState: MutableStateFlow<Float>,
     positionState: MutableState<Offset>,
     transformableState: TransformableState
 ): Modifier

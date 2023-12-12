@@ -10,10 +10,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @ExperimentalComposeUiApi
 actual fun Modifier.sceneViewControlModifier(
-    scaleState: MutableState<Float>,
+    scaleState: MutableStateFlow<Float>,
     positionState: MutableState<Offset>,
     transformableState: TransformableState
 ): Modifier =

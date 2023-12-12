@@ -28,6 +28,7 @@ import tabletop.common.game.Game
 
 private val logger = KotlinLogging.logger { }
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class ConnectionScreen(
     private val dependencies: Dependencies

@@ -37,7 +37,6 @@ data class DnD5eGame(
     override val system: DnD5e,
     override val players: Map<UUID, Player> = mapOf(),
     override val scenes: Map<UUID, Scene> = mapOf(),
-    override val tokenizables: Map<UUID, TokenizableEntity> = mapOf(),
     override val gameMaster: GameMaster,
     override val image: String? = null,
     override val id: UUID = UUID.generateUUID(),
@@ -52,7 +51,6 @@ data class DnD5eGame(
         system: DnD5e,
         players: Map<UUID, Player> = mapOf(),
         scenes: Map<UUID, Scene> = mapOf(),
-        tokenizables: Map<UUID, TokenizableEntity> = mapOf(),
         initialGameMasterUser: User,
         id: UUID = UUID.generateUUID()
     ) : this(
@@ -63,8 +61,7 @@ data class DnD5eGame(
         nonPlayerCharacters = nonPlayerCharacters,
         system = system,
         players = players,
-        scenes = scenes,
-        tokenizables = tokenizables
+        scenes = scenes
     )
 
 
@@ -72,4 +69,7 @@ data class DnD5eGame(
     override val chat: Chat = Chat()
     override val entities: Map<UUID, Entity>
         get() = playerCharacters + nonPlayerCharacters + players + scenes + tokenizables + gameMaster.let { it.id to it }
+
+    override val tokenizables: Map<UUID, TokenizableEntity>
+        get() = (playerCharacters + nonPlayerCharacters)
 }

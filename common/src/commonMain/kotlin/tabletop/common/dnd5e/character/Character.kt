@@ -14,6 +14,7 @@ import tabletop.common.geometry.Point
 import tabletop.common.scene.Scene
 import tabletop.common.scene.token.Token
 import tabletop.common.scene.token.Tokenizable
+import tabletop.common.scene.token.TokenizableEntity
 import kotlin.math.floor
 
 
@@ -64,7 +65,7 @@ class NonPlayerCharacter(
 }
 
 @Serializable
-abstract class Character : Entity(), Tokenizable, Named, Identifiable<UUID>, Usable.User,
+abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable<UUID>, Usable.User,
     Usable.Target {
     abstract override val tokenImageFilePath: String
     abstract override val name: String
