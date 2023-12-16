@@ -42,7 +42,7 @@ data class DnD5eGame(
     override val id: UUID = UUID.generateUUID(),
 ) : Game<DnD5e>() {
 
-    companion object {}
+    companion object;
 
     constructor(
         name: String,

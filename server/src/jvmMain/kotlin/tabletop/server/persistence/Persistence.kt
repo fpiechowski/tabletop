@@ -26,7 +26,7 @@ class Persistence(
         val users: Map<UUID, User> = mapOf(),
         val credentials: Map<User, Credentials.UsernamePassword> = mutableMapOf(),
     ) {
-        companion object {}
+        companion object
     }
 
     @Serializable

@@ -24,9 +24,7 @@ data class Scene(
     override val id: UUID = UUID.generateUUID()
 ) : Entity() {
 
-    companion object {
-
-    }
+    companion object;
 
     @Serializable
     class Grid(
