@@ -1,5 +1,8 @@
 package tabletop.common.dnd5e
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Money(
     val cp: Int,
     val sp: Int,

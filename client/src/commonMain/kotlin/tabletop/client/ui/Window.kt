@@ -28,6 +28,7 @@ data class WindowModel(
     val content: @Composable () -> Unit,
 )
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @Composable

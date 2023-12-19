@@ -1,5 +1,6 @@
 package tabletop.client
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,6 +12,7 @@ import tabletop.client.connection.ConnectionScreen
 import tabletop.client.di.Dependencies
 import tabletop.client.navigation.Navigation
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @Composable

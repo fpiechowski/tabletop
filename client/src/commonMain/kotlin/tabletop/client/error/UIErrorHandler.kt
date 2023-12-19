@@ -1,6 +1,7 @@
 package tabletop.client.error
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ import tabletop.common.error.ErrorHandler
 import kotlin.coroutines.CoroutineContext
 
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class UIErrorHandler(

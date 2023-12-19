@@ -1,5 +1,6 @@
 package tabletop.client.server
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.ExperimentalComposeUiApi
 import arrow.core.Either
@@ -21,6 +22,7 @@ import tabletop.common.event.AuthenticationRequested
 import tabletop.common.event.ResultEvent
 import tabletop.common.server.Server
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class ServerAdapter(

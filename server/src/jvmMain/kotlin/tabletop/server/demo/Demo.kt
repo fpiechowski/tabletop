@@ -7,6 +7,7 @@ import arrow.optics.copy
 import tabletop.common.demo.*
 import tabletop.common.dnd5e.DnD5eGame
 import tabletop.common.dnd5e.nonPlayerCharacters
+import tabletop.common.dnd5e.playerCharacters
 import tabletop.common.dnd5e.scenes
 import tabletop.common.error.CommonError
 import tabletop.server.persistence.Persistence
@@ -43,6 +44,7 @@ class Demo(private val persistence: Persistence) {
                         it.copy {
                             DnD5eGame.scenes set it.scenes + (demoScene.id to demoScene)
                             DnD5eGame.nonPlayerCharacters set it.nonPlayerCharacters + demoNonPlayerCharacter.let { it.id to it }
+                            DnD5eGame.playerCharacters set it.playerCharacters + demoPlayerCharacter.let { it.id to it }
                         }
                     }.onEach { game ->
                         persistenceRoot.copy {

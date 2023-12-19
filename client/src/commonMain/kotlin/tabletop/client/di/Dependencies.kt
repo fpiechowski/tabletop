@@ -1,5 +1,6 @@
 package tabletop.client.di
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.ExperimentalComposeUiApi
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -18,6 +19,7 @@ import tabletop.common.error.ConnectionErrorHandler
 import tabletop.common.error.TerminalErrorHandler
 import tabletop.common.serialization.Serialization
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class Dependencies(
@@ -58,6 +60,7 @@ class Dependencies(
     }
 }
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class ConnectionDependencies(

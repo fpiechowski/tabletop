@@ -1,5 +1,6 @@
 package tabletop.client.state
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.geometry.Offset
@@ -18,6 +19,7 @@ import tabletop.common.scene.Scene
 import tabletop.common.scene.token.Token
 import tabletop.common.user.User
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class State(

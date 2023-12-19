@@ -1,5 +1,6 @@
 package tabletop.client.asset
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.ExperimentalComposeUiApi
 import arrow.core.Either
@@ -19,6 +20,7 @@ import tabletop.client.server.ServerAdapter
 import tabletop.common.error.CommonError
 import java.io.File
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class Assets(

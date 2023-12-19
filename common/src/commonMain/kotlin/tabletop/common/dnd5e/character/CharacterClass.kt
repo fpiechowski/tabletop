@@ -1,25 +1,33 @@
 package tabletop.common.dnd5e.character
 
 import kotlinx.serialization.Serializable
-import tabletop.common.entity.Named
 import tabletop.common.dice.Dice
+import tabletop.common.dice.d
+import tabletop.common.entity.Named
 
 @Serializable
-abstract class CharacterClass(
-    val level: Int,
-    val features: Set<Feature>,
+class CharacterClass(
+    override val name: String,
     val hitDice: Dice,
-    val proficiencies: Set<Proficiency<*>>
+    val proficiencies: Set<Proficiency<*>> = setOf(),
+    val advancements: Advancements = Advancements()
 ) : Named {
-    abstract val advancement: Advancement<*>
 
-    sealed interface Advancement<T> {
-        val operation: Set<T>.(T) -> Unit
-
-        interface FeatureAdvancement : Advancement<Feature> {
-            val feature: Feature
-
-            fun apply(characterClass: CharacterClass) = characterClass.features.apply { operation(feature) }
+    @Serializable
+    class Advancements : Map<Int, Advancements.Advancement> by mapOf() {
+        interface Advancement {
+            val proficiencyBonusChange: (Int) -> Int
+            val features: Set<Feature>
         }
+    }
+
+    companion object {
+        val figter = CharacterClass(
+            "Fighter",
+            1 d 10,
+            setOf(
+
+            ),
+        )
     }
 }

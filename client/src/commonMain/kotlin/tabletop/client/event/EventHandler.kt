@@ -1,5 +1,6 @@
 package tabletop.client.event
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.ExperimentalComposeUiApi
 import arrow.core.Either
@@ -26,6 +27,7 @@ import tabletop.common.scene.Scene
 import tabletop.common.scene.tokens
 import kotlin.coroutines.CoroutineContext
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class EventHandler(

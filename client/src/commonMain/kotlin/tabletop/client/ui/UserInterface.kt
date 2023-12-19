@@ -1,5 +1,6 @@
 package tabletop.client.ui
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -16,6 +17,7 @@ import tabletop.common.error.CommonError
 import kotlin.coroutines.CoroutineContext
 
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class UserInterface(private val dependencies: Dependencies) : CoroutineScope {
