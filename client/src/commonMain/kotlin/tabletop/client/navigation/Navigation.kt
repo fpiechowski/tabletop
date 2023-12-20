@@ -12,14 +12,5 @@ import tabletop.client.ui.UserInterface
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class Navigation(
-    private val userInterface: UserInterface,
     private val navigator: Navigator
-) : Stack<Screen> by navigator {
-
-
-    enum class Route {
-        Connection,
-        Game,
-        Debug
-    }
-}
+) : Stack<Screen> by navigator
