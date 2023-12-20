@@ -27,6 +27,7 @@ class AndroidApp : Application() {
     }
 }
 
+@ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class AppActivity : ComponentActivity() {

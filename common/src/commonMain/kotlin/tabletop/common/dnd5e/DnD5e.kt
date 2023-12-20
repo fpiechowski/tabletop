@@ -65,8 +65,6 @@ data class DnD5eGame(
     )
 
 
-    @Transient
-    override val chat: Chat = Chat()
     override val entities: Map<UUID, Entity>
         get() = playerCharacters + nonPlayerCharacters + players + scenes + tokenizables + gameMaster.let { it.id to it }
 

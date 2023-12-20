@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 
 plugins {
     alias(libs.plugins.multiplatform)
+    alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.compose)
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)

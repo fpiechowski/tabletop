@@ -156,10 +156,10 @@ class Library(
                                     TokenPlacingRequested(
                                         game.bind().id,
                                         entity.id,
-                                        currentScene.ensureNotNull().bind().id,
+                                        scene.current.ensureNotNull().bind().id,
                                         (tokenizableDragging.ensureNotNull()
-                                            .bind().offset - sceneForegroundImagePositionInWindow.ensureNotNull()
-                                            .bind()).div(sceneForeGroundImageScale.value).toPoint()
+                                            .bind().offset - scene.foregroundImage.offset.ensureNotNull()
+                                            .bind()).div(scene.foregroundImage.scale.value).toPoint()
                                     ).handle().bind()
                                 }) {
                                     logger.error { it }

@@ -230,6 +230,7 @@ private fun CharacterView(character: Character) {
     }
 
     @ExperimentalLayoutApi
+    @Composable
     fun skillsFeaturesSpellsItemsRow() {
         Row {
             val selectedCategory = remember { mutableStateOf(CharacterViewCategory.Skills) }

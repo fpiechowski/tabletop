@@ -5,6 +5,5 @@ import tabletop.common.scene.token.Tokenizable
 
 data class TokenizableDragging(
     val tokenizable: Tokenizable,
-    val offset: Offset,
-
-    )
+    val offset: Offset
+)

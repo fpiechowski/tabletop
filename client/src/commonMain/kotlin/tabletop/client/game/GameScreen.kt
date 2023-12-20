@@ -46,11 +46,13 @@ class GameScreen(
 ) : Screen {
     private val logger = KotlinLogging.logger { }
 
-    val library: Library = Library(dependencies)
+    private val library: Library = Library(dependencies)
 
     @Composable
     override fun Content() {
         val windowsOpened by dependencies.userInterface.openedWindows.collectAsState()
+
+        dependencies.uiErrorHandler.errorDialog()
 
         Box(modifier = Modifier.fillMaxSize()) {
             SceneView()
@@ -70,31 +72,31 @@ class GameScreen(
 
     @Composable
     fun SceneView() {
-        val currentScene by dependencies.state.currentScene.collectAsState()
+        val currentScene by dependencies.state.scene.current.collectAsState()
 
-        val positionState = remember { mutableStateOf(Offset.Zero) }
+        val offsetState = remember { mutableStateOf(Offset.Zero) }
 
-        val sceneForegroundImageScale = dependencies.state.sceneForeGroundImageScale
+        val sceneForegroundImageScale = dependencies.state.scene.foregroundImage.scale
         val transformableState = rememberTransformableState { zoomChange, panChange, rotationChange ->
             sceneForegroundImageScale.value *= zoomChange
         }
 
         val connectionDependencies by dependencies.state.connectionDependencies.collectAsState()
-        val selectedToken by dependencies.state.selectedToken.collectAsState()
+        val selectedToken by dependencies.state.scene.selectedToken.collectAsState()
 
         val zoom by sceneForegroundImageScale.collectAsState()
 
         Box(
             modifier = Modifier.fillMaxSize()
                 .border(1.dp, Color.Blue)
-                .sceneViewControlModifier(sceneForegroundImageScale, positionState, transformableState)
+                .sceneViewControlModifier(sceneForegroundImageScale, offsetState, transformableState)
         ) {
             currentScene
                 ?.let { scene ->
                     Box(modifier = Modifier.offset {
                         IntOffset(
-                            positionState.value.x.roundToInt(),
-                            positionState.value.y.roundToInt()
+                            offsetState.value.x.roundToInt(),
+                            offsetState.value.y.roundToInt()
                         )
                     }.scale(zoom)) {
                         CompositionLocalProvider(
@@ -111,7 +113,7 @@ class GameScreen(
                                         painterFor = { remember { BitmapPainter(it) } },
                                         contentDescription = "Foreground image",
                                         modifier = Modifier.onGloballyPositioned {
-                                            dependencies.state.sceneForegroundImagePositionInWindow.value =
+                                            dependencies.state.scene.foregroundImage.offset.value =
                                                 it.positionInWindow()
                                                     .also { logger.debug { "Scene image window pos = $it" } }
                                         }
@@ -121,7 +123,7 @@ class GameScreen(
                                 scene.tokens.forEach { (id, token) ->
                                     Box(
                                         modifier = Modifier.offset { IntOffset(token.position.x, token.position.y) }
-                                            .clickable { dependencies.state.selectedToken.value = token }
+                                            .clickable { dependencies.state.scene.selectedToken.value = token }
                                             .let {
                                                 if (token == selectedToken) {
                                                     it.border(1.dp, Color.Yellow)

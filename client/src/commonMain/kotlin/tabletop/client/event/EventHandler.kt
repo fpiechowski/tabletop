@@ -17,7 +17,6 @@ import tabletop.client.game.GameScreen
 import tabletop.client.navigation.Navigation
 import tabletop.client.server.ServerAdapter
 import tabletop.client.state.State
-import tabletop.client.ui.UserInterface
 import tabletop.common.error.CommonError
 import tabletop.common.error.NotFoundError
 import tabletop.common.error.UnsupportedSubtypeError
@@ -32,11 +31,9 @@ import kotlin.coroutines.CoroutineContext
 @ExperimentalComposeUiApi
 class EventHandler(
     private val dependencies: Dependencies,
-
-    ) : CoroutineScope {
+) : CoroutineScope {
     private val logger = KotlinLogging.logger {}
 
-    private val userInterface: UserInterface = dependencies.userInterface
     private val state: State = dependencies.state
     private val uiErrorHandler: UIErrorHandler = dependencies.uiErrorHandler
     private suspend fun navigation(): Navigation = dependencies.navigation.await()
@@ -125,7 +122,7 @@ class EventHandler(
                             }
 
                             maybeGame.value = game
-                            currentScene.value = scene
+                            state.scene.current.value = scene
                         }
                     }
 
@@ -135,7 +132,7 @@ class EventHandler(
                             val scene =
                                 ensureNotNull(game.bind().scenes[sceneId]) { NotFoundError(Scene::class, sceneId) }
 
-                            currentScene.value = scene
+                            state.scene.current.value = scene
                         }
                     }
 

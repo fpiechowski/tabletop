@@ -20,17 +20,12 @@ import kotlin.coroutines.CoroutineContext
 @ExperimentalLayoutApi
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
-class UserInterface(private val dependencies: Dependencies) : CoroutineScope {
+class UserInterface(private val dependencies: Dependencies) {
 
-
-    val snackbarHostState = SnackbarHostState()
     val openedWindows: MutableStateFlow<Map<UUID, WindowModel>> = MutableStateFlow(mapOf())
-    val connectionScreenModel = CompletableDeferred<ConnectionScreen.Model>()
 
     companion object
 
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
-
-    override val coroutineContext: CoroutineContext = Job() + Dispatchers.Default
 }
 
