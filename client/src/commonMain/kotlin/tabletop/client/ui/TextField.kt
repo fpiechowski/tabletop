@@ -1,0 +1,44 @@
+package tabletop.client.ui
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import arrow.core.raise.recover
+import tabletop.common.error.CommonError
+
+@Composable
+fun <T : Any> TextField(
+    field: Field<T>,
+    value: String,
+    editable: State<Boolean> = mutableStateOf(true),
+    errors: MutableState<Map<Field<*>, CommonError>> = mutableStateOf(mapOf()),
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    singleLine: Boolean = false,
+    colors: TextFieldColors = TextFieldDefaults.colors(),
+    readOnly: Boolean? = null,
+    onValueChange: (T) -> Unit,
+) = recover({
+    androidx.compose.material3.TextField(
+        readOnly = readOnly ?: !editable.value,
+        value = value,
+        label = { Text(field.label) },
+        isError = errors.value.containsKey(field),
+        onValueChange = {
+            onValueChange(field.fromString(it).bind())
+        },
+        textStyle = textStyle,
+        modifier = modifier,
+        singleLine = singleLine,
+        colors = colors
+    )
+}) {
+    Text(it.message ?: "Unknown Error")
+}

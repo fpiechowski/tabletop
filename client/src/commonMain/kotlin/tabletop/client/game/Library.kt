@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.uuid.UUID
 import tabletop.client.di.Dependencies
-import tabletop.client.dnd5e.character.CharacterWindowModel
+import tabletop.client.dnd5e.character.characterWindowModel
 import tabletop.client.io.loadImageFile
 import tabletop.client.ui.AsyncImage
 import tabletop.client.ui.TokenizableDragging
@@ -133,7 +133,7 @@ class Library(
             }
 
             is Character -> {
-                dependencies.userInterface.openedWindows.value += CharacterWindowModel(entity)
+                dependencies.userInterface.openedWindows.value += characterWindowModel(entity)
             }
         }
     }
