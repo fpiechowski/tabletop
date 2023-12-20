@@ -3,9 +3,8 @@ package tabletop.server.auth
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
-import tabletop.common.auth.Authentication
-import tabletop.common.user.User
-import tabletop.server.di.ConnectionDependencies
+import tabletop.shared.auth.Authentication
+import tabletop.shared.user.User
 import tabletop.server.di.Dependencies
 
 class AuthenticationAdapter(

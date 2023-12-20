@@ -27,7 +27,7 @@ kotlin {
             }
         }
         commonMain.dependencies {
-            implementation(project(":common"))
+            implementation(project(":shared"))
 
             implementation(compose.runtime)
             implementation(compose.material3)

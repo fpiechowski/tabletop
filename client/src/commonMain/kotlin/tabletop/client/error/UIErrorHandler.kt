@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.update
 import tabletop.client.di.Dependencies
-import tabletop.common.error.CommonError
-import tabletop.common.error.ErrorHandler
+import tabletop.shared.error.CommonError
+import tabletop.shared.error.ErrorHandler
 
 
 @ExperimentalLayoutApi

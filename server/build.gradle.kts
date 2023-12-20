@@ -39,7 +39,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":common"))
+                implementation(project(":shared"))
                 implementation(libs.ktor.server.netty)
                 implementation(libs.ktor.server.websockets)
             }

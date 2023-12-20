@@ -11,13 +11,13 @@ import tabletop.client.event.EventHandler
 import tabletop.client.navigation.Navigation
 import tabletop.client.state.State
 import tabletop.client.ui.UserInterface
-import tabletop.common.connection.Connection
-import tabletop.common.connection.ConnectionCommunicator
-import tabletop.common.di.CommonDependencies
-import tabletop.common.error.CommonError
-import tabletop.common.error.ConnectionErrorHandler
-import tabletop.common.error.TerminalErrorHandler
-import tabletop.common.serialization.Serialization
+import tabletop.shared.connection.Connection
+import tabletop.shared.connection.ConnectionCommunicator
+import tabletop.shared.di.CommonDependencies
+import tabletop.shared.error.CommonError
+import tabletop.shared.error.ConnectionErrorHandler
+import tabletop.shared.error.TerminalErrorHandler
+import tabletop.shared.serialization.Serialization
 
 @ExperimentalLayoutApi
 @ExperimentalMaterial3Api

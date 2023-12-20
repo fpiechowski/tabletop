@@ -12,9 +12,9 @@ import kotlinx.serialization.Serializable
 import tabletop.client.asset.Assets
 import tabletop.client.di.ConnectionDependencies
 import tabletop.client.ui.TokenizableDragging
-import tabletop.common.error.CommonError
-import tabletop.common.game.Game
-import tabletop.common.user.User
+import tabletop.shared.error.CommonError
+import tabletop.shared.game.Game
+import tabletop.shared.user.User
 
 @ExperimentalLayoutApi
 @ExperimentalMaterial3Api

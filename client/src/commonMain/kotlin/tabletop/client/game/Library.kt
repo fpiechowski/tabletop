@@ -36,13 +36,13 @@ import tabletop.client.io.loadImageFile
 import tabletop.client.ui.AsyncImage
 import tabletop.client.ui.TokenizableDragging
 import tabletop.client.ui.WindowModel
-import tabletop.common.dnd5e.character.Character
-import tabletop.common.entity.Entity
-import tabletop.common.event.SceneOpeningRequested
-import tabletop.common.event.TokenPlacingRequested
-import tabletop.common.geometry.Point
-import tabletop.common.scene.Scene
-import tabletop.common.scene.token.Tokenizable
+import tabletop.shared.dnd5e.character.Character
+import tabletop.shared.entity.Entity
+import tabletop.shared.event.SceneOpeningRequested
+import tabletop.shared.event.TokenPlacingRequested
+import tabletop.shared.geometry.Point
+import tabletop.shared.scene.Scene
+import tabletop.shared.scene.token.Tokenizable
 import kotlin.math.roundToInt
 
 @ExperimentalLayoutApi

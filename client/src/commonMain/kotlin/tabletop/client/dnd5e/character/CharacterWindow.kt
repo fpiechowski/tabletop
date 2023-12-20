@@ -25,9 +25,9 @@ import kotlinx.uuid.generateUUID
 import tabletop.client.ui.Field
 import tabletop.client.ui.TextField
 import tabletop.client.ui.WindowModel
-import tabletop.common.dnd5e.character.*
-import tabletop.common.dnd5e.skill.Skill
-import tabletop.common.error.CommonError
+import tabletop.shared.dnd5e.character.*
+import tabletop.shared.dnd5e.skill.Skill
+import tabletop.shared.error.CommonError
 
 
 @ExperimentalLayoutApi

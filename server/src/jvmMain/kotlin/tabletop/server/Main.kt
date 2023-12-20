@@ -3,7 +3,7 @@ package tabletop.server
 import arrow.continuations.SuspendApp
 import arrow.core.raise.fold
 import io.github.oshai.kotlinlogging.KotlinLogging
-import tabletop.common.error.CommonError
+import tabletop.shared.error.CommonError
 import tabletop.server.di.Dependencies
 
 private val logger = KotlinLogging.logger { }

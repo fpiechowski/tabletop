@@ -19,7 +19,7 @@ import tabletop.client.navigation.Navigation
 fun application() {
     Dependencies().run {
         Navigator(ConnectionScreen(this@run)) {
-            navigation.complete(Navigation(userInterface, it))
+            navigation.complete(Navigation(it))
 
             Scaffold {
                 CurrentScreen()

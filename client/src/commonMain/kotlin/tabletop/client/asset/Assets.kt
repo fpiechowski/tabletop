@@ -16,8 +16,8 @@ import io.ktor.utils.io.core.*
 import kotlinx.coroutines.flow.update
 import tabletop.client.di.ConnectionDependencies
 import tabletop.client.di.Dependencies
-import tabletop.client.server.ServerAdapter
-import tabletop.common.error.CommonError
+import tabletop.client.server.Server
+import tabletop.shared.error.CommonError
 import java.io.File
 
 @ExperimentalLayoutApi
@@ -48,7 +48,7 @@ class Assets(
                 if (!file.exists()) {
                     file.parentFile.mkdirs()
                     logger.debug { "Downloading asset $path" }
-                    ServerAdapter.httpClient.prepareGet {
+                    Server.httpClient.prepareGet {
                         url(serverUrl(path))
                     }.execute { response ->
                         val channel: ByteReadChannel = response.body()

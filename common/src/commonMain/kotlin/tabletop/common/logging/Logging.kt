@@ -1,3 +1,0 @@
-package tabletop.common.logging
-
-

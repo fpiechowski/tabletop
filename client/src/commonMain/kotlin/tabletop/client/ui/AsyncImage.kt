@@ -14,7 +14,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import tabletop.common.error.CommonError
+import tabletop.shared.error.CommonError
 
 @Composable
 fun <T> AsyncImage(

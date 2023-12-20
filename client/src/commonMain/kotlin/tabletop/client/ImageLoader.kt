@@ -4,7 +4,7 @@ import com.seiko.imageloader.ImageLoader
 import com.seiko.imageloader.component.setupDefaultComponents
 import com.seiko.imageloader.defaultImageResultMemoryCache
 import okio.Path.Companion.toOkioPath
-import tabletop.common.ApplicationInfo
+import tabletop.shared.ApplicationInfo
 import java.io.File
 
 fun generateImageLoader(): ImageLoader {

@@ -15,15 +15,15 @@ import tabletop.client.di.Dependencies
 import tabletop.client.error.UIErrorHandler
 import tabletop.client.game.GameScreen
 import tabletop.client.navigation.Navigation
-import tabletop.client.server.ServerAdapter
+import tabletop.client.server.Server
 import tabletop.client.state.State
-import tabletop.common.error.CommonError
-import tabletop.common.error.NotFoundError
-import tabletop.common.error.UnsupportedSubtypeError
-import tabletop.common.event.*
-import tabletop.common.game.Game
-import tabletop.common.scene.Scene
-import tabletop.common.scene.tokens
+import tabletop.shared.error.CommonError
+import tabletop.shared.error.NotFoundError
+import tabletop.shared.error.UnsupportedSubtypeError
+import tabletop.shared.event.*
+import tabletop.shared.game.Game
+import tabletop.shared.scene.Scene
+import tabletop.shared.scene.tokens
 import kotlin.coroutines.CoroutineContext
 
 @ExperimentalLayoutApi
@@ -65,7 +65,7 @@ class EventHandler(
             state.connectionJob.value?.let {
                 launch(it) {
                     recover({
-                        ServerAdapter(dependencies, this@EventHandler, uiErrorHandler)
+                        Server(dependencies, this@EventHandler, uiErrorHandler)
                             .connect(host, port, credentialsData).bind()
                     }) {
                         ConnectionEnded(it).handle().bind()

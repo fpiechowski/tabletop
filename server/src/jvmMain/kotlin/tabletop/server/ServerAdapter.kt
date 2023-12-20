@@ -17,11 +17,11 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import tabletop.common.connection.Connection
-import tabletop.common.error.CommonError
-import tabletop.common.event.Event
-import tabletop.common.event.RequestEvent
-import tabletop.common.server.Server
+import tabletop.shared.connection.Connection
+import tabletop.shared.error.CommonError
+import tabletop.shared.event.Event
+import tabletop.shared.event.RequestEvent
+import tabletop.shared.server.Server
 import tabletop.server.di.ConnectionDependencies
 import tabletop.server.di.Dependencies
 import java.io.File

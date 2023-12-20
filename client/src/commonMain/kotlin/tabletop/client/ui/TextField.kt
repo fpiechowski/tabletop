@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import arrow.core.raise.recover
-import tabletop.common.error.CommonError
+import tabletop.shared.error.CommonError
 
 @Composable
 fun <T : Any> TextField(

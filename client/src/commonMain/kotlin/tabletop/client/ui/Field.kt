@@ -3,8 +3,8 @@ package tabletop.client.ui
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import tabletop.common.error.CommonError
-import tabletop.common.error.UnsupportedSubtypeError
+import tabletop.shared.error.CommonError
+import tabletop.shared.error.UnsupportedSubtypeError
 import kotlin.reflect.KClass
 
 data class Field<T : Any>(

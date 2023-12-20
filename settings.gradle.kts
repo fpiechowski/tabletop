@@ -11,4 +11,4 @@ pluginManagement {
     }
 }
 
-include("common", "server", "client")
+include("shared", "server", "client")

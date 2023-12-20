@@ -2,8 +2,8 @@ package tabletop.client.state
 
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.flow.MutableStateFlow
-import tabletop.common.scene.Scene
-import tabletop.common.scene.token.Token
+import tabletop.shared.scene.Scene
+import tabletop.shared.scene.token.Token
 
 class SceneState {
     val current: MutableStateFlow<Scene?> = MutableStateFlow(null)

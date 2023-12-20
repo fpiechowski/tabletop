@@ -16,11 +16,11 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
 import tabletop.client.di.Dependencies
 import tabletop.client.event.ConnectionAttempted
-import tabletop.common.auth.Credentials
-import tabletop.common.connection.Connection
-import tabletop.common.error.CommonError
-import tabletop.common.error.ErrorHandler.Companion.use
-import tabletop.common.event.GameLoadingRequested
+import tabletop.shared.auth.Credentials
+import tabletop.shared.connection.Connection
+import tabletop.shared.error.CommonError
+import tabletop.shared.error.ErrorHandler.Companion.use
+import tabletop.shared.event.GameLoadingRequested
 
 private val logger = KotlinLogging.logger { }
 

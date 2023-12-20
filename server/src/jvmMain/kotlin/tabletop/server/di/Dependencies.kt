@@ -1,15 +1,13 @@
 package tabletop.server.di
 
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import one.microstream.storage.embedded.types.EmbeddedStorage
-import tabletop.common.auth.Authentication
-import tabletop.common.connection.Connection
-import tabletop.common.connection.ConnectionCommunicator
-import tabletop.common.di.CommonDependencies
-import tabletop.common.error.ConnectionErrorHandler
-import tabletop.common.error.TerminalErrorHandler
-import tabletop.common.serialization.Serialization
+import tabletop.shared.connection.Connection
+import tabletop.shared.connection.ConnectionCommunicator
+import tabletop.shared.di.CommonDependencies
+import tabletop.shared.error.ConnectionErrorHandler
+import tabletop.shared.error.TerminalErrorHandler
+import tabletop.shared.serialization.Serialization
 import tabletop.server.ServerAdapter
 import tabletop.server.auth.AuthenticationAdapter
 import tabletop.server.demo.Demo

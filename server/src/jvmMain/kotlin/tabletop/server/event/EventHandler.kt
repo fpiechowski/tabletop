@@ -6,13 +6,13 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.update
-import tabletop.common.error.CommonError
-import tabletop.common.error.ErrorHandler.Companion.use
-import tabletop.common.error.NotFoundError
-import tabletop.common.error.UnsupportedSubtypeError
-import tabletop.common.event.*
-import tabletop.common.scene.Scene
-import tabletop.common.scene.token.Tokenizable
+import tabletop.shared.error.CommonError
+import tabletop.shared.error.ErrorHandler.Companion.use
+import tabletop.shared.error.NotFoundError
+import tabletop.shared.error.UnsupportedSubtypeError
+import tabletop.shared.event.*
+import tabletop.shared.scene.Scene
+import tabletop.shared.scene.token.Tokenizable
 import tabletop.server.di.ConnectionDependencies
 import tabletop.server.di.Dependencies
 

@@ -7,11 +7,11 @@ import arrow.optics.optics
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import one.microstream.storage.embedded.types.EmbeddedStorageManager
-import tabletop.common.auth.Credentials
-import tabletop.common.error.CommonError
-import tabletop.common.game.Game
-import tabletop.common.state.State
-import tabletop.common.user.User
+import tabletop.shared.auth.Credentials
+import tabletop.shared.error.CommonError
+import tabletop.shared.game.Game
+import tabletop.shared.state.State
+import tabletop.shared.user.User
 
 class Persistence(
     private val storageManager: EmbeddedStorageManager,

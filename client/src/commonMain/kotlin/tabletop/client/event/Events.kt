@@ -1,8 +1,8 @@
 package tabletop.client.event
 
-import tabletop.common.auth.Credentials
-import tabletop.common.error.CommonError
-import tabletop.common.event.Event
+import tabletop.shared.auth.Credentials
+import tabletop.shared.error.CommonError
+import tabletop.shared.event.Event
 
 class ConnectionAttempted(val host: String, val port: Int, val credentialsData: Credentials.UsernamePassword.Data) :
     Event
