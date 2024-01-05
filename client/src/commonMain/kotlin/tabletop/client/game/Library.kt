@@ -133,7 +133,7 @@ class Library(
             }
 
             is Character -> {
-                dependencies.userInterface.openedWindows.value += characterWindowModel(entity)
+                dependencies.userInterface.openedWindows.value += characterWindowModel(entity, dependencies)
             }
         }
     }

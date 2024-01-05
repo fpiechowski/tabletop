@@ -12,11 +12,8 @@ import kotlinx.serialization.modules.subclass
 import tabletop.shared.auth.Authentication
 import tabletop.shared.connection.Connection
 import tabletop.shared.dnd5e.DnD5eGame
-import tabletop.shared.dnd5e.character.Human
-import tabletop.shared.dnd5e.character.Race
-import tabletop.shared.error.CommonError
-import tabletop.shared.error.InvalidSubtypeError
-import tabletop.shared.error.NotFoundError
+import tabletop.shared.dnd5e.character.*
+import tabletop.shared.error.*
 import tabletop.shared.event.Event
 import tabletop.shared.game.Game
 import tabletop.shared.server.Server
@@ -34,6 +31,8 @@ class Serialization {
                 subclass(Authentication.Error::class)
                 subclass(CommonError.ThrowableError::class)
                 subclass(NotFoundError::class)
+                subclass(NotImplementedError::class)
+                subclass(IllegalStateError::class)
                 subclass(InvalidSubtypeError::class)
             }
 
@@ -43,6 +42,11 @@ class Serialization {
 
             polymorphic(Race::class) {
                 subclass(Human::class)
+            }
+
+            polymorphic(Character::class) {
+                subclass(PlayerCharacter::class)
+                subclass(NonPlayerCharacter::class)
             }
         }
     }

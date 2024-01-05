@@ -1,5 +1,6 @@
 package tabletop.shared.dnd5e.character
 
+import arrow.optics.Lens
 import arrow.optics.optics
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
@@ -103,6 +104,10 @@ abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable
 
     abstract override val id: UUID
 
+    companion object {
+        const val defaultImage = "assets/images/characters/default.png"
+    }
+
     @Serializable
     data class Equipment(
         val armor: Equippable? = null,
@@ -128,7 +133,8 @@ abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable
         )
 
     @Serializable
-    class Attributes(
+    @optics
+    data class Attributes(
         val strength: Int = 10,
         val dexterity: Int = 10,
         val constitution: Int = 10,
@@ -136,13 +142,15 @@ abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable
         val wisdom: Int = 10,
         val charisma: Int = 10,
     ) : Map<Attribute, Int> by mapOf(
-        Attribute.strength to strength,
-        Attribute.dexterity to dexterity,
-        Attribute.constitution to constitution,
-        Attribute.intelligence to intelligence,
-        Attribute.wisdom to wisdom,
-        Attribute.charisma to charisma
-    )
+        Attribute.Strength to strength,
+        Attribute.Dexterity to dexterity,
+        Attribute.Constitution to constitution,
+        Attribute.Intelligence to intelligence,
+        Attribute.Wisdom to wisdom,
+        Attribute.Charisma to charisma
+    ) {
+        companion object
+    }
 
     class ArmorClass(
         val modifiers: List<Modifier<Int>>
@@ -168,14 +176,16 @@ abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable
     }
 
     @Serializable
-    data class Attribute(override val name: String, val shortName: String) : Proficiency.Subject {
+    data class Attribute(override val name: String, val shortName: String, val lens: Lens<Attributes, Int>) : Proficiency.Subject {
+
+
         companion object {
-            val strength = Attribute("Strength", "str")
-            val dexterity = Attribute("Dexterity", "dex")
-            val constitution = Attribute("Constitution", "con")
-            val intelligence = Attribute("Intelligence", "int")
-            val wisdom = Attribute("Wisdom", "wis")
-            val charisma = Attribute("Charisma", "cha")
+            val Strength = Attribute("Strength", "str", Attributes.strength)
+            val Dexterity = Attribute("Dexterity", "dex", Attributes.dexterity)
+            val Constitution = Attribute("Constitution", "con", Attributes.constitution)
+            val Intelligence = Attribute("Intelligence", "int", Attributes.intelligence)
+            val Wisdom = Attribute("Wisdom", "wis", Attributes.wisdom)
+            val Charisma = Attribute("Charisma", "cha", Attributes.charisma)
 
             fun modifier(value: Int): IntModifier = IntModifier { floor((value - 10).toFloat() / 2f).toInt() }
         }

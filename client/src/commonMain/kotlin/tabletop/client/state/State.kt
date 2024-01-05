@@ -50,3 +50,10 @@ class State(
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 }
 
+fun MutableStateFlow<List<CommonError>>.add(error: CommonError) {
+    value += error
+}
+
+fun MutableStateFlow<List<CommonError>>.add(throwable: Throwable) {
+    value += CommonError.ThrowableError(throwable)
+}

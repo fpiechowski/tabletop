@@ -1,6 +1,7 @@
 package tabletop.server.di
 
 import kotlinx.coroutines.runBlocking
+import one.microstream.persistence.types.PersistenceFieldEvaluator
 import one.microstream.storage.embedded.types.EmbeddedStorage
 import tabletop.shared.connection.Connection
 import tabletop.shared.connection.ConnectionCommunicator
@@ -15,10 +16,12 @@ import tabletop.server.event.EventHandler
 import tabletop.server.persistence.Persistence
 import tabletop.server.persistence.Persistence.Root
 import tabletop.server.state.State
+import kotlin.reflect.jvm.kotlinProperty
+
 
 class Dependencies(
     lazyPersistence: Lazy<Persistence> = lazy {
-        Persistence(EmbeddedStorage.start(Root()))
+        Persistence(EmbeddedStorage.Foundation().createEmbeddedStorageManager().also { it.setRoot(Root()) }.start())
     }
 ) : CommonDependencies {
     override val serialization: Serialization by lazy { Serialization() }

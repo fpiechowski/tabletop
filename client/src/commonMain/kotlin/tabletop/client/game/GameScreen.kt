@@ -50,7 +50,8 @@ class GameScreen(
 
     @Composable
     override fun Content() {
-        val windowsOpened by dependencies.userInterface.openedWindows.collectAsState()
+        val openedWindowsState = dependencies.userInterface.openedWindows
+        val openedWindows by openedWindowsState.collectAsState()
 
         dependencies.uiErrorHandler.errorDialog()
 
@@ -61,8 +62,8 @@ class GameScreen(
                 LibraryButton(Modifier.align(Alignment.TopStart).padding(16.dp))
             }
 
-            windowsOpened.forEach { (_, it) ->
-                Window(it.title, it.modifier, dependencies.userInterface, it.offsetState, it.id) {
+            openedWindows.forEach { (_, it) ->
+                Window(it.title, openedWindowsState, it.modifier, it.offsetState, it.id) {
                     it.content()
                 }
             }

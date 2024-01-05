@@ -47,6 +47,11 @@ data class UnsupportedSubtypeError(
     }
 }
 
+@Serializable
+data class IllegalStateError(
+    override val message: String,
+    override val cause: CommonError? = null
+) : CommonError()
 
 @Serializable
 open class NotFoundError(
@@ -69,5 +74,13 @@ data class InvalidSubtypeError(
     companion object {
         operator fun <T : Any, T2 : T> invoke(klass: KClass<T>, klass2: KClass<T2>) =
             InvalidSubtypeError("Invalid subtype of $klass: $klass2")
+    }
+}
+
+@Serializable
+data class NotImplementedError(override val message: String?, override val cause: CommonError?) : CommonError() {
+
+    companion object {
+        operator fun invoke(description: String = "Functionality",cause: CommonError? = null) = NotImplementedError("$description not implemented", cause)
     }
 }

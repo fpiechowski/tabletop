@@ -12,7 +12,7 @@ data class Field<T : Any>(
     val type: KClass<T>,
 ) {
     @Suppress("UNCHECKED_CAST")
-    fun fromString(string: String): Either<CommonError, T> = either {
+    fun fromString(string: String, previous: String = ""): Either<CommonError, T> = either {
         catch({
             when (type) {
                 String::class -> string as T
@@ -22,8 +22,26 @@ data class Field<T : Any>(
                 Double::class -> string.toDouble() as T
                 else -> raise(UnsupportedSubtypeError(type))
             }
-        }) {
-            raise(CommonError.ThrowableError(it))
+        }) { throwable ->
+            when (throwable) {
+                is NumberFormatException -> when (string) {
+                    "" -> 0 as T
+                    else -> fromString(previous, "").bind()
+                }
+
+                else -> {
+                    raise(CommonError.ThrowableError(throwable))
+                }
+            }
+        }
+    }
+
+    data class RecoverableFieldError(
+        val recoverValue: String, override val message: String?, override val cause: CommonError?
+    ) : CommonError() {
+        companion object {
+            operator fun invoke(recoverValue: String, cause: CommonError?) =
+                RecoverableFieldError(recoverValue, cause?.message, cause?.cause)
         }
     }
 } 

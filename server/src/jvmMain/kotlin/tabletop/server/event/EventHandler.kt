@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
+import arrow.optics.copy
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.update
 import tabletop.shared.error.CommonError
@@ -15,6 +16,12 @@ import tabletop.shared.scene.Scene
 import tabletop.shared.scene.token.Tokenizable
 import tabletop.server.di.ConnectionDependencies
 import tabletop.server.di.Dependencies
+import tabletop.shared.dnd5e.DnD5eGame
+import tabletop.shared.dnd5e.character.NonPlayerCharacter
+import tabletop.shared.dnd5e.character.PlayerCharacter
+import tabletop.shared.dnd5e.nonPlayerCharacters
+import tabletop.shared.dnd5e.playerCharacters
+import tabletop.shared.game.Game
 
 
 class EventHandler(
@@ -35,6 +42,7 @@ class EventHandler(
                         is GameLoadingRequested -> handle().bind()
                         is GameListingRequested -> handle().bind()
                         is TokenPlacingRequested -> handle().bind()
+                        is CharacterUpdateRequested -> handle().bind()
                         is SceneOpeningRequested -> SceneOpened(sceneId).handle().bind()
                         else -> raise(UnsupportedSubtypeError(RequestEvent::class))
                     }
@@ -86,6 +94,30 @@ class EventHandler(
             }.bind()
                 .toSet()
             GamesLoaded(games).handle().bind()
+        }
+
+    private suspend fun CharacterUpdateRequested.handle(): Either<CommonError, Unit> =
+        either {
+            val game = persistence.retrieve { games[gameId] }.bind()
+                .let {
+                    when (it) {
+                        !is DnD5eGame -> raise(UnsupportedSubtypeError(Game::class))
+                        else -> it
+                    }
+                }
+
+            val updatedGame = game.copy {
+                when (character) {
+                    is PlayerCharacter -> DnD5eGame.playerCharacters set game.playerCharacters.plus(character.id to character as PlayerCharacter)
+                    is NonPlayerCharacter -> DnD5eGame.nonPlayerCharacters set game.nonPlayerCharacters.plus(character.id to character as NonPlayerCharacter)
+                }
+            }
+
+            with(persistence) {
+                updatedGame.persist().bind()
+            }
+
+            CharacterUpdated(character).handle()
         }
 
     private suspend fun GameLoadingRequested.handle(): Either<CommonError, Unit> =

@@ -4,6 +4,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.fold
 import arrow.core.raise.recover
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.websocket.*
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
@@ -25,6 +26,8 @@ class Connection(
 }
 
 class ConnectionCommunicator(val connection: Connection, val serialization: Serialization) {
+
+    val logger = KotlinLogging.logger {}
 
     suspend inline fun <reified T : Any> T.send() =
         send<T>(connection)
@@ -51,7 +54,7 @@ class ConnectionCommunicator(val connection: Connection, val serialization: Seri
                     )
                 },
                 recover = { raise(Connection.Error("Error on sending ${this@send}", it)) },
-                transform = { }
+                transform = { logger.debug { "Sent $this@send" } }
             )
         }
 

@@ -3,6 +3,7 @@ package tabletop.shared.event
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
 import tabletop.shared.auth.Credentials
+import tabletop.shared.dnd5e.character.Character
 import tabletop.shared.error.CommonError
 import tabletop.shared.game.Game
 import tabletop.shared.geometry.Point
@@ -72,3 +73,10 @@ data class TokenPlaced(val token: Token<*>) : ResultEvent {
     override val shared: Boolean = false
 }
 
+@Serializable
+data class CharacterUpdateRequested(val gameId: UUID, val character: Character) : RequestEvent
+
+@Serializable
+data class CharacterUpdated(val character: Character) : ResultEvent {
+    override val shared: Boolean = true
+}

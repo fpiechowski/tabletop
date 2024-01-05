@@ -42,3 +42,35 @@ fun <T : Any> TextField(
 }) {
     Text(it.message ?: "Unknown Error")
 }
+
+@Composable
+fun <T : Any> OutlinedTextField(
+    field: Field<T>,
+    value: String,
+    editable: State<Boolean> = mutableStateOf(true),
+    errors: MutableState<Map<Field<*>, CommonError>> = mutableStateOf(mapOf()),
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    singleLine: Boolean = false,
+    colors: TextFieldColors = TextFieldDefaults.colors(),
+    readOnly: Boolean? = null,
+    errorHandler: (CommonError) -> Unit,
+    onValueChange: (T) -> Unit,
+) =
+    androidx.compose.material3.OutlinedTextField(
+        readOnly = readOnly ?: !editable.value,
+        value = value,
+        label = { Text(field.label) },
+        isError = errors.value.containsKey(field),
+        onValueChange = {
+            recover({
+                onValueChange(field.fromString(it).bind())
+            }) {
+                errorHandler(it)
+            }
+        },
+        textStyle = textStyle,
+        modifier = modifier,
+        singleLine = singleLine,
+        colors = colors
+    )

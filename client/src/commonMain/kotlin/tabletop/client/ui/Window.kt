@@ -4,6 +4,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -18,7 +20,6 @@ import androidx.compose.ui.unit.round
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
-import tabletop.client.di.Dependencies
 
 data class WindowModel(
     val title: String,
@@ -33,10 +34,11 @@ data class WindowModel(
 @ExperimentalComposeUiApi
 @Composable
 fun Window(
-    title: String, modifier: Modifier,
-    userInterface: UserInterface,
-    offsetState: MutableStateFlow<IntOffset>,
-    id: UUID,
+    title: String,
+    openedWindows: MutableStateFlow<Map<UUID, WindowModel>>,
+    modifier: Modifier = Modifier,
+    offsetState: MutableStateFlow<IntOffset> = MutableStateFlow(IntOffset.Zero),
+    id: UUID = UUID.generateUUID(),
     content: @Composable () -> Unit,
 ) {
     val offset by offsetState.collectAsState()
@@ -44,8 +46,8 @@ fun Window(
     Card(
         Modifier
             .then(modifier)
-            .height(300.dp)
-            .offset { offset }
+            .offset { offset },
+        elevation = CardDefaults.cardElevation(20.dp)
     ) {
         Column {
             Box(
@@ -67,7 +69,7 @@ fun Window(
 
                 Row(modifier = Modifier.align(Alignment.CenterEnd)) {
                     IconButton(onClick = {
-                        userInterface.openedWindows.value -= id
+                        openedWindows.value -= id
                     }) {
                         Icon(
                             Icons.Default.Close,
@@ -79,6 +81,10 @@ fun Window(
             }
 
             content()
+        }
+
+        Row(horizontalArrangement = Arrangement.End) {
+            Icon(Icons.Default.OpenInFull, contentDescription = "Resize Window")
         }
     }
 }

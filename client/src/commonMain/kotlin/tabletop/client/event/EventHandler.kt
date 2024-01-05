@@ -10,6 +10,7 @@ import arrow.core.raise.recover
 import arrow.optics.copy
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.update
 import tabletop.client.connection.ConnectionScreen
 import tabletop.client.di.Dependencies
 import tabletop.client.error.UIErrorHandler
@@ -17,6 +18,11 @@ import tabletop.client.game.GameScreen
 import tabletop.client.navigation.Navigation
 import tabletop.client.server.Server
 import tabletop.client.state.State
+import tabletop.shared.dnd5e.DnD5eGame
+import tabletop.shared.dnd5e.character.NonPlayerCharacter
+import tabletop.shared.dnd5e.character.PlayerCharacter
+import tabletop.shared.dnd5e.nonPlayerCharacters
+import tabletop.shared.dnd5e.playerCharacters
 import tabletop.shared.error.CommonError
 import tabletop.shared.error.NotFoundError
 import tabletop.shared.error.UnsupportedSubtypeError
@@ -134,6 +140,23 @@ class EventHandler(
 
                             state.scene.current.value = scene
                         }
+                    }
+
+                    is CharacterUpdated -> {
+                        state.maybeGame.update {
+                            when (it) {
+                                is DnD5eGame -> when(character) {
+                                    is PlayerCharacter -> it.copy {
+                                        DnD5eGame.playerCharacters set it.playerCharacters + (character.id to character as PlayerCharacter)
+                                    }
+                                    is NonPlayerCharacter -> it.copy {
+                                        DnD5eGame.nonPlayerCharacters set it.nonPlayerCharacters + (character.id to character as NonPlayerCharacter)
+                                    }
+                                    else -> raise(UnsupportedSubtypeError(Game::class))
+                                }
+                                else -> raise(UnsupportedSubtypeError(Game::class))
+
+                            }                                }
                     }
 
                     else -> raise(UnsupportedSubtypeError(ResultEvent::class))

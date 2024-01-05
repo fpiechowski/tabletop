@@ -1,7 +1,10 @@
 package tabletop.shared.dnd5e.character
 
+import arrow.core.raise.either
 import arrow.optics.PLens
 import arrow.optics.copy
+import tabletop.shared.error.CommonError
+import tabletop.shared.error.IllegalStateError
 
 val Character.Companion.name
     get() = PLens<Character, Character, String, String>(
@@ -74,3 +77,27 @@ val Character.Companion.experience
             }
         }
     )
+
+fun Character.Companion.attribute(attribute: Character.Attribute) =
+    either {
+        PLens<Character, Character, Int, Int>(
+            get = { it.attributes[attribute] ?: raise(IllegalStateError("Attribute $attribute not found in character $it")) },
+            set = { character, attributeValue ->
+                when (character) {
+                    is PlayerCharacter -> character.copy {
+                        PlayerCharacter.attributes.set(character.attributes.copy {
+                            attribute.lens.set(attributeValue)
+                        })
+                    }
+
+                    is NonPlayerCharacter -> character.copy {
+                        NonPlayerCharacter.attributes.set(character.attributes.copy {
+                           attribute.lens.set(attributeValue)
+                        })
+                    }
+
+                    else -> character
+                }
+            }
+        )
+    }
