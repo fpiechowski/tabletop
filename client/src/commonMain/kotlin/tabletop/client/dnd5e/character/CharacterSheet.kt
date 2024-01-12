@@ -104,8 +104,8 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                         textStyle = MaterialTheme.typography.headlineMedium,
                         singleLine = true,
                         onValueChange = {
-                            updatedCharacter.value = character.copy {
-                                Character.name set it
+                            updatedCharacter.value = character.apply {
+                                name = it
                             }
                             resetAutosaveTimer()
                         }
@@ -180,8 +180,8 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                                 errorIndicatorColor = Color.Transparent,
                             ),
                             onValueChange = {
-                                updatedCharacter.value = character.copy {
-                                    Character.currentHp set it
+                                updatedCharacter.value = character.apply {
+                                    currentHp = it
                                 }
 
                                 resetAutosaveTimer()
@@ -205,8 +205,8 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                                 errorIndicatorColor = Color.Transparent,
                             ),
                             onValueChange = {
-                                updatedCharacter.value = character.copy {
-                                    Character.hp set it
+                                updatedCharacter.value = character.apply {
+                                    hp = it
                                 }
 
                                 resetAutosaveTimer()
@@ -242,8 +242,8 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                                 errorIndicatorColor = Color.Transparent,
                             ),
                             onValueChange = {
-                                updatedCharacter.value = character.copy {
-                                    Character.experience set it
+                                updatedCharacter.value = character.apply {
+                                    experience = it
                                 }
 
                                 resetAutosaveTimer()
@@ -285,13 +285,11 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                                     textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
                                     errorHandler = { dependencies.state.errors.add(it) },
                                     onValueChange = { value: Int ->
-                                        recover({
-                                            updatedCharacter.value = updatedCharacter.value.copy {
-                                                Character.attribute(attribute.key).bind() set value
+                                        updatedCharacter.value = character.apply {
+                                            attributes = attributes.copy {
+                                                Character.Attributes.attributeLens(attribute.key) set value
                                             }
-                                        }, recover = { error ->
-                                            coroutineScope.launch { error.handle() }
-                                        })
+                                        }
 
                                         resetAutosaveTimer()
                                     }

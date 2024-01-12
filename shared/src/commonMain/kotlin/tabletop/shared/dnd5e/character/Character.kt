@@ -23,20 +23,20 @@ import kotlin.math.floor
 
 
 @Serializable
-@optics
+
 data class PlayerCharacter(
     override val hp: Int,
     override val currentHp: Int,
     override val race: Race,
+    val player: Player,
+    override val name: String,
+    override val tokenImageFilePath: String,
+    override val image: String? = null,
+    override val experience: Long = 0,
     override val attributes: Attributes = Attributes(),
     override val characterClassesLevels: Set<CharacterClassLevel> = setOf(),
     override val skillProficiencies: Set<SkillProficiency> = setOf(),
     override val equipment: Equipment = Equipment(),
-    override val name: String,
-    override val tokenImageFilePath: String,
-    val player: Player,
-    override val image: String? = null,
-    override val experience: Long = 0,
     override val savingThrowProficiencies: Set<SavingThrowProficiency> = setOf(),
     override val features: Set<Feature> = setOf(),
     override val spells: Set<Spell> = setOf(),
@@ -52,7 +52,7 @@ data class PlayerCharacter(
 }
 
 @Serializable
-@optics
+
 data class NonPlayerCharacter(
     override val hp: Int,
     override val currentHp: Int,
@@ -127,13 +127,10 @@ abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable
 
     val armorClass: ArmorClass
         get() = ArmorClass(
-            modifiers = listOf(
-                Attribute.modifier(attributes.dexterity)
-            )
+            modifiers = listOf()
         )
 
     @Serializable
-    @optics
     data class Attributes(
         val strength: Int = 10,
         val dexterity: Int = 10,
@@ -149,7 +146,22 @@ abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable
         Attribute.Wisdom to wisdom,
         Attribute.Charisma to charisma
     ) {
-        companion object
+        companion object {
+
+            fun attributeLens(attribute: Attribute): Lens<Attributes, Int> = Lens(
+                get = { attributes -> attributes[attribute] ?: 0 },
+                set = { attributes, value ->
+                    when (attribute) {
+                        Attribute.Strength -> attributes.copy(strength = value)
+                        Attribute.Dexterity -> attributes.copy(dexterity = value)
+                        Attribute.Constitution -> attributes.copy(constitution = value)
+                        Attribute.Intelligence -> attributes.copy(intelligence = value)
+                        Attribute.Wisdom -> attributes.copy(wisdom = value)
+                        Attribute.Charisma -> attributes.copy(charisma = value)
+                    }
+                }
+            )
+        }
     }
 
     class ArmorClass(
@@ -171,22 +183,19 @@ abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable
         Large,
         Huge,
         Gargantuan;
-
-
     }
 
     @Serializable
-    data class Attribute(override val name: String, val shortName: String, val lens: Lens<Attributes, Int>) : Proficiency.Subject {
+    sealed class Attribute(override val name: String, val shortName: String) : Proficiency.Subject {
 
+        data object Strength : Attribute("Strength", "str")
+        data object Dexterity : Attribute("Dexterity", "dex")
+        data object Constitution : Attribute("Constitution", "con")
+        data object Intelligence : Attribute("Intelligence", "int")
+        data object Wisdom : Attribute("Wisdom", "wis")
+        data object Charisma : Attribute("Charisma", "cha")
 
         companion object {
-            val Strength = Attribute("Strength", "str", Attributes.strength)
-            val Dexterity = Attribute("Dexterity", "dex", Attributes.dexterity)
-            val Constitution = Attribute("Constitution", "con", Attributes.constitution)
-            val Intelligence = Attribute("Intelligence", "int", Attributes.intelligence)
-            val Wisdom = Attribute("Wisdom", "wis", Attributes.wisdom)
-            val Charisma = Attribute("Charisma", "cha", Attributes.charisma)
-
             fun modifier(value: Int): IntModifier = IntModifier { floor((value - 10).toFloat() / 2f).toInt() }
         }
     }

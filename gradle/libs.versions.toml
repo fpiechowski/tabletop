@@ -14,7 +14,8 @@ kotlinx-serialization = "1.6.1"
 kotlinx-uuid = "0.0.22"
 ktor = "2.3.6"
 logback = "1.4.11"
-microstream = "08.01.01-MS-GA"
+mapdb = "3.0.10"
+eclipse-store = "1.0.0"
 mockk = "1.13.8"
 suspendapp = "0.4.0"
 voyager = "1.0.0-rc10"
@@ -56,8 +57,9 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-microstream-storage-embedded = { module = "one.microstream:microstream-storage-embedded", version.ref = "microstream" }
-microstream-storage-embedded-configuration = { module = "one.microstream:microstream-storage-embedded-configuration", version.ref = "microstream" }
+mapdb = { module = "org.mapdb:mapdb", version.ref = "mapdb" }
+eclipse-store-storage-embedded = { module = "org.eclipse.store:storage-embedded", version.ref = "eclipse-store" }
+eclipse-store-storage-embedded-configuration = { module = "org.eclipse.store:storage-embedded-configuration", version.ref = "eclipse-store" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 suspendapp = { module = "io.arrow-kt:suspendapp", version.ref = "suspendapp" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }

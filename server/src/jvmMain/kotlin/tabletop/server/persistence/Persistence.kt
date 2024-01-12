@@ -4,23 +4,26 @@ import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.optics.optics
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
-import one.microstream.storage.embedded.types.EmbeddedStorageManager
+import org.eclipse.store.storage.embedded.types.EmbeddedStorage
+import org.eclipse.store.storage.embedded.types.EmbeddedStorageManager
 import tabletop.shared.auth.Credentials
 import tabletop.shared.error.CommonError
 import tabletop.shared.game.Game
-import tabletop.shared.state.State
 import tabletop.shared.user.User
+import kotlin.coroutines.CoroutineContext
 
 class Persistence(
-    private val storageManager: EmbeddedStorageManager,
-): State {
+    private val storageManager: EmbeddedStorageManager = EmbeddedStorage.start(Root()),
+) : CoroutineScope {
     init {
         storageManager.storeRoot()
     }
 
-    @optics
+    
     data class Root(
         val games: Map<UUID, Game<*>> = mapOf(),
         val users: Map<UUID, User> = mapOf(),
@@ -64,5 +67,7 @@ class Persistence(
         }
 
     val persistenceRoot: Root get() = storageManager.root() as Root
+
+    override val coroutineContext: CoroutineContext = Dispatchers.IO
 }
 

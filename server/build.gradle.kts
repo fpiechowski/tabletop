@@ -47,8 +47,8 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                implementation(libs.microstream.storage.embedded)
-                implementation(libs.microstream.storage.embedded.configuration)
+                implementation(libs.eclipse.store.storage.embedded)
+                implementation(libs.eclipse.store.storage.embedded.configuration)
             }
         }
     }

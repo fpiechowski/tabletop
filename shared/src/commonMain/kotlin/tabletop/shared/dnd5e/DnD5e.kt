@@ -28,7 +28,7 @@ data class DnD5e(
 }
 
 @Serializable
-@optics
+
 data class DnD5eGame(
     override val name: String,
     val playerCharacters: Map<UUID, PlayerCharacter> = mapOf(),

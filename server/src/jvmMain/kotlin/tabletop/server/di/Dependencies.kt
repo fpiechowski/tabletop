@@ -1,28 +1,22 @@
 package tabletop.server.di
 
 import kotlinx.coroutines.runBlocking
-import one.microstream.persistence.types.PersistenceFieldEvaluator
-import one.microstream.storage.embedded.types.EmbeddedStorage
+import tabletop.server.ServerAdapter
+import tabletop.server.auth.AuthenticationAdapter
+import tabletop.server.demo.Demo
+import tabletop.server.event.EventHandler
+import tabletop.server.persistence.Persistence
+import tabletop.server.state.State
 import tabletop.shared.connection.Connection
 import tabletop.shared.connection.ConnectionCommunicator
 import tabletop.shared.di.CommonDependencies
 import tabletop.shared.error.ConnectionErrorHandler
 import tabletop.shared.error.TerminalErrorHandler
 import tabletop.shared.serialization.Serialization
-import tabletop.server.ServerAdapter
-import tabletop.server.auth.AuthenticationAdapter
-import tabletop.server.demo.Demo
-import tabletop.server.event.EventHandler
-import tabletop.server.persistence.Persistence
-import tabletop.server.persistence.Persistence.Root
-import tabletop.server.state.State
-import kotlin.reflect.jvm.kotlinProperty
 
 
 class Dependencies(
-    lazyPersistence: Lazy<Persistence> = lazy {
-        Persistence(EmbeddedStorage.Foundation().createEmbeddedStorageManager().also { it.setRoot(Root()) }.start())
-    }
+    lazyPersistence: Lazy<Persistence> = lazy { Persistence() }
 ) : CommonDependencies {
     override val serialization: Serialization by lazy { Serialization() }
     override val terminalErrorHandler: TerminalErrorHandler by lazy { TerminalErrorHandler() }

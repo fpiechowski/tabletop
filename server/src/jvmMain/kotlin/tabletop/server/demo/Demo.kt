@@ -34,9 +34,8 @@ class Demo(private val persistence: Persistence) {
                     demoGmUser to demoGmUserCredentials,
                     demoPlayerUser to demoPlayerUserCredentials
                 ).onEach { credentialsUserPair ->
-                    persistenceRoot.copy {
-                        Persistence.Root.credentials set persistenceRoot.credentials.plus(credentialsUserPair)
-                    }.persist()
+                    persistenceRoot.copy(credentials = persistenceRoot.credentials.plus(credentialsUserPair))
+                        .persist()
                 }.map { it.second }
 
                 val games = listOf(demoGame, demoGame2)

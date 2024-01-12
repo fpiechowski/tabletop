@@ -8,7 +8,7 @@ import tabletop.shared.entity.Entity
 import tabletop.shared.scene.token.Token
 
 @Serializable
-@optics
+
 data class Scene(
     override val name: String,
     val gameId: UUID,
