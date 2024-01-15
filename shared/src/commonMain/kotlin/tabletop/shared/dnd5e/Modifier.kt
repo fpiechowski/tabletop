@@ -19,8 +19,5 @@ data class IntModifier(override val modify: Int.() -> Int) : Modifier<Int>() {
     override fun toString(): String =
         if (value > 0) {
             "+$value"
-        } else if (value < 0) {
-            "$value"
         } else "$value"
-
 }

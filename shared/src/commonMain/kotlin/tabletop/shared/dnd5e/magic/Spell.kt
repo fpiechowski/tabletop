@@ -6,6 +6,8 @@ import kotlinx.uuid.generateUUID
 import tabletop.shared.entity.Entity
 
 @Serializable
-class Spell(override val name: String,
-            override val image: String? = null,
-            override val id: UUID = UUID.generateUUID()) : Entity()
+class Spell(
+    override val name: String,
+    override val image: String? = null,
+    override val id: UUID = UUID.generateUUID()
+) : Entity()
