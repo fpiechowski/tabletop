@@ -21,60 +21,38 @@ import tabletop.shared.scene.token.Tokenizable
 import tabletop.shared.scene.token.TokenizableEntity
 import kotlin.math.floor
 
-
 @Serializable
-
-data class PlayerCharacter(
-    override val hp: Int,
-    override val currentHp: Int,
-    override val race: Race,
-    val player: Player,
-    override val name: String,
+data class Character(
+    val hp: Int,
+    val currentHp: Int,
+    val race: Race,
+    val characterClassesLevels: Set<CharacterClassLevel> = setOf(),
+    val skillProficiencies: Set<SkillProficiency> = setOf(),
+    val savingThrowProficiencies: Set<SavingThrowProficiency> = setOf(),
+    val attributes: Attributes = Attributes(),
+    val equipment: Equipment = Equipment(),
+    val experience: Long = 0,
+    val features: Set<Feature> = setOf(),
+    val spells: Set<Spell> = setOf(),
+    val items: Set<Item> = setOf(),
+    val player: Player? = null,
     override val tokenImageFilePath: String,
+    override val name: String,
     override val image: String? = null,
-    override val experience: Long = 0,
-    override val attributes: Attributes = Attributes(),
-    override val characterClassesLevels: Set<CharacterClassLevel> = setOf(),
-    override val skillProficiencies: Set<SkillProficiency> = setOf(),
-    override val equipment: Equipment = Equipment(),
-    override val savingThrowProficiencies: Set<SavingThrowProficiency> = setOf(),
-    override val features: Set<Feature> = setOf(),
-    override val spells: Set<Spell> = setOf(),
-    override val items: Set<Item> = setOf(),
-    override val id: UUID = UUID.generateUUID(),
-) : Character() {
+    override val id: UUID
+) : TokenizableEntity(), Tokenizable, Named, Identifiable<UUID>, Usable.User,
+    Usable.Target {
 
-    companion object;
+    companion object {
+        const val defaultImage = "assets/images/characters/default.png"
 
-    override fun tokenize(scene: Scene, position: Point): Token<*> {
-        TODO("Not yet implemented")
+        val attributes: Lens<Character, Attributes> = Lens(
+            get = { it.attributes },
+            set = { character, attributes -> character.copy(attributes = attributes) }
+        )
     }
-}
 
-@Serializable
-
-data class NonPlayerCharacter(
-    override val hp: Int,
-    override val currentHp: Int,
-    override val race: Race,
-    override val characterClassesLevels: Set<CharacterClassLevel> = setOf(),
-    override val skillProficiencies: Set<SkillProficiency> = setOf(),
-    override val attributes: Attributes = Attributes(),
-    override val equipment: Equipment = Equipment(),
-    override val name: String,
-    override val tokenImageFilePath: String,
-    override val image: String? = null,
-    override val experience: Long = 0,
-    override val savingThrowProficiencies: Set<SavingThrowProficiency> = setOf(),
-    override val features: Set<Feature> = setOf(),
-    override val spells: Set<Spell> = setOf(),
-    override val items: Set<Item> = setOf(),
-    override val id: UUID = UUID.generateUUID(),
-) : Character() {
-
-    companion object;
-
-    override fun tokenize(scene: Scene, position: Point): Token<NonPlayerCharacter> = Token(
+    override fun tokenize(scene: Scene, position: Point): Token<Character> = Token(
         name,
         position,
         scene.gameId,
@@ -82,31 +60,7 @@ data class NonPlayerCharacter(
         this.id,
         tokenImageFilePath
     )
-}
 
-@Serializable
-abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable<UUID>, Usable.User,
-    Usable.Target {
-    abstract override val tokenImageFilePath: String
-    abstract override val name: String
-    abstract val hp: Int
-    abstract val currentHp: Int
-    abstract val race: Race
-    abstract val characterClassesLevels: Set<CharacterClassLevel>
-    abstract val skillProficiencies: Set<SkillProficiency>
-    abstract val savingThrowProficiencies: Set<SavingThrowProficiency>
-    abstract val attributes: Attributes
-    abstract val equipment: Equipment
-    abstract val experience: Long
-    abstract val features: Set<Feature>
-    abstract val spells: Set<Spell>
-    abstract val items: Set<Item>
-
-    abstract override val id: UUID
-
-    companion object {
-        const val defaultImage = "assets/images/characters/default.png"
-    }
 
     @Serializable
     data class Equipment(
@@ -148,7 +102,7 @@ abstract class Character : TokenizableEntity(), Tokenizable, Named, Identifiable
     ) {
         companion object {
 
-            fun attributeLens(attribute: Attribute): Lens<Attributes, Int> = Lens(
+            fun lensFor(attribute: Attribute): Lens<Attributes, Int> = Lens(
                 get = { attributes -> attributes[attribute] ?: 0 },
                 set = { attributes, value ->
                     when (attribute) {

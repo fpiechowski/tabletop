@@ -11,12 +11,14 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import tabletop.shared.auth.Authentication
 import tabletop.shared.connection.Connection
-import tabletop.shared.dnd5e.DnD5eGame
+import tabletop.shared.dnd5e.DnD5e
 import tabletop.shared.dnd5e.character.*
 import tabletop.shared.error.*
 import tabletop.shared.event.Event
 import tabletop.shared.game.Game
+import tabletop.shared.persistence.Persistence
 import tabletop.shared.server.Server
+import tabletop.shared.system.System
 
 
 class Serialization {
@@ -34,19 +36,15 @@ class Serialization {
                 subclass(NotImplementedError::class)
                 subclass(IllegalStateError::class)
                 subclass(InvalidSubtypeError::class)
-            }
-
-            polymorphic(Game::class) {
-                subclass(DnD5eGame::class)
+                subclass(Persistence.Error::class)
             }
 
             polymorphic(Race::class) {
                 subclass(Human::class)
             }
 
-            polymorphic(Character::class) {
-                subclass(PlayerCharacter::class)
-                subclass(NonPlayerCharacter::class)
+            polymorphic(System::class) {
+                subclass(DnD5e::class)
             }
         }
     }

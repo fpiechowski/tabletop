@@ -1,49 +1,50 @@
 package tabletop.shared.game
 
-import arrow.core.Either
-import arrow.core.raise.either
 import arrow.optics.Lens
 import kotlinx.serialization.Serializable
 import kotlinx.uuid.UUID
-import tabletop.shared.dnd5e.DnD5eGame
 import tabletop.shared.entity.Entity
-import tabletop.shared.error.CommonError
-import tabletop.shared.error.UnsupportedSubtypeError
 import tabletop.shared.game.player.Player
-import tabletop.shared.idLens
+import tabletop.shared.idOptional
+import tabletop.shared.plus
 import tabletop.shared.scene.Scene
-import tabletop.shared.scene.token.Tokenizable
+import tabletop.shared.scene.token.TokenizableEntity
 import tabletop.shared.system.System
 import tabletop.shared.user.GameMaster
 
-@Serializable
-abstract class Game<T : System> : Entity() {
+typealias Scenes = Map<UUID, Scene>
 
-    abstract override val id: UUID
-    abstract override val name: String
-    abstract val system: T
-    abstract val gameMaster: GameMaster
-    abstract val players: Map<UUID, Player>
-    abstract val scenes: Map<UUID, Scene>
-    abstract val tokenizables: Map<UUID, Tokenizable>
-    abstract val entities: Map<UUID, Entity>
+@Serializable
+data class Game<T : System>(
+    override val id: UUID,
+    override val name: String,
+    val system: T,
+    val gameMaster: GameMaster,
+    override val image: String? = null,
+    val players: Map<UUID, Player> = mapOf(),
+    val scenes: Map<UUID, Scene> = mapOf(),
+    val tokenizableEntities: Map<UUID, TokenizableEntity> = mapOf(),
+) : Entity() {
+
+    val entities get() = players + scenes + tokenizableEntities + system + gameMaster + system.entities
 
     companion object {
-        val scenes: Either<CommonError, Lens<Game<*>, Map<UUID, Scene>>> = either {
+        fun <T : System> system(): Lens<Game<T>, T> =
+            Lens(
+                get = { it.system },
+                set = { game, system -> game.copy(system = system) }
+            )
+
+        val scenes: Lens<Game<*>, Scenes> =
             Lens(
                 get = { game -> game.scenes },
                 set = { game, scenes ->
-                    when (game) {
-                        is DnD5eGame -> game.copy(scenes = scenes)
-                        else -> raise(UnsupportedSubtypeError(Game::class))
-                    }
+                    game.copy(scenes = scenes)
                 }
             )
-        }
 
-        fun scene(id: UUID) = either {
-            scenes.bind()
-                .compose(idLens<Scene>(id).bind())
-        }
+        fun scene(id: UUID) =
+            scenes compose idOptional<Scene>(id)
+
     }
 }

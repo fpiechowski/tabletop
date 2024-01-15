@@ -104,21 +104,17 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                         textStyle = MaterialTheme.typography.headlineMedium,
                         singleLine = true,
                         onValueChange = {
-                            updatedCharacter.value = character.apply {
-                                name = it
-                            }
+                            updatedCharacter.value = character.copy(name = it)
                             resetAutosaveTimer()
                         }
                     )
 
-                    if (updatedCharacter.value is PlayerCharacter) {
+                    updatedCharacter.value.player?.let {
                         Button(
-                            onClick = {
-                                TODO("Implement Player View and open Player Window here")
-                            },
+                            onClick = { TODO("Implement Player View and open Player Window here") },
                             modifier = Modifier,
                         ) {
-                            Text((updatedCharacter.value as PlayerCharacter).player.name)
+                            Text(it.name)
                         }
                     }
                 }
@@ -180,9 +176,7 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                                 errorIndicatorColor = Color.Transparent,
                             ),
                             onValueChange = {
-                                updatedCharacter.value = character.apply {
-                                    currentHp = it
-                                }
+                                updatedCharacter.value = character.copy(currentHp = it)
 
                                 resetAutosaveTimer()
                             }
@@ -205,9 +199,7 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                                 errorIndicatorColor = Color.Transparent,
                             ),
                             onValueChange = {
-                                updatedCharacter.value = character.apply {
-                                    hp = it
-                                }
+                                updatedCharacter.value = character.copy(hp = it)
 
                                 resetAutosaveTimer()
                             }
@@ -242,9 +234,7 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                                 errorIndicatorColor = Color.Transparent,
                             ),
                             onValueChange = {
-                                updatedCharacter.value = character.apply {
-                                    experience = it
-                                }
+                                updatedCharacter.value = character.copy(experience = it)
 
                                 resetAutosaveTimer()
                             }
@@ -285,10 +275,8 @@ fun CharacterView(character: Character, dependencies: Dependencies) {
                                     textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
                                     errorHandler = { dependencies.state.errors.add(it) },
                                     onValueChange = { value: Int ->
-                                        updatedCharacter.value = character.apply {
-                                            attributes = attributes.copy {
-                                                Character.Attributes.attributeLens(attribute.key) set value
-                                            }
+                                        updatedCharacter.value = character.copy {
+                                            Character.attributes compose Character.Attributes.lensFor(attribute.key) set value
                                         }
 
                                         resetAutosaveTimer()

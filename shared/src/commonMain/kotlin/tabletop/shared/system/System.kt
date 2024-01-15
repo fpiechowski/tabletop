@@ -8,4 +8,6 @@ import tabletop.shared.entity.Entity
 abstract class System : Entity() {
     abstract override val name: String
     abstract override val id: UUID
+
+    abstract val entities: Map<UUID, Entity>
 }

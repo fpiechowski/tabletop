@@ -3,10 +3,11 @@ package tabletop.shared.demo
 import kotlinx.uuid.UUID
 import tabletop.shared.auth.Credentials
 import tabletop.shared.dnd5e.DnD5e
-import tabletop.shared.dnd5e.DnD5eGame
 import tabletop.shared.dnd5e.character.*
+import tabletop.shared.game.Game
 import tabletop.shared.game.player.Player
 import tabletop.shared.scene.Scene
+import tabletop.shared.user.GameMaster
 import tabletop.shared.user.User
 
 
@@ -24,20 +25,24 @@ val demoPlayerUser = User(
 
 val demoPlayerUserCredentials = Credentials.UsernamePassword("player", "player")
 
-val demoGame = DnD5eGame(
-    name = "demo",
-    id = UUID("543efd85-98c2-482d-a292-6c9b2c188b7a"),
-    system = DnD5e(),
-    initialGameMasterUser = demoGmUser,
-)
+val demoGame = UUID("8b6c9a25-066d-4233-8f26-0cb4c141b7af").let { gameId ->
+    Game(
+        name = "demo2",
+        id = gameId,
+        system = DnD5e(),
+        gameMaster = GameMaster("gm", gameId, demoGmUser)
+    )
+}
 
 
-val demoGame2 = DnD5eGame(
-    name = "demo2",
-    id = UUID("8b6c9a25-066d-4233-8f26-0cb4c141b7af"),
-    system = DnD5e(),
-    initialGameMasterUser = demoGmUser
-)
+val demoGame2 = UUID("e84e8dca-b4f8-48c4-b45a-a0bad8a0d4a0").let { gameId ->
+    Game(
+        name = "demo2",
+        id = gameId,
+        system = DnD5e(),
+        gameMaster = GameMaster("gm", gameId, demoGmUser)
+    )
+}
 
 
 val demoScene = Scene(
@@ -47,7 +52,7 @@ val demoScene = Scene(
     id = UUID("815a027a-dfa7-44f2-83aa-a8073bd5b5bb")
 )
 
-val demoNonPlayerCharacter = NonPlayerCharacter(
+val demoNonPlayerCharacter = Character(
     hp = 10,
     race = Human(),
     characterClassesLevels = setOf(),
@@ -60,7 +65,7 @@ val demoNonPlayerCharacter = NonPlayerCharacter(
     id = UUID("9186fb5e-9387-4527-a02c-15f5dabd3932")
 )
 
-val demoPlayerCharacter = PlayerCharacter(
+val demoCharacter = Character(
     hp = 10,
     race = Human(),
     characterClassesLevels = setOf(Character.CharacterClassLevel(1, CharacterClass.figter)),

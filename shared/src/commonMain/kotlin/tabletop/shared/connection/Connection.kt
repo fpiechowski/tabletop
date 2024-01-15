@@ -54,7 +54,7 @@ class ConnectionCommunicator(val connection: Connection, val serialization: Seri
                     )
                 },
                 recover = { raise(Connection.Error("Error on sending ${this@send}", it)) },
-                transform = { logger.debug { "Sent $this@send" } }
+                transform = { logger.debug { "Sent ${this@send}" } }
             )
         }
 

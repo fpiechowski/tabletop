@@ -18,18 +18,13 @@ import tabletop.client.game.GameScreen
 import tabletop.client.navigation.Navigation
 import tabletop.client.server.Server
 import tabletop.client.state.State
-import tabletop.shared.dnd5e.DnD5eGame
-import tabletop.shared.dnd5e.character.NonPlayerCharacter
-import tabletop.shared.dnd5e.character.PlayerCharacter
-import tabletop.shared.dnd5e.nonPlayerCharacters
-import tabletop.shared.dnd5e.playerCharacters
+import tabletop.shared.dnd5e.DnD5e
 import tabletop.shared.error.CommonError
 import tabletop.shared.error.NotFoundError
 import tabletop.shared.error.UnsupportedSubtypeError
 import tabletop.shared.event.*
 import tabletop.shared.game.Game
 import tabletop.shared.scene.Scene
-import tabletop.shared.scene.tokens
 import kotlin.coroutines.CoroutineContext
 
 @ExperimentalLayoutApi
@@ -61,6 +56,8 @@ class EventHandler(
             }) {
                 raise(Error("Error when handling ${this@handle}", it))
             }
+
+            logger.debug { "Handled ${this@handle}" }
         }
 
 
@@ -124,7 +121,7 @@ class EventHandler(
                             }
 
                             game.copy {
-                                Game.scenes.bind() set game.scenes + (scene.id to scene)
+                                Game.scenes set game.scenes + (scene.id to scene)
                             }
 
                             maybeGame.value = game
@@ -144,27 +141,18 @@ class EventHandler(
 
                     is CharacterUpdated -> {
                         state.maybeGame.update {
-                            when (it) {
-                                is DnD5eGame -> when(character) {
-                                    is PlayerCharacter -> it.copy {
-                                        DnD5eGame.playerCharacters set it.playerCharacters + (character.id to character as PlayerCharacter)
-                                    }
-                                    is NonPlayerCharacter -> it.copy {
-                                        DnD5eGame.nonPlayerCharacters set it.nonPlayerCharacters + (character.id to character as NonPlayerCharacter)
-                                    }
+                            it?.let { game ->
+                                when (it.system) {
+                                    is DnD5e -> (Game.system<DnD5e>() compose DnD5e.characters).modify(game as Game<DnD5e>) { it + (character.id to character) }
                                     else -> raise(UnsupportedSubtypeError(Game::class))
                                 }
-                                else -> raise(UnsupportedSubtypeError(Game::class))
-
-                            }                                }
+                            }
+                        }
                     }
-
-                    else -> raise(UnsupportedSubtypeError(ResultEvent::class))
                 }
+
             }
-
         }
-
 
     private suspend inline fun <reified T : RequestEvent> T.sendToServer(): Either<CommonError, Unit> =
         either {
@@ -177,7 +165,5 @@ class EventHandler(
             }
         }
 
-
     override val coroutineContext: CoroutineContext = Dispatchers.Default
 }
-

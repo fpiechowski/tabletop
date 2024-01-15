@@ -11,7 +11,7 @@ abstract class CommonError {
     abstract val message: String?
     abstract val cause: CommonError?
 
-    override fun toString() =
+    override fun toString(): String =
         """${this::class.qualifiedName}${message?.let { ": $it" }}${cause?.let { ", cause: $it" } ?: ""}""".trimMargin()
 
     fun CommonError.findThrowable(): ThrowableError? = when {

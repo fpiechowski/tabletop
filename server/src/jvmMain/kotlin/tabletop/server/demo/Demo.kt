@@ -5,29 +5,27 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.optics.copy
 import tabletop.shared.demo.*
-import tabletop.shared.dnd5e.DnD5eGame
-import tabletop.shared.dnd5e.nonPlayerCharacters
-import tabletop.shared.dnd5e.playerCharacters
-import tabletop.shared.dnd5e.scenes
 import tabletop.shared.error.CommonError
 import tabletop.server.persistence.Persistence
-import tabletop.server.persistence.credentials
-import tabletop.server.persistence.games
-import tabletop.server.persistence.users
+import tabletop.shared.dnd5e.DnD5e
+import tabletop.shared.game.Game
+import tabletop.shared.plus
+import tabletop.shared.persistence.Persistence as SharedPersistence
 
+@Suppress("UNCHECKED_CAST")
 class Demo(private val persistence: Persistence) {
 
     init {
         storeEntities()
     }
 
-    private fun storeEntities(): Either<Persistence.Error, Unit> = either {
+
+    private fun storeEntities(): Either<SharedPersistence.Error, Unit> = either {
         catch({
             with(persistence) {
                 val users = listOf(demoGmUser, demoPlayerUser).onEach { user ->
-                    persistenceRoot.copy {
-                        Persistence.Root.users set persistenceRoot.users + (user.id to user)
-                    }.persist()
+                    Persistence.Root.users.modify(persistenceRoot) { it + (user.id to user) }
+                        .persist()
                 }
 
                 val credentials = listOf(
@@ -40,11 +38,12 @@ class Demo(private val persistence: Persistence) {
 
                 val games = listOf(demoGame, demoGame2)
                     .map {
-                        it.copy {
-                            DnD5eGame.scenes set it.scenes + (demoScene.id to demoScene)
-                            DnD5eGame.nonPlayerCharacters set it.nonPlayerCharacters + demoNonPlayerCharacter.let { it.id to it }
-                            DnD5eGame.playerCharacters set it.playerCharacters + demoPlayerCharacter.let { it.id to it }
-                        }
+                        Game.scenes.modify(it) {  it + (demoScene.id to demoScene)}
+                            .let {
+                                Game.system<DnD5e>().compose(DnD5e.characters).modify(it as Game<DnD5e>) {
+                                    it + demoCharacter + demoNonPlayerCharacter
+                                }
+                            }
                     }.onEach { game ->
                         persistenceRoot.copy {
                             Persistence.Root.games set persistenceRoot.games + (game.id to game)
@@ -55,8 +54,9 @@ class Demo(private val persistence: Persistence) {
                     it.persist()
                 }
             }
-        }) {
-            raise(Persistence.Error("Error on storing demo entities", CommonError.ThrowableError(it)))
+        })
+        {
+            raise(SharedPersistence.Error("Error on storing demo entities", CommonError.ThrowableError(it)))
         }
     }
 }

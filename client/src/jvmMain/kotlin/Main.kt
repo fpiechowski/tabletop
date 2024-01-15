@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import tabletop.client.di.Dependencies
 import tabletop.client.dnd5e.character.CharacterView
 import tabletop.shared.ApplicationInfo
-import tabletop.shared.demo.demoPlayerCharacter
+import tabletop.shared.demo.demoCharacter
 
 
 @ExperimentalLayoutApi
@@ -35,6 +35,6 @@ fun preview() {
         "Character Sheet",
         MutableStateFlow(mapOf())
     ) {
-        CharacterView(demoPlayerCharacter, Dependencies())
+        CharacterView(demoCharacter, Dependencies())
     }
 }

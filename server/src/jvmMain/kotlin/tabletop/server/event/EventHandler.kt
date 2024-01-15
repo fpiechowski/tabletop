@@ -4,26 +4,23 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
-import arrow.optics.copy
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.update
+import tabletop.server.di.ConnectionDependencies
+import tabletop.server.di.Dependencies
+import tabletop.shared.dnd5e.DnD5e
 import tabletop.shared.error.CommonError
 import tabletop.shared.error.ErrorHandler.Companion.use
 import tabletop.shared.error.NotFoundError
 import tabletop.shared.error.UnsupportedSubtypeError
 import tabletop.shared.event.*
+import tabletop.shared.game.Game
+import tabletop.shared.plus
 import tabletop.shared.scene.Scene
 import tabletop.shared.scene.token.Tokenizable
-import tabletop.server.di.ConnectionDependencies
-import tabletop.server.di.Dependencies
-import tabletop.shared.dnd5e.DnD5eGame
-import tabletop.shared.dnd5e.character.NonPlayerCharacter
-import tabletop.shared.dnd5e.character.PlayerCharacter
-import tabletop.shared.dnd5e.nonPlayerCharacters
-import tabletop.shared.dnd5e.playerCharacters
-import tabletop.shared.game.Game
 
 
+@Suppress("UNCHECKED_CAST")
 class EventHandler(
     private val dependencies: Dependencies,
     private val connectionDependencies: ConnectionDependencies,
@@ -59,7 +56,7 @@ class EventHandler(
                         with(connectionDependencies) {
                             with(connectionCommunicator) {
                                 connectionErrorHandler.use {
-                                    if (shared) {
+                                    if (this@handle.shared) {
                                         state.connectionToGame.value[connectionDependencies.connection]
                                             ?.let { game ->
                                                 state.connectionToGame.value
@@ -100,17 +97,14 @@ class EventHandler(
         either {
             val game = persistence.retrieve { games[gameId] }.bind()
                 .let {
-                    when (it) {
-                        !is DnD5eGame -> raise(UnsupportedSubtypeError(Game::class))
-                        else -> it
+                    when (it.system) {
+                        !is DnD5e -> raise(UnsupportedSubtypeError(Game::class))
+                        else -> it as Game<DnD5e>
                     }
                 }
 
-            val updatedGame = game.copy {
-                when (character) {
-                    is PlayerCharacter -> DnD5eGame.playerCharacters set game.playerCharacters.plus(character.id to character as PlayerCharacter)
-                    is NonPlayerCharacter -> DnD5eGame.nonPlayerCharacters set game.nonPlayerCharacters.plus(character.id to character as NonPlayerCharacter)
-                }
+            val updatedGame = (Game.system<DnD5e>() compose DnD5e.characters).modify(game) {
+                it + character
             }
 
             with(persistence) {
@@ -139,10 +133,9 @@ class EventHandler(
         either {
             val game = persistence.retrieve { games[gameId] }.bind()
 
-            val tokenizable = game.tokenizables[tokenizableId] ?: raise(NotFoundError(Tokenizable::class, tokenizableId))
-
+            val tokenizable = game.tokenizableEntities[tokenizableId]
+                ?: raise(NotFoundError(Tokenizable::class, tokenizableId))
             val scene = game.scenes[sceneId] ?: raise(NotFoundError(Scene::class, sceneId))
-
             val token = tokenizable.tokenize(scene, position)
                 .also {
                     persistence
