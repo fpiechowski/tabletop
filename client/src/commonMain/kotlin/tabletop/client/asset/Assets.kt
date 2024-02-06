@@ -24,7 +24,6 @@ import java.io.File
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 class Assets(
-    private val dependencies: Dependencies,
     private val connectionDependencies: ConnectionDependencies
 ) {
     private val logger = KotlinLogging.logger { }
@@ -35,6 +34,7 @@ class Assets(
     data class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
     private val httpClient = HttpClient()
+
     private fun serverUrl(path: String): Url = URLBuilder(
         protocol = URLProtocol.HTTP,
         host = connectionDependencies.connection.host,
@@ -64,7 +64,7 @@ class Assets(
                                 val bytes = packet.readBytes()
                                 file.appendBytes(bytes)
                                 logger.debug { "Received ${file.length()} bytes from $totalLength" }
-                                dependencies.state.assetDownloads.update {
+                                connectionDependencies.dependencies.state.assetDownloads.update {
                                     it + (path to Download(path, file, file.length(), totalLength))
                                 }
                             }

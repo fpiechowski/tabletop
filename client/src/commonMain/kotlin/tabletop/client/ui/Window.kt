@@ -12,79 +12,88 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.arkivanov.decompose.extensions.compose.jetbrains.subscribeAsState
+import com.arkivanov.decompose.value.MutableValue
+import com.arkivanov.decompose.value.Value
 import kotlinx.uuid.UUID
 import kotlinx.uuid.generateUUID
+import tabletop.client.di.Dependencies
+import tabletop.shared.entity.Identifiable
 
-data class WindowModel(
+@ExperimentalComposeUiApi
+@ExperimentalMaterial3Api
+@ExperimentalLayoutApi
+data class Window(
+    val dependencies: Dependencies,
     val title: String,
     val modifier: Modifier,
-    val offsetState: MutableStateFlow<IntOffset>,
-    val id: UUID,
+    val position: MutableValue<IntOffset> = MutableValue(IntOffset.Zero),
+    override val id: UUID = UUID.generateUUID(),
     val content: @Composable () -> Unit,
-)
+) : Identifiable<UUID> {
+    @ExperimentalLayoutApi
+    @ExperimentalMaterial3Api
+    @ExperimentalComposeUiApi
+    @Composable
+    fun content() {
+        val position = position.subscribeAsState()
 
-@ExperimentalLayoutApi
-@ExperimentalMaterial3Api
-@ExperimentalComposeUiApi
-@Composable
-fun Window(
-    title: String,
-    openedWindows: MutableStateFlow<Map<UUID, WindowModel>>,
-    modifier: Modifier = Modifier,
-    offsetState: MutableStateFlow<IntOffset> = MutableStateFlow(IntOffset.Zero),
-    id: UUID = UUID.generateUUID(),
-    content: @Composable () -> Unit,
-) {
-    val offset by offsetState.collectAsState()
-
-    Card(
-        Modifier
-            .then(modifier)
-            .offset { offset },
-        elevation = CardDefaults.cardElevation(20.dp)
-    ) {
-        Column {
-            Box(
-                Modifier.fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            offsetState.apply {
-                                value += dragAmount.round()
+        Card(
+            Modifier
+                .then(modifier)
+                .offset { position.value },
+            elevation = CardDefaults.cardElevation(20.dp)
+        ) {
+            Column {
+                Box(
+                    Modifier.fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
+                                this@Window.position.apply {
+                                    value += dragAmount.round()
+                                }
                             }
                         }
-                    }
-            ) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.align(Alignment.Center).padding(8.dp)
-                )
+                ) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.align(Alignment.Center).padding(8.dp)
+                    )
 
-                Row(modifier = Modifier.align(Alignment.CenterEnd)) {
-                    IconButton(onClick = {
-                        openedWindows.value -= id
-                    }) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                    Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+                        IconButton(onClick = {
+                            dependencies.windows.openedWindows.value -= id
+                        }) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
+
+                content()
             }
 
-            content()
-        }
-
-        Row(horizontalArrangement = Arrangement.End) {
-            Icon(Icons.Default.OpenInFull, contentDescription = "Resize Window")
+            Row(horizontalArrangement = Arrangement.End) {
+                Icon(Icons.Default.OpenInFull, contentDescription = "Resize Window")
+            }
         }
     }
 }
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterial3Api
+@ExperimentalLayoutApi
+class Windows(val dependencies: Dependencies) {
+    val openedWindows: MutableValue<Map<UUID, Window>> = MutableValue(mapOf())
+}
+
+

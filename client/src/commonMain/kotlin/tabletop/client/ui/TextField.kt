@@ -5,20 +5,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import arrow.core.raise.recover
+import com.arkivanov.decompose.value.MutableValue
+import com.arkivanov.decompose.value.Value
 import tabletop.shared.error.CommonError
 
 @Composable
 fun <T : Any> TextField(
     field: Field<T>,
     value: String,
-    editable: State<Boolean> = mutableStateOf(true),
-    errors: MutableState<Map<Field<*>, CommonError>> = mutableStateOf(mapOf()),
+    editable: Value<Boolean> = MutableValue(true),
+    errors: MutableValue<Map<Field<*>, CommonError>> = MutableValue(mapOf()),
     modifier: Modifier = Modifier,
     textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
     singleLine: Boolean = false,
@@ -47,8 +46,8 @@ fun <T : Any> TextField(
 fun <T : Any> OutlinedTextField(
     field: Field<T>,
     value: String,
-    editable: State<Boolean> = mutableStateOf(true),
-    errors: MutableState<Map<Field<*>, CommonError>> = mutableStateOf(mapOf()),
+    editable: Value<Boolean> = MutableValue(true),
+    errors: MutableValue<Map<Field<*>, CommonError>> = MutableValue(mapOf()),
     modifier: Modifier = Modifier,
     textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
     singleLine: Boolean = false,

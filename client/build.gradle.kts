@@ -5,19 +5,11 @@ plugins {
     alias(libs.plugins.multiplatform)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.compose)
-    alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
+
 }
 
 kotlin {
-    androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
-
     jvm()
 
     sourceSets {
@@ -35,16 +27,12 @@ kotlin {
             @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
             implementation(compose.components.resources)
             implementation(libs.voyager.navigator)
+            implementation("com.arkivanov.decompose:decompose:2.2.2")
+            implementation("com.arkivanov.decompose:extensions-compose-jetbrains:2.2.2")
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.imageloader)
-
-        }
-
-        androidMain.dependencies {
-            implementation(libs.androidx.appcompat)
-            implementation(libs.androidx.activityCompose)
-            implementation(libs.compose.uitooling)
-            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.reaktive)
+            implementation(libs.reaktive.coroutines)
         }
 
         commonTest.dependencies {
@@ -54,45 +42,10 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.common)
             implementation(compose.desktop.currentOs)
+            implementation(libs.jgit)
+            implementation(libs.stablediffussion.sdk)
+            implementation(libs.kotlinx.coroutines.swing)
         }
-    }
-}
-
-android {
-    lint {
-        baseline = file("lint-baseline.xml")
-        abortOnError = false
-    }
-
-    namespace = "tabletop.client"
-    compileSdk = 34
-
-    defaultConfig {
-        minSdk = 24
-        targetSdk = 34
-
-        applicationId = "tabletop.client.AndroidApp"
-        versionCode = 1
-        versionName = "1.0.0"
-    }
-    sourceSets["main"].apply {
-        manifest.srcFile("src/androidMain/AndroidManifest.xml")
-        res.srcDirs("src/androidMain/resources")
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
-    }
-
-    packagingOptions {
-        exclude("META-INF/INDEX.LIST")
-        exclude("META-INF/versions/9/previous-compilation-data.bin")
     }
 }
 
@@ -116,6 +69,3 @@ dependencies {
 
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 
-tasks.withType<KotlinCompile<*>>().all {
-    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
-}

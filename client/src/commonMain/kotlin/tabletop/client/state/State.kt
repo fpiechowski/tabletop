@@ -25,7 +25,6 @@ class State(
 ) {
     val scene: SceneState = SceneState()
 
-    val errors: MutableStateFlow<List<CommonError>> = MutableStateFlow(listOf())
     val tokenizableDragging: MutableStateFlow<TokenizableDragging?> = MutableStateFlow(null)
     val assetDownloads = MutableStateFlow(mapOf<String, Assets.Download>())
 

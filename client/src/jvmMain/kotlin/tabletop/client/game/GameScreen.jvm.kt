@@ -25,7 +25,7 @@ actual fun Modifier.sceneViewControlModifier(
             scaleState.value *= 0.9f
         }
     }.pointerInput(Unit) {
-        detectDragGestures { change, dragAmount ->
+        detectDragGestures { _, dragAmount ->
             positionState.value += dragAmount
         }
     }.transformable(transformableState)

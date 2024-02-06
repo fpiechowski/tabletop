@@ -25,22 +25,23 @@ import androidx.compose.ui.unit.dp
 import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.raise.recover
+import com.arkivanov.decompose.value.MutableValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.uuid.UUID
 import tabletop.client.di.Dependencies
-import tabletop.client.dnd5e.character.characterWindowModel
+import tabletop.client.dnd5e.character.CharacterSheet
 import tabletop.client.io.loadImageFile
 import tabletop.client.ui.AsyncImage
 import tabletop.client.ui.TokenizableDragging
-import tabletop.client.ui.WindowModel
+import tabletop.client.ui.Window
 import tabletop.shared.dnd5e.character.Character
 import tabletop.shared.entity.Entity
 import tabletop.shared.event.SceneOpeningRequested
 import tabletop.shared.event.TokenPlacingRequested
 import tabletop.shared.geometry.Point
+import tabletop.shared.plus
 import tabletop.shared.scene.Scene
 import tabletop.shared.scene.token.Tokenizable
 import kotlin.math.roundToInt
@@ -52,27 +53,37 @@ class Library(
     val dependencies: Dependencies
 ) {
     private val logger = KotlinLogging.logger { }
-    val windowPosition: MutableStateFlow<IntOffset> = MutableStateFlow(IntOffset.Zero)
+    val windowPosition: MutableValue<IntOffset> = MutableValue(IntOffset.Zero)
 
     @Composable
-    fun LibraryButton(modifier: Modifier) {
-        val windowsOpened = dependencies.userInterface.openedWindows
+    fun button(modifier: Modifier) {
+        val windowsOpened = dependencies.windows.openedWindows
 
         Button(onClick = {
             if (windowsOpened.value.containsKey(UUID(GameScreen.libraryWindowModelId))) {
                 windowsOpened.value -= UUID(GameScreen.libraryWindowModelId)
             } else {
-                windowsOpened.value += LibraryWindowModel(windowPosition) {
-                    LibraryWindowContent()
-                }.let { it.id to it }
+                windowsOpened.value += window {
+                    content()
+                }
             }
         }, modifier = modifier) {
             Icon(Icons.Default.LibraryBooks, contentDescription = "Library")
         }
     }
 
+    private fun window(content: @Composable () -> Unit) =
+        Window(
+            dependencies.childDependencies("libraryWindow"),
+            "Library",
+            Modifier.width(600.dp),
+            windowPosition,
+            UUID(GameScreen.libraryWindowModelId),
+            content
+        )
+
     @Composable
-    fun LibraryWindowContent() {
+    fun content() {
         val maybeGame by dependencies.state.maybeGame.collectAsState()
         val searchText = remember { mutableStateOf("") }
 
@@ -85,15 +96,17 @@ class Library(
                     this.items(game.entities.values.filter {
                         it.name.lowercase().indexOf(searchText.value.lowercase()) != -1
                     }.toList()) {
-                        LibraryEntityGridItem(it)
+                        entityGridItem(it)
                     }
                 }
             }
         }
     }
 
+
+    //TODO could clean up all these child composables
     @Composable
-    fun LibraryEntityGridItem(entity: Entity) {
+    fun entityGridItem(entity: Entity) {
         val positionInRoot = remember { mutableStateOf(Offset.Zero) }
         val coroutineScope = rememberCoroutineScope()
 
@@ -133,7 +146,7 @@ class Library(
             }
 
             is Character -> {
-                dependencies.userInterface.openedWindows.value += characterWindowModel(entity, dependencies)
+                dependencies.windows.openedWindows.value += CharacterSheet(dependencies, entity).window()
             }
         }
     }
@@ -171,7 +184,7 @@ class Library(
                         }
                     }
                 }
-            ) { change, dragAmount ->
+            ) { change, _ ->
                 change.consume()
                 dependencies.state.tokenizableDragging.value =
                     TokenizableDragging(entity, positionInRoot.value + change.position)
@@ -181,14 +194,7 @@ class Library(
         }
     }
 
-    private fun LibraryWindowModel(offsetState: MutableStateFlow<IntOffset>, content: @Composable () -> Unit) =
-        WindowModel(
-            "Library",
-            Modifier.width(600.dp),
-            offsetState,
-            UUID(GameScreen.libraryWindowModelId),
-            content
-        )
+
 }
 
 fun Offset.toPoint(): Point = Point(x.roundToInt(), y.roundToInt())

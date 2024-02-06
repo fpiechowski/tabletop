@@ -8,12 +8,13 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
 import arrow.optics.copy
+import com.arkivanov.decompose.value.update
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.update
 import tabletop.client.connection.ConnectionScreen
 import tabletop.client.di.Dependencies
-import tabletop.client.error.UIErrorHandler
+import tabletop.client.error.ErrorDialogs
 import tabletop.client.game.GameScreen
 import tabletop.client.navigation.Navigation
 import tabletop.client.server.Server
@@ -36,8 +37,7 @@ class EventHandler(
     private val logger = KotlinLogging.logger {}
 
     private val state: State = dependencies.state
-    private val uiErrorHandler: UIErrorHandler = dependencies.uiErrorHandler
-    private suspend fun navigation(): Navigation = dependencies.navigation.await()
+    private val errorDialogs: ErrorDialogs = dependencies.errorDialogs
 
     class Error(override val message: String?, override val cause: CommonError?) : CommonError()
 
@@ -68,21 +68,21 @@ class EventHandler(
             state.connectionJob.value?.let {
                 launch(it) {
                     recover({
-                        Server(dependencies, this@EventHandler, uiErrorHandler)
+                        Server(dependencies, this@EventHandler, errorDialogs)
                             .connect(host, port, credentialsData).bind()
                     }) {
                         ConnectionEnded(it).handle().bind()
-                        with(uiErrorHandler) { it.handle() }
+                        with(errorDialogs) { it.handle() }
                     }
                 }
             }
         }
 
-    private suspend fun ConnectionEnded.handle(): Either<CommonError, Unit> =
+    private fun ConnectionEnded.handle(): Either<CommonError, Unit> =
         either {
             dependencies.state.maybeUser.value = null
             dependencies.state.maybeGame.value = null
-            navigation().popUntil { it is ConnectionScreen }
+            dependencies.navigation.currentScreen.update { Navigation.Screen.Connection }
         }
 
     private suspend fun <T : ResultEvent> T.handle(): Either<CommonError, Unit> =
@@ -92,7 +92,7 @@ class EventHandler(
                     is GameLoaded -> {
                         state.maybeGame.value = this@handle.game
 
-                        navigation().push(GameScreen(dependencies))
+                        dependencies.navigation.currentScreen.update { Navigation.Screen.Game }
                     }
 
                     is GamesLoaded -> {
@@ -129,7 +129,6 @@ class EventHandler(
                         }
                     }
 
-
                     is SceneOpened -> {
                         with(state) {
                             val scene =
@@ -150,7 +149,6 @@ class EventHandler(
                         }
                     }
                 }
-
             }
         }
 

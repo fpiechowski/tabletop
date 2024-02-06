@@ -13,7 +13,7 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
 import tabletop.client.di.ConnectionDependencies
 import tabletop.client.di.Dependencies
-import tabletop.client.error.UIErrorHandler
+import tabletop.client.error.ErrorDialogs
 import tabletop.client.event.EventHandler
 import tabletop.shared.auth.Credentials
 import tabletop.shared.connection.Connection
@@ -28,7 +28,7 @@ import tabletop.shared.server.Server as CommonServer
 class Server(
     private val dependencies: Dependencies,
     private val eventHandler: EventHandler,
-    private val uiErrorHandler: UIErrorHandler,
+    private val errorDialogs: ErrorDialogs,
 ) : CommonServer() {
     private val logger = KotlinLogging.logger { }
 
@@ -76,7 +76,7 @@ class Server(
         connectionCommunicator.receiveIncoming<ResultEvent>({
             onEach(it)
         }) {
-            with(uiErrorHandler) { it.handle() }
+            with(errorDialogs) { it.handle() }
         }
     }
 
